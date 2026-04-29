@@ -15,6 +15,8 @@ Meta Quest 환경에서 손 제스처, 헤드 트래킹, 보이스 입력을 활
 
 팀 공통 설정 파일인 `Packages/`, `ProjectSettings/`, `Assets/XR/`, `Assets/Oculus/OculusProjectConfig.asset`, `Assets/Plugins/Android/`, `Assets/Resources/`는 커밋 대상입니다. `Library/`, `Temp/`, `Obj/`, `Build/`, `Builds/`, `Logs/`, `UserSettings/`는 각자 PC에서 재생성되는 파일이므로 커밋하지 않습니다.
 
+팀 역할 분담, 브랜치 전략, 이벤트 연동 규칙은 `TEAM_WORKFLOW.md`를 기준으로 합니다.
+
 ## 프로젝트 개요
 
 - 장르: VR 핸드트래킹 기반 마법 액션 / 보스 배틀
