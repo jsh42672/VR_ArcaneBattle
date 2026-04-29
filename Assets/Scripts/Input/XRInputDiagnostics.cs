@@ -3,17 +3,19 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Hands;
+using XRInputDevice = UnityEngine.XR.InputDevice;
 
 public class XRInputDiagnostics : MonoBehaviour
 {
     const float PinchThresholdMeters = 0.035f;
 
-    readonly List<InputDevice> m_Devices = new();
+    readonly List<XRInputDevice> m_Devices = new();
     readonly List<XRHandSubsystem> m_HandSubsystems = new();
     readonly StringBuilder m_Text = new();
 
     Transform m_XrOrigin;
     Camera m_MainCamera;
+    GameObject m_HudRoot;
     TextMesh m_StatusText;
     Marker m_LeftControllerMarker;
     Marker m_RightControllerMarker;
@@ -26,6 +28,8 @@ public class XRInputDiagnostics : MonoBehaviour
     Material m_LeftHandMaterial;
     Material m_RightHandMaterial;
     Material m_ActiveMaterial;
+    bool m_DiagnosticsVisible;
+    bool m_ToggleWasPressed;
 
     void Awake()
     {
@@ -44,6 +48,13 @@ public class XRInputDiagnostics : MonoBehaviour
             m_XrOrigin = FindXrOrigin();
 
         RefreshHandSubsystem();
+        HandleToggle();
+
+        if (!m_DiagnosticsVisible)
+        {
+            SetMarkersVisible(false);
+            return;
+        }
 
         var leftController = UpdateController(
             InputDeviceCharacteristics.Left,
@@ -117,14 +128,14 @@ public class XRInputDiagnostics : MonoBehaviour
         m_MainCamera = Camera.main;
         var parent = m_MainCamera != null ? m_MainCamera.transform : transform;
 
-        var hudRoot = new GameObject("XR Diagnostics HUD");
-        hudRoot.transform.SetParent(parent, false);
-        hudRoot.transform.localPosition = new Vector3(-0.65f, 0.28f, 1.45f);
-        hudRoot.transform.localRotation = Quaternion.identity;
-        hudRoot.transform.localScale = Vector3.one;
+        m_HudRoot = new GameObject("XR Diagnostics HUD");
+        m_HudRoot.transform.SetParent(parent, false);
+        m_HudRoot.transform.localPosition = new Vector3(-0.72f, -0.22f, 1.55f);
+        m_HudRoot.transform.localRotation = Quaternion.identity;
+        m_HudRoot.transform.localScale = Vector3.one;
 
         var textObject = new GameObject("Status Text");
-        textObject.transform.SetParent(hudRoot.transform, false);
+        textObject.transform.SetParent(m_HudRoot.transform, false);
         textObject.transform.localPosition = Vector3.zero;
         textObject.transform.localRotation = Quaternion.identity;
 
@@ -132,9 +143,10 @@ public class XRInputDiagnostics : MonoBehaviour
         m_StatusText.anchor = TextAnchor.UpperLeft;
         m_StatusText.alignment = TextAlignment.Left;
         m_StatusText.fontSize = 44;
-        m_StatusText.characterSize = 0.014f;
+        m_StatusText.characterSize = 0.01f;
         m_StatusText.color = Color.white;
         m_StatusText.text = "XR diagnostics starting...";
+        m_HudRoot.SetActive(m_DiagnosticsVisible);
     }
 
     void CreateMarkers()
@@ -143,6 +155,44 @@ public class XRInputDiagnostics : MonoBehaviour
         m_RightControllerMarker = new Marker("R Controller", PrimitiveType.Cube, 0.08f);
         m_LeftHandMarker = new Marker("L Hand", PrimitiveType.Sphere, 0.055f);
         m_RightHandMarker = new Marker("R Hand", PrimitiveType.Sphere, 0.055f);
+    }
+
+    void HandleToggle()
+    {
+        var togglePressed = F1WasPressed();
+        var leftController = GetController(InputDeviceCharacteristics.Left);
+        if (leftController.isValid)
+            togglePressed |= ReadButton(leftController, CommonUsages.secondaryButton);
+
+        if (togglePressed && !m_ToggleWasPressed)
+        {
+            m_DiagnosticsVisible = !m_DiagnosticsVisible;
+            if (m_HudRoot != null)
+                m_HudRoot.SetActive(m_DiagnosticsVisible);
+
+            if (!m_DiagnosticsVisible)
+                SetMarkersVisible(false);
+        }
+
+        m_ToggleWasPressed = togglePressed;
+    }
+
+    bool F1WasPressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var keyboard = UnityEngine.InputSystem.Keyboard.current;
+        return keyboard != null && keyboard.f1Key.wasPressedThisFrame;
+#else
+        return false;
+#endif
+    }
+
+    void SetMarkersVisible(bool visible)
+    {
+        m_LeftControllerMarker.SetVisible(visible);
+        m_RightControllerMarker.SetVisible(visible);
+        m_LeftHandMarker.SetVisible(visible);
+        m_RightHandMarker.SetVisible(visible);
     }
 
     bool UpdateController(
@@ -186,7 +236,7 @@ public class XRInputDiagnostics : MonoBehaviour
         return hasPose;
     }
 
-    InputDevice GetController(InputDeviceCharacteristics side)
+    XRInputDevice GetController(InputDeviceCharacteristics side)
     {
         var characteristics = InputDeviceCharacteristics.HeldInHand |
             InputDeviceCharacteristics.Controller |
@@ -288,12 +338,12 @@ public class XRInputDiagnostics : MonoBehaviour
             origin.rotation * localRotation);
     }
 
-    float ReadFloat(InputDevice device, InputFeatureUsage<float> usage)
+    float ReadFloat(XRInputDevice device, InputFeatureUsage<float> usage)
     {
         return device.TryGetFeatureValue(usage, out var value) ? value : 0f;
     }
 
-    bool ReadButton(InputDevice device, InputFeatureUsage<bool> usage)
+    bool ReadButton(XRInputDevice device, InputFeatureUsage<bool> usage)
     {
         return device.TryGetFeatureValue(usage, out var value) && value;
     }

@@ -4,6 +4,17 @@ Meta Quest 환경에서 손 제스처, 헤드 트래킹, 보이스 입력을 활
 
 본 프로젝트는 **VR 마법사 결투 / Arcane Duel VR** 아이디어 제안 발표를 바탕으로 시작되었습니다. 단순히 손동작으로 마법을 발사하는 것을 넘어, 속성 선언, 양손 조합, 보스 상태 카운터, 마나 관리, 회피와 베리어를 결합한 전략형 VR 전투 경험을 목표로 합니다.
 
+## 팀원 개발 환경
+
+- Unity Editor: `6000.4.3f1`
+- Unity 모듈: Android Build Support, OpenJDK, Android SDK & NDK Tools
+- 대상 기기: Meta Quest 2 / 3 / 3S
+- 첫 실행 씬: `Assets/Scenes/Main.unity`
+
+클론 후 Unity Hub에서 위 Unity 버전으로 프로젝트를 열면 `Packages/manifest.json`과 `Packages/packages-lock.json` 기준으로 Meta XR, OpenXR, XR Hands 패키지가 복원됩니다. Package Manager에서 Meta 패키지 서명 경고가 나오면 내용을 확인한 뒤 열어도 됩니다.
+
+팀 공통 설정 파일인 `Packages/`, `ProjectSettings/`, `Assets/XR/`, `Assets/Oculus/OculusProjectConfig.asset`, `Assets/Plugins/Android/`, `Assets/Resources/`는 커밋 대상입니다. `Library/`, `Temp/`, `Obj/`, `Build/`, `Builds/`, `Logs/`, `UserSettings/`는 각자 PC에서 재생성되는 파일이므로 커밋하지 않습니다.
+
 ## 프로젝트 개요
 
 - 장르: VR 핸드트래킹 기반 마법 액션 / 보스 배틀

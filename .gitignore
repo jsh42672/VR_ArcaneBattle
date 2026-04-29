@@ -34,6 +34,10 @@
 # Visual Studio cache directory
 .vs/
 
+# Personal IDE/editor settings
+.idea/
+.vscode/
+
 # Gradle cache directory
 .gradle/
 
@@ -114,3 +118,10 @@ InitTestScene*.unity*
 *.aab
 *.symbols.zip
 *.mapping
+
+# Android signing keys must stay local to each developer/build machine.
+*.keystore
+*.keystore.meta
+*.jks
+*.jks.meta
+local.properties
