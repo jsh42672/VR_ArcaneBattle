@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using ArcaneVR.Input;
 
 namespace ArcaneVR.Player
 {

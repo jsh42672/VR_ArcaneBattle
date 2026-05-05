@@ -386,8 +386,16 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 521555727555064246, guid: f9f107e8ecae49048bda9d4fd7e1d1ec, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1607932510}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 521555726832732642, guid: f9f107e8ecae49048bda9d4fd7e1d1ec, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 517806307}
   m_SourcePrefab: {fileID: 100100000, guid: f9f107e8ecae49048bda9d4fd7e1d1ec, type: 3}
+--- !u!4 &3001 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 521555726832732652, guid: f9f107e8ecae49048bda9d4fd7e1d1ec, type: 3}
+  m_PrefabInstance: {fileID: 3000}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &4000
 GameObject:
   m_ObjectHideFlags: 0
@@ -476,6 +484,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd72ecbc9c194762b054b79051b992fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &517806305 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 521555726832732642, guid: f9f107e8ecae49048bda9d4fd7e1d1ec, type: 3}
+  m_PrefabInstance: {fileID: 3000}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &517806307
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 517806305}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07327af1a52bc0843b7e008bc1500b8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandPullMovementController
+  xrOriginRoot: {fileID: 3001}
+  trackingSpace: {fileID: 519980508}
+  headTransform: {fileID: 1498103065}
+  leftHand: {fileID: 0}
+  rightHand: {fileID: 0}
+  leftHandTransform: {fileID: 0}
+  rightHandTransform: {fileID: 0}
+  autoFindRuntimeHands: 1
+  handFindRetryInterval: 0.5
+  fistFingerThreshold: 0.65
+  requiredClosedFingerCount: 3
+  pullMultiplier: 1.2
+  maxMoveSpeed: 3
+  handMoveDeadZone: 0.003
+  horizontalOnly: 1
+  requirePullTowardBody: 1
+  towardBodyDotThreshold: 0.25
+  showDebugLog: 1
+--- !u!4 &519980508 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 521555727181035328, guid: f9f107e8ecae49048bda9d4fd7e1d1ec, type: 3}
+  m_PrefabInstance: {fileID: 3000}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &833529568
 GameObject:
   m_ObjectHideFlags: 0
@@ -711,6 +759,7 @@ GameObject:
   - component: {fileID: 1607932508}
   - component: {fileID: 1607932507}
   - component: {fileID: 1607932506}
+  - component: {fileID: 1607932511}
   m_Layer: 5
   m_Name: DodgeDebugCanvas
   m_TagString: Untagged
@@ -725,7 +774,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1607932505}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0ad65104fa8e9684987da534616ed647, type: 3}
   m_Name: 
@@ -816,6 +865,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -0.25}
   m_SizeDelta: {x: 1000, y: 500}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1607932511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1607932505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e364c3f5a0d981b47a704481d2aa9fec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Player.HandPullMovementDebugDisplay
+  movementController: {fileID: 517806307}
+  debugText: {fileID: 994710951}
 --- !u!1 &1967643367
 GameObject:
   m_ObjectHideFlags: 0
