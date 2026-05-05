@@ -26,7 +26,7 @@
       "url": "https://npm.developer.oculus.com"
     },
     "com.meta.xr.sdk.movement": {
-      "version": "https://github.com/oculus-samples/Unity-Movement.git",
+      "version": "https://github.com/oculus-samples/Unity-Movement.git#2d2fe7d8ce451e69be0599eee2f597b5935f8e04",
       "depth": 0,
       "source": "git",
       "dependencies": {
