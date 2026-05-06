@@ -33,6 +33,8 @@ namespace ArcaneVR.Spell
         [SerializeField] private float prototypeSpellSpeed = 12f;
         [SerializeField] private float prototypeCooldown = 0.5f;
         [SerializeField] private float prototypeProjectileScale = 0.12f;
+        [SerializeField] private float prototypeSpawnForwardOffset = 0.18f;
+        [SerializeField] private float prototypeMinimumProjectileSpeed = 8f;
         [SerializeField] private bool prototypeAimAtViewCenter = true;
         [SerializeField] private float prototypeAimDistance = 18f;
         [SerializeField] private GameObject spellPrefabOpenPalm;
@@ -45,6 +47,7 @@ namespace ArcaneVR.Spell
         private bool hasPreviousPrototypeWristPosition;
         private bool prototypeEventsSubscribed;
         private bool prototypeRouterEventsSubscribed;
+        private bool prototypeReadyForThrust = true;
         private float prototypeLastForwardSpeed;
         private float prototypeLastHandForwardSpeed;
         private float prototypeLastHeadForwardSpeed;
@@ -199,6 +202,9 @@ namespace ArcaneVR.Spell
 
         private void HandleRightPrototypePoseConfirmed(PoseType pose)
         {
+            if (currentPrototypePose != pose)
+                prototypeReadyForThrust = true;
+
             currentPrototypePose = pose;
             hasPreviousPrototypeWristPosition = false;
         }
@@ -207,6 +213,7 @@ namespace ArcaneVR.Spell
         {
             currentPrototypePose = PoseType.None;
             hasPreviousPrototypeWristPosition = false;
+            prototypeReadyForThrust = true;
         }
 
         private void UpdateGesturePrototypeCasting()
@@ -228,7 +235,7 @@ namespace ArcaneVR.Spell
                 return;
             }
 
-            var wristPosition = spawnPoint.position;
+            var wristPosition = ResolvePrototypeCastOrigin(spawnPoint);
             if (!hasPreviousPrototypeWristPosition)
             {
                 previousPrototypeWristPosition = wristPosition;
@@ -246,15 +253,20 @@ namespace ArcaneVR.Spell
             prototypeDebugStatus =
                 $"CAST pose:{currentPrototypePose} speed:{forwardSpeed:0.00}/{prototypeThrustThreshold:0.00} aim:{prototypeLastHandForwardSpeed:0.00} head:{prototypeLastHeadForwardSpeed:0.00} away:{prototypeLastAwayFromHeadSpeed:0.00} cd:{Mathf.Max(0f, prototypeCooldownTimer):0.00}";
 
+            if (forwardSpeed < prototypeThrustThreshold * 0.25f)
+                prototypeReadyForThrust = true;
+
             if (forwardSpeed <= prototypeThrustThreshold ||
                 currentPrototypePose == PoseType.None ||
-                prototypeCooldownTimer > 0f)
+                prototypeCooldownTimer > 0f ||
+                !prototypeReadyForThrust)
             {
                 return;
             }
 
-            FirePrototypeSpell(currentPrototypePose, spawnPoint, fireDirection);
+            FirePrototypeSpell(currentPrototypePose, wristPosition, fireDirection);
             prototypeCooldownTimer = prototypeCooldown;
+            prototypeReadyForThrust = false;
         }
 
         private void SyncPrototypePoseFromDetector()
@@ -323,6 +335,114 @@ namespace ArcaneVR.Spell
                 return prototypeHand.transform;
 
             return rightHandSpawnPoint != null ? rightHandSpawnPoint : leftHandSpawnPoint;
+        }
+
+        private Vector3 ResolvePrototypeCastOrigin(Transform fallback)
+        {
+            if (TryGetPrototypePointerPose(out var pointerPosition) &&
+                IsUsablePrototypeHandPosition(pointerPosition))
+            {
+                return pointerPosition;
+            }
+
+            if (TryGetPrototypeBonePosition(
+                    out var indexTipPosition,
+                    OVRSkeleton.BoneId.XRHand_IndexTip,
+                    OVRSkeleton.BoneId.Hand_IndexTip) &&
+                IsUsablePrototypeHandPosition(indexTipPosition))
+            {
+                return indexTipPosition;
+            }
+
+            if (TryGetPrototypeBonePosition(
+                    out var palmPosition,
+                    OVRSkeleton.BoneId.XRHand_Palm,
+                    OVRSkeleton.BoneId.XRHand_Wrist,
+                    OVRSkeleton.BoneId.Hand_WristRoot) &&
+                IsUsablePrototypeHandPosition(palmPosition))
+            {
+                return palmPosition;
+            }
+
+            if (fallback != null)
+                return fallback.position;
+
+            return transform.position;
+        }
+
+        private bool TryGetPrototypePointerPose(out Vector3 position)
+        {
+            position = Vector3.zero;
+            if (prototypeHand == null || !prototypeHand.IsPointerPoseValid || prototypeHand.PointerPose == null)
+                return false;
+
+            position = prototypeHand.PointerPose.position;
+            return true;
+        }
+
+        private bool TryGetPrototypeBonePosition(out Vector3 position, params OVRSkeleton.BoneId[] boneIds)
+        {
+            position = Vector3.zero;
+            if (prototypeHand == null)
+                return false;
+
+            foreach (var skeleton in prototypeHand.GetComponentsInChildren<OVRSkeleton>(true))
+            {
+                if (TryGetSkeletonBonePosition(skeleton, out position, boneIds))
+                    return true;
+            }
+
+            var expectedHand = prototypeHand.GetHand();
+            foreach (var skeleton in FindObjectsByType<OVRSkeleton>(FindObjectsInactive.Include))
+            {
+                if (!MatchesPrototypeHand(skeleton, expectedHand))
+                    continue;
+
+                if (TryGetSkeletonBonePosition(skeleton, out position, boneIds))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryGetSkeletonBonePosition(OVRSkeleton skeleton, out Vector3 position, params OVRSkeleton.BoneId[] boneIds)
+        {
+            position = Vector3.zero;
+            if (skeleton == null || skeleton.Bones == null)
+                return false;
+
+            foreach (var requestedId in boneIds)
+            {
+                foreach (var bone in skeleton.Bones)
+                {
+                    if (bone == null || bone.Transform == null || bone.Id != requestedId)
+                        continue;
+
+                    position = bone.Transform.position;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool MatchesPrototypeHand(OVRSkeleton skeleton, OVRPlugin.Hand expectedHand)
+        {
+            var skeletonType = skeleton.GetSkeletonType();
+            return expectedHand switch
+            {
+                OVRPlugin.Hand.HandLeft => skeletonType == OVRSkeleton.SkeletonType.HandLeft ||
+                                           skeletonType == OVRSkeleton.SkeletonType.XRHandLeft,
+                OVRPlugin.Hand.HandRight => skeletonType == OVRSkeleton.SkeletonType.HandRight ||
+                                            skeletonType == OVRSkeleton.SkeletonType.XRHandRight,
+                _ => false
+            };
+        }
+
+        private bool IsUsablePrototypeHandPosition(Vector3 position)
+        {
+            var head = ResolvePrototypeHeadTransform();
+            return head == null || Vector3.Distance(position, head.position) > 0.12f;
         }
 
         private Vector3 ResolvePrototypeFireDirection(Transform spawnPoint, Vector3 wristPosition)
@@ -394,22 +514,28 @@ namespace ArcaneVR.Spell
             return null;
         }
 
-        private void FirePrototypeSpell(PoseType pose, Transform spawnPoint, Vector3 direction)
+        private void FirePrototypeSpell(PoseType pose, Vector3 originPosition, Vector3 direction)
         {
+            direction = direction.sqrMagnitude > 0.001f
+                ? direction.normalized
+                : (ResolvePrototypeHeadTransform() != null ? ResolvePrototypeHeadTransform().forward : transform.forward).normalized;
+
             var data = ResolvePrototypeSpellData(pose);
             var element = data != null ? data.element : ResolveDefaultPrototypeElement(pose);
             var statusEffect = data != null ? data.statusEffect : ResolveDefaultPrototypeStatusEffect(pose);
             var damage = data != null ? data.damage : ResolveDefaultPrototypeDamage(pose);
             var statusDuration = data != null ? data.statusDuration : ResolveDefaultPrototypeStatusDuration(pose);
-            var projectileSpeed = data != null ? data.projectileSpeed : prototypeSpellSpeed;
+            var projectileSpeed = Mathf.Max(
+                prototypeMinimumProjectileSpeed,
+                data != null ? data.projectileSpeed : prototypeSpellSpeed);
             var prefab = data != null && data.prefab != null ? data.prefab : ResolvePrototypePrefab(pose);
-            var spawnPosition = spawnPoint.position + direction * 0.08f;
+            var spawnPosition = originPosition + direction * prototypeSpawnForwardOffset;
             var rotation = Quaternion.LookRotation(direction, Vector3.up);
             var projectileObject = prefab != null
                 ? Instantiate(prefab, spawnPosition, rotation)
                 : CreatePrototypeProjectileObject(pose, element, spawnPosition, rotation);
 
-            if (prototypeSpellSpawnRoot != null)
+            if (prototypeSpellSpawnRoot != null && prototypeSpellSpawnRoot.parent == null)
                 projectileObject.transform.SetParent(prototypeSpellSpawnRoot, true);
 
             var projectile = projectileObject.GetComponent<SpellProjectile>();
@@ -707,7 +833,12 @@ namespace ArcaneVR.Spell
 
         private static Material CreateDebugMaterial(Color color)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard") ?? Shader.Find("Unlit/Color");
+            var shader = Shader.Find("Universal Render Pipeline/Unlit") ??
+                         Shader.Find("Universal Render Pipeline/Lit") ??
+                         Shader.Find("Sprites/Default") ??
+                         Shader.Find("Unlit/Color") ??
+                         Shader.Find("Hidden/Internal-Colored") ??
+                         Shader.Find("Standard");
             var material = new Material(shader);
             if (material.HasProperty("_BaseColor"))
                 material.SetColor("_BaseColor", color);

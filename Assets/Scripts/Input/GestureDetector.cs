@@ -1580,15 +1580,85 @@ namespace ArcaneVR.Input
             if (rightOvrHand != null && rightOvrHand.GetHand() != OVRPlugin.Hand.HandRight)
                 rightOvrHand = null;
 
-            var hands = FindObjectsByType<OVRHand>(FindObjectsInactive.Include);
-            foreach (var hand in hands)
+            var bestLeft = FindBestOvrHand(true);
+            var bestRight = FindBestOvrHand(false);
+
+            if (bestLeft != null && (leftOvrHand == null || ScoreOvrHand(bestLeft, true) > ScoreOvrHand(leftOvrHand, true) + 20))
+                leftOvrHand = bestLeft;
+
+            if (bestRight != null && (rightOvrHand == null || ScoreOvrHand(bestRight, false) > ScoreOvrHand(rightOvrHand, false) + 20))
+                rightOvrHand = bestRight;
+        }
+
+        private static OVRHand FindBestOvrHand(bool isLeft)
+        {
+            var expected = isLeft ? OVRPlugin.Hand.HandLeft : OVRPlugin.Hand.HandRight;
+            OVRHand bestHand = null;
+            var bestScore = int.MinValue;
+
+            foreach (var hand in FindObjectsByType<OVRHand>(FindObjectsInactive.Include))
             {
-                var handType = hand.GetHand();
-                if (handType == OVRPlugin.Hand.HandLeft && leftOvrHand == null)
-                    leftOvrHand = hand;
-                else if (handType == OVRPlugin.Hand.HandRight && rightOvrHand == null)
-                    rightOvrHand = hand;
+                if (hand.GetHand() != expected)
+                    continue;
+
+                var score = ScoreOvrHand(hand, isLeft);
+                if (score <= bestScore)
+                    continue;
+
+                bestHand = hand;
+                bestScore = score;
             }
+
+            return bestHand;
+        }
+
+        private static int ScoreOvrHand(OVRHand hand, bool isLeft)
+        {
+            if (hand == null)
+                return int.MinValue;
+
+            var score = 0;
+            if (hand.gameObject.activeInHierarchy)
+                score += 100;
+            if (hand.enabled)
+                score += 20;
+            if (hand.IsTracked)
+                score += 30;
+            if (hand.HandConfidence == OVRHand.TrackingConfidence.High)
+                score += 30;
+            if (hand.IsPointerPoseValid)
+                score += 10;
+            if (hand.GetComponentInChildren<OVRSkeleton>(true) != null)
+                score += 10;
+            if (hand.GetComponentInChildren<OVRMeshRenderer>(true) != null)
+                score += 10;
+
+            var path = GetHierarchyPath(hand.transform);
+            if (path.Contains("Detached"))
+                score -= 80;
+            if (path.Contains("Controller"))
+                score -= 25;
+            if (path.Contains(isLeft ? "LeftHandAnchor/" : "RightHandAnchor/"))
+                score += 30;
+            if (path.Contains(isLeft ? "RightHand" : "LeftHand"))
+                score -= 120;
+
+            return score;
+        }
+
+        private static string GetHierarchyPath(Transform transform)
+        {
+            if (transform == null)
+                return string.Empty;
+
+            var path = transform.name;
+            while (transform.parent != null)
+            {
+                transform = transform.parent;
+                path = $"{transform.name}/{path}";
+            }
+
+            return path;
         }
     }
 }
