@@ -15,6 +15,7 @@ namespace ArcaneVR.Input
 
         [SerializeField] private GestureDetector gestureDetector;
         [SerializeField] private SpellCaster spellCaster;
+        [SerializeField] private HandPullMovementController handPullMovement;
         [SerializeField] private bool attachToHead = true;
         [SerializeField] private Vector3 localRootPosition = new Vector3(0f, 0f, 2.65f);
         [SerializeField] private Vector3 fallbackWorldPosition = new Vector3(0f, 1.45f, 3.1f);
@@ -29,6 +30,7 @@ namespace ArcaneVR.Input
         private readonly TextMesh[] handStatusTexts = new TextMesh[2];
         private readonly TextMesh[] prototypeDebugTexts = new TextMesh[2];
         private TextMesh spellCasterText;
+        private TextMesh movementText;
         private Transform overlayRoot;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -61,6 +63,9 @@ namespace ArcaneVR.Input
             gestureDetector = detector;
             if (spellCaster == null)
                 spellCaster = FindAnyObjectByType<SpellCaster>();
+
+            if (handPullMovement == null)
+                handPullMovement = FindAnyObjectByType<HandPullMovementController>();
         }
 
         private void Awake()
@@ -70,6 +75,9 @@ namespace ArcaneVR.Input
 
             if (spellCaster == null)
                 spellCaster = FindAnyObjectByType<SpellCaster>();
+
+            if (handPullMovement == null)
+                handPullMovement = FindAnyObjectByType<HandPullMovementController>();
 
             BuildOverlay();
         }
@@ -81,6 +89,9 @@ namespace ArcaneVR.Input
 
             if (spellCaster == null)
                 spellCaster = FindAnyObjectByType<SpellCaster>();
+
+            if (handPullMovement == null)
+                handPullMovement = FindAnyObjectByType<HandPullMovementController>();
 
             AttachOverlay();
             RefreshStatuses();
@@ -97,6 +108,8 @@ namespace ArcaneVR.Input
             BuildHandTextBlock(RightHand, "RIGHT", 0.18f, TextAnchor.MiddleLeft);
             if (showCastDebug)
                 spellCasterText = CreateText("CAST: waiting", new Vector3(-0.78f, -0.52f, 0f), TextAnchor.MiddleLeft, Color.gray);
+
+            movementText = CreateText("MOVE: waiting", new Vector3(-0.78f, -0.52f, 0f), TextAnchor.MiddleLeft, Color.gray);
         }
 
         private void BuildHandTextBlock(int handIndex, string title, float x, TextAnchor anchor)
@@ -190,6 +203,23 @@ namespace ArcaneVR.Input
                 spellCasterText.color = spellCaster != null && spellCaster.PrototypeDebugStatus.Contains("fired")
                     ? Color.green
                     : Color.white;
+            }
+
+            if (movementText != null)
+            {
+                if (handPullMovement == null)
+                {
+                    movementText.text = "MOVE: missing";
+                    movementText.color = Color.red;
+                }
+                else
+                {
+                    var delta = handPullMovement.LastMoveDelta;
+                    movementText.text = handPullMovement.IsPulling
+                        ? $"MOVE: {handPullMovement.ActiveHandName} ({delta.x:F2},{delta.z:F2})"
+                        : $"MOVE: {handPullMovement.LastDebugMessage}";
+                    movementText.color = handPullMovement.IsPulling ? Color.green : Color.gray;
+                }
             }
         }
 

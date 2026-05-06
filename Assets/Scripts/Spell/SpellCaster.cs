@@ -28,6 +28,7 @@ namespace ArcaneVR.Spell
         [SerializeField] private GestureEventRouter gestureRouter;
         [SerializeField] private OVRHand prototypeHand;
         [SerializeField] private Transform prototypeSpawnPoint;
+        [SerializeField] private Transform prototypeTrackingSpaceRoot;
         [SerializeField] private Transform prototypeSpellSpawnRoot;
         [SerializeField] private float prototypeThrustThreshold = 0.65f;
         [SerializeField] private float prototypeSpellSpeed = 12f;
@@ -235,20 +236,21 @@ namespace ArcaneVR.Spell
                 return;
             }
 
-            var wristPosition = ResolvePrototypeCastOrigin(spawnPoint);
+            var castOrigin = ResolvePrototypeCastOrigin(spawnPoint);
+            var thrustPosition = ResolvePrototypeThrustTrackingPosition(spawnPoint, castOrigin);
             if (!hasPreviousPrototypeWristPosition)
             {
-                previousPrototypeWristPosition = wristPosition;
+                previousPrototypeWristPosition = thrustPosition;
                 hasPreviousPrototypeWristPosition = true;
                 prototypeDebugStatus = $"CAST pose:{currentPrototypePose} speed:0.00/{prototypeThrustThreshold:0.00} init";
                 return;
             }
 
-            var wristVelocity = (wristPosition - previousPrototypeWristPosition) / Time.deltaTime;
-            previousPrototypeWristPosition = wristPosition;
+            var wristVelocity = (thrustPosition - previousPrototypeWristPosition) / Time.deltaTime;
+            previousPrototypeWristPosition = thrustPosition;
 
-            var fireDirection = ResolvePrototypeFireDirection(spawnPoint, wristPosition);
-            var forwardSpeed = ResolvePrototypeForwardSpeed(spawnPoint, wristPosition, wristVelocity);
+            var fireDirection = ResolvePrototypeFireDirection(spawnPoint, castOrigin);
+            var forwardSpeed = ResolvePrototypeForwardSpeed(spawnPoint, thrustPosition, wristVelocity);
             prototypeLastForwardSpeed = forwardSpeed;
             prototypeDebugStatus =
                 $"CAST pose:{currentPrototypePose} speed:{forwardSpeed:0.00}/{prototypeThrustThreshold:0.00} aim:{prototypeLastHandForwardSpeed:0.00} head:{prototypeLastHeadForwardSpeed:0.00} away:{prototypeLastAwayFromHeadSpeed:0.00} cd:{Mathf.Max(0f, prototypeCooldownTimer):0.00}";
@@ -264,7 +266,7 @@ namespace ArcaneVR.Spell
                 return;
             }
 
-            FirePrototypeSpell(currentPrototypePose, wristPosition, fireDirection);
+            FirePrototypeSpell(currentPrototypePose, castOrigin, fireDirection);
             prototypeCooldownTimer = prototypeCooldown;
             prototypeReadyForThrust = false;
         }
@@ -339,10 +341,14 @@ namespace ArcaneVR.Spell
 
         private Vector3 ResolvePrototypeCastOrigin(Transform fallback)
         {
-            if (TryGetPrototypePointerPose(out var pointerPosition) &&
-                IsUsablePrototypeHandPosition(pointerPosition))
+            if (TryGetPrototypeBonePosition(
+                    out var palmPosition,
+                    OVRSkeleton.BoneId.XRHand_Palm,
+                    OVRSkeleton.BoneId.XRHand_Wrist,
+                    OVRSkeleton.BoneId.Hand_WristRoot) &&
+                IsUsablePrototypeHandPosition(palmPosition))
             {
-                return pointerPosition;
+                return palmPosition;
             }
 
             if (TryGetPrototypeBonePosition(
@@ -354,6 +360,20 @@ namespace ArcaneVR.Spell
                 return indexTipPosition;
             }
 
+            if (fallback != null)
+                return fallback.position;
+
+            if (TryGetPrototypePointerPose(out var pointerPosition) &&
+                IsUsablePrototypeHandPosition(pointerPosition))
+            {
+                return pointerPosition;
+            }
+
+            return transform.position;
+        }
+
+        private Vector3 ResolvePrototypeThrustPosition(Transform fallback, Vector3 castOrigin)
+        {
             if (TryGetPrototypeBonePosition(
                     out var palmPosition,
                     OVRSkeleton.BoneId.XRHand_Palm,
@@ -367,7 +387,20 @@ namespace ArcaneVR.Spell
             if (fallback != null)
                 return fallback.position;
 
-            return transform.position;
+            if (TryGetPrototypePointerPose(out var pointerPosition) &&
+                IsUsablePrototypeHandPosition(pointerPosition))
+            {
+                return pointerPosition;
+            }
+
+            return castOrigin;
+        }
+
+        private Vector3 ResolvePrototypeThrustTrackingPosition(Transform fallback, Vector3 castOrigin)
+        {
+            var worldPosition = ResolvePrototypeThrustPosition(fallback, castOrigin);
+            var trackingSpace = ResolvePrototypeTrackingSpaceRoot();
+            return trackingSpace != null ? trackingSpace.InverseTransformPoint(worldPosition) : worldPosition;
         }
 
         private bool TryGetPrototypePointerPose(out Vector3 position)
@@ -479,25 +512,109 @@ namespace ArcaneVR.Spell
             return head.position + headForward * Mathf.Max(1f, prototypeAimDistance);
         }
 
-        private float ResolvePrototypeForwardSpeed(Transform spawnPoint, Vector3 wristPosition, Vector3 wristVelocity)
+        private float ResolvePrototypeForwardSpeed(Transform spawnPoint, Vector3 wristTrackingPosition, Vector3 wristTrackingVelocity)
         {
             var head = ResolvePrototypeHeadTransform();
-            var aimForward = ResolvePrototypeFireDirection(spawnPoint, wristPosition);
-            var headForward = head != null && head.forward.sqrMagnitude > 0.001f ? head.forward.normalized : transform.forward.normalized;
+            var wristWorldPosition = ToPrototypeWorldPoint(wristTrackingPosition);
+            var aimForward = ToPrototypeTrackingVector(ResolvePrototypeFireDirection(spawnPoint, wristWorldPosition));
+            var headForward = head != null && head.forward.sqrMagnitude > 0.001f
+                ? ToPrototypeTrackingVector(head.forward)
+                : ToPrototypeTrackingVector(transform.forward);
             var awayFromHead = Vector3.zero;
 
             if (head != null)
             {
-                awayFromHead = wristPosition - head.position;
+                var headTrackingPosition = ToPrototypeTrackingPoint(head.position);
+                awayFromHead = wristTrackingPosition - headTrackingPosition;
                 if (awayFromHead.sqrMagnitude > 0.001f)
                     awayFromHead.Normalize();
             }
 
-            prototypeLastHandForwardSpeed = aimForward == Vector3.zero ? 0f : Vector3.Dot(wristVelocity, aimForward);
-            prototypeLastHeadForwardSpeed = headForward == Vector3.zero ? 0f : Vector3.Dot(wristVelocity, headForward);
-            prototypeLastAwayFromHeadSpeed = awayFromHead == Vector3.zero ? 0f : Vector3.Dot(wristVelocity, awayFromHead);
+            prototypeLastHandForwardSpeed = aimForward == Vector3.zero ? 0f : Vector3.Dot(wristTrackingVelocity, aimForward);
+            prototypeLastHeadForwardSpeed = headForward == Vector3.zero ? 0f : Vector3.Dot(wristTrackingVelocity, headForward);
+            prototypeLastAwayFromHeadSpeed = awayFromHead == Vector3.zero ? 0f : Vector3.Dot(wristTrackingVelocity, awayFromHead);
 
             return Mathf.Max(prototypeLastHandForwardSpeed, prototypeLastHeadForwardSpeed, prototypeLastAwayFromHeadSpeed);
+        }
+
+        private Vector3 ToPrototypeTrackingPoint(Vector3 worldPosition)
+        {
+            var trackingSpace = ResolvePrototypeTrackingSpaceRoot();
+            return trackingSpace != null ? trackingSpace.InverseTransformPoint(worldPosition) : worldPosition;
+        }
+
+        private Vector3 ToPrototypeWorldPoint(Vector3 trackingPosition)
+        {
+            var trackingSpace = ResolvePrototypeTrackingSpaceRoot();
+            return trackingSpace != null ? trackingSpace.TransformPoint(trackingPosition) : trackingPosition;
+        }
+
+        private Vector3 ToPrototypeTrackingVector(Vector3 worldVector)
+        {
+            var trackingSpace = ResolvePrototypeTrackingSpaceRoot();
+            var trackingVector = trackingSpace != null ? trackingSpace.InverseTransformDirection(worldVector) : worldVector;
+            return trackingVector.sqrMagnitude > 0.001f ? trackingVector.normalized : Vector3.zero;
+        }
+
+        private Transform ResolvePrototypeTrackingSpaceRoot()
+        {
+            if (prototypeTrackingSpaceRoot != null)
+                return prototypeTrackingSpaceRoot;
+
+            if (prototypeHand != null)
+            {
+                var rig = prototypeHand.GetComponentInParent<OVRCameraRig>();
+                if (rig != null)
+                {
+                    rig.EnsureGameObjectIntegrity();
+                    if (rig.trackingSpace != null)
+                    {
+                        prototypeTrackingSpaceRoot = rig.trackingSpace;
+                        return prototypeTrackingSpaceRoot;
+                    }
+                }
+
+                prototypeTrackingSpaceRoot = FindPrototypeParentNamed(prototypeHand.transform, "TrackingSpace");
+                if (prototypeTrackingSpaceRoot != null)
+                    return prototypeTrackingSpaceRoot;
+            }
+
+            if (prototypeSpawnPoint != null)
+            {
+                prototypeTrackingSpaceRoot = FindPrototypeParentNamed(prototypeSpawnPoint, "TrackingSpace");
+                if (prototypeTrackingSpaceRoot != null)
+                    return prototypeTrackingSpaceRoot;
+            }
+
+            if (Camera.main != null)
+            {
+                var rig = Camera.main.GetComponentInParent<OVRCameraRig>();
+                if (rig != null)
+                {
+                    rig.EnsureGameObjectIntegrity();
+                    if (rig.trackingSpace != null)
+                    {
+                        prototypeTrackingSpaceRoot = rig.trackingSpace;
+                        return prototypeTrackingSpaceRoot;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static Transform FindPrototypeParentNamed(Transform start, string name)
+        {
+            var current = start;
+            while (current != null)
+            {
+                if (current.name == name)
+                    return current;
+
+                current = current.parent;
+            }
+
+            return null;
         }
 
         private Transform ResolvePrototypeHeadTransform()
