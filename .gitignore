@@ -128,3 +128,14 @@ InitTestScene*.unity*
 *.jks.meta
 local.properties
 
+# Unity Burst generated debug/build output
+[Bb]urstDebugInformation_DoNotShip/
+*_BurstDebugInformation_DoNotShip/
+**/*_BurstDebugInformation_DoNotShip/
+
+# Unity auto-generated cache in Assets folder
+/[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Visual Studio newer solution format
+*.slnx
+
