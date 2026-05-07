@@ -1,4 +1,5 @@
 using UnityEngine;
+using ArcaneVR.Spell;
 
 namespace ArcaneVR.UI
 {
@@ -7,6 +8,9 @@ namespace ArcaneVR.UI
     /// </summary>
     public class FeedbackManager : MonoBehaviour
     {
-        // TODO: Implement
+        public void OnSpellCast(SpellId spellId)
+        {
+            // Placeholder hook for spell feedback. 담당 UI/VFX 구현에서 실제 피드백을 연결합니다.
+        }
     }
 }

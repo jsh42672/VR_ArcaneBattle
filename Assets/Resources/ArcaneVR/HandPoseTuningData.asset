@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d80c0ada73be6a24ba2f61d7c02c2ddb, type: 3}
+  m_Name: HandPoseTuningData
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.HandPoseTuningData
+  stablePoseDuration: 0.1
+  grimoireHoldDuration: 0.3
+  pinchThreshold: 0.65
+  openThreshold: 0.25
+  okThumbIndexThreshold: 0.55
+  okTipDistance: 0.04
+  extendedDistance: 0.105
+  indexExtendedDistance: 0.11
+  curledDistance: 0.025
+  relaxedDistance: 0.1
+  combineDistance: 0.16
+  pushVelocity: 0.25
