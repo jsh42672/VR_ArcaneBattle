@@ -13,8 +13,16 @@ namespace ArcaneVR.Input
             Right
         }
 
+        private enum PullHandMode
+        {
+            LeftOnly,
+            RightOnly,
+            Either
+        }
+
         [Header("Rig References")]
         [SerializeField] private Transform xrOriginRoot;
+        [SerializeField] private Transform movementRoot;
         [SerializeField] private Transform headTransform;
 
         [Header("XR Hands")]
@@ -26,12 +34,19 @@ namespace ArcaneVR.Input
         [SerializeField] private int requiredClosedFingerCount = 3;
 
         [Header("Pull Movement")]
-        [SerializeField] private float pullMultiplier = 1.2f;
-        [SerializeField] private float maxMoveSpeed = 3.0f;
+        [SerializeField] private PullHandMode pullHandMode = PullHandMode.LeftOnly;
+        [SerializeField] private float pullMultiplier = 2.4f;
+        [SerializeField] private float maxMoveSpeed = 6.0f;
         [SerializeField] private float handMoveDeadZone = 0.003f;
         [SerializeField] private bool horizontalOnly = true;
         [SerializeField] private bool requirePullTowardBody = false;
         [SerializeField] private float towardBodyDotThreshold = 0.25f;
+
+        [Header("Player Height")]
+        [SerializeField] private bool autoCorrectLowHeadHeight = true;
+        [SerializeField] private float heightCorrectionDelay = 0.75f;
+        [SerializeField] private float minimumHeadHeight = 0.85f;
+        [SerializeField] private float fallbackHeadHeight = 1.45f;
 
         [Header("Debug")]
         [SerializeField] private bool showDebugLog = true;
@@ -40,10 +55,11 @@ namespace ArcaneVR.Input
         private XRHandSubsystem handSubsystem;
 
         private PullHand activeHand = PullHand.None;
-        private Vector3 previousHandWorldPosition;
+        private Vector3 previousHandTrackingPosition;
         private Vector3 lastMoveDelta;
         private string lastDebugMessage = "Idle";
         private float nextSubsystemRefreshTime;
+        private bool heightCorrectionApplied;
 
         public bool IsPulling => activeHand != PullHand.None;
         public string ActiveHandName => activeHand.ToString();
@@ -57,6 +73,14 @@ namespace ArcaneVR.Input
         public bool HasHandSubsystem => handSubsystem != null;
         public bool IsHandSubsystemRunning => handSubsystem != null && handSubsystem.running;
 
+        public void ConfigurePrototype(Transform rigRoot, Transform head)
+        {
+            xrOriginRoot = rigRoot != null ? rigRoot : xrOriginRoot;
+            headTransform = head != null ? head : headTransform;
+            ResolveRigReferences();
+            RefreshHandSubsystem();
+        }
+
         private void Awake()
         {
             ResolveRigReferences();
@@ -65,7 +89,7 @@ namespace ArcaneVR.Input
 
         private void Update()
         {
-            if (xrOriginRoot == null || headTransform == null)
+            if (xrOriginRoot == null || movementRoot == null || headTransform == null)
             {
                 ResolveRigReferences();
             }
@@ -83,6 +107,7 @@ namespace ArcaneVR.Input
                 return;
             }
 
+            ApplyHeightCorrectionIfNeeded();
             UpdateHandPullMovement();
         }
 
@@ -94,11 +119,18 @@ namespace ArcaneVR.Input
 
                 if (origin == null)
                 {
+                    origin = GameObject.Find("OVRCameraRig");
+                }
+
+                if (origin == null)
+                {
                     origin = GameObject.Find("XROriginCameraRig");
                 }
 
                 xrOriginRoot = origin != null ? origin.transform : transform;
             }
+
+            movementRoot = ResolveMovementRoot(xrOriginRoot);
 
             if (headTransform == null)
             {
@@ -114,6 +146,37 @@ namespace ArcaneVR.Input
                     headTransform = centerEye != null ? centerEye : transform;
                 }
             }
+        }
+
+        private Transform ResolveMovementRoot(Transform rigRoot)
+        {
+            if (movementRoot != null)
+            {
+                return movementRoot;
+            }
+
+            if (rigRoot == null)
+            {
+                return transform;
+            }
+
+            OVRCameraRig ovrCameraRig = rigRoot.GetComponent<OVRCameraRig>();
+            if (ovrCameraRig == null)
+            {
+                ovrCameraRig = rigRoot.GetComponentInChildren<OVRCameraRig>(true);
+            }
+
+            if (ovrCameraRig != null)
+            {
+                ovrCameraRig.EnsureGameObjectIntegrity();
+                if (ovrCameraRig.trackingSpace != null)
+                {
+                    return ovrCameraRig.trackingSpace;
+                }
+            }
+
+            Transform trackingSpace = rigRoot.Find("TrackingSpace");
+            return trackingSpace != null ? trackingSpace : rigRoot;
         }
 
         private void RefreshHandSubsystem()
@@ -155,13 +218,13 @@ namespace ArcaneVR.Input
 
             if (activeHand == PullHand.None)
             {
-                if (rightFist)
-                {
-                    BeginPull(PullHand.Right);
-                }
-                else if (leftFist)
+                if (leftFist && IsPullHandAllowed(PullHand.Left))
                 {
                     BeginPull(PullHand.Left);
+                }
+                else if (rightFist && IsPullHandAllowed(PullHand.Right))
+                {
+                    BeginPull(PullHand.Right);
                 }
 
                 return;
@@ -184,13 +247,13 @@ namespace ArcaneVR.Input
 
         private void BeginPull(PullHand hand)
         {
-            if (!TryGetPalmWorldPose(hand, out Pose palmPose))
+            if (!TryGetPalmTrackingPose(hand, out Pose palmPose))
             {
                 return;
             }
 
             activeHand = hand;
-            previousHandWorldPosition = palmPose.position;
+            previousHandTrackingPosition = palmPose.position;
             lastMoveDelta = Vector3.zero;
             lastDebugMessage = $"Pull Start: {hand}";
 
@@ -202,14 +265,15 @@ namespace ArcaneVR.Input
 
         private void ContinuePull()
         {
-            if (!TryGetPalmWorldPose(activeHand, out Pose palmPose))
+            if (!TryGetPalmTrackingPose(activeHand, out Pose palmPose))
             {
                 EndPull();
                 return;
             }
 
-            Vector3 currentHandWorldPosition = palmPose.position;
-            Vector3 handWorldDelta = currentHandWorldPosition - previousHandWorldPosition;
+            Vector3 currentHandTrackingPosition = palmPose.position;
+            Vector3 handTrackingDelta = currentHandTrackingPosition - previousHandTrackingPosition;
+            Vector3 handWorldDelta = ToWorldVector(handTrackingDelta);
 
             if (horizontalOnly)
             {
@@ -219,15 +283,16 @@ namespace ArcaneVR.Input
             if (handWorldDelta.magnitude < handMoveDeadZone)
             {
                 lastMoveDelta = Vector3.zero;
-                previousHandWorldPosition = currentHandWorldPosition;
+                previousHandTrackingPosition = currentHandTrackingPosition;
                 return;
             }
 
+            Vector3 currentHandWorldPosition = ToWorldPoint(currentHandTrackingPosition);
             if (requirePullTowardBody && !IsPullingTowardBody(currentHandWorldPosition, handWorldDelta))
             {
                 lastMoveDelta = Vector3.zero;
                 lastDebugMessage = $"Not pulling toward body: {activeHand}";
-                previousHandWorldPosition = currentHandWorldPosition;
+                previousHandTrackingPosition = currentHandTrackingPosition;
                 return;
             }
 
@@ -241,11 +306,12 @@ namespace ArcaneVR.Input
 
             if (xrOriginRoot != null)
             {
-                xrOriginRoot.position += moveDelta;
+                Transform root = movementRoot != null ? movementRoot : xrOriginRoot;
+                root.position += moveDelta;
             }
 
             lastMoveDelta = moveDelta;
-            previousHandWorldPosition = currentHandWorldPosition;
+            previousHandTrackingPosition = currentHandTrackingPosition;
 
             lastDebugMessage =
                 $"Pulling: {activeHand}, Move=({moveDelta.x:F3}, {moveDelta.y:F3}, {moveDelta.z:F3})";
@@ -262,6 +328,58 @@ namespace ArcaneVR.Input
             }
 
             activeHand = PullHand.None;
+        }
+
+        private void ApplyHeightCorrectionIfNeeded()
+        {
+            if (!autoCorrectLowHeadHeight || heightCorrectionApplied)
+            {
+                return;
+            }
+
+            if (Time.timeSinceLevelLoad < heightCorrectionDelay)
+            {
+                return;
+            }
+
+            if (movementRoot == null || headTransform == null)
+            {
+                return;
+            }
+
+            float headY = headTransform.position.y;
+            if (headY >= minimumHeadHeight)
+            {
+                heightCorrectionApplied = true;
+                return;
+            }
+
+            float lift = fallbackHeadHeight - headY;
+            if (lift <= 0f)
+            {
+                heightCorrectionApplied = true;
+                return;
+            }
+
+            movementRoot.position += Vector3.up * lift;
+            heightCorrectionApplied = true;
+            lastDebugMessage = $"Height corrected +{lift:F2}m";
+
+            if (showDebugLog)
+            {
+                Debug.Log($"[HandPullMovement] {lastDebugMessage}");
+            }
+        }
+
+        private bool IsPullHandAllowed(PullHand hand)
+        {
+            if (pullHandMode == PullHandMode.Either)
+            {
+                return true;
+            }
+
+            return (pullHandMode == PullHandMode.LeftOnly && hand == PullHand.Left) ||
+                   (pullHandMode == PullHandMode.RightOnly && hand == PullHand.Right);
         }
 
         private bool IsPullingTowardBody(Vector3 handWorldPosition, Vector3 handWorldDelta)
@@ -312,9 +430,9 @@ namespace ArcaneVR.Input
                 return false;
             }
 
-            if (!TryGetJointWorldPose(xrHand, XRHandJointID.Palm, out Pose palmPose))
+            if (!TryGetJointTrackingPose(xrHand, XRHandJointID.Palm, out Pose palmPose))
             {
-                if (!TryGetRootWorldPose(xrHand, out palmPose))
+                if (!TryGetRootTrackingPose(xrHand, out palmPose))
                 {
                     return false;
                 }
@@ -345,18 +463,18 @@ namespace ArcaneVR.Input
             return closedFingerCount >= requiredClosedFingerCount;
         }
 
-        private bool IsFingerClosed(XRHand hand, XRHandJointID fingerTipId, Vector3 palmWorldPosition)
+        private bool IsFingerClosed(XRHand hand, XRHandJointID fingerTipId, Vector3 palmTrackingPosition)
         {
-            if (!TryGetJointWorldPose(hand, fingerTipId, out Pose fingerTipPose))
+            if (!TryGetJointTrackingPose(hand, fingerTipId, out Pose fingerTipPose))
             {
                 return false;
             }
 
-            float distance = Vector3.Distance(fingerTipPose.position, palmWorldPosition);
+            float distance = Vector3.Distance(fingerTipPose.position, palmTrackingPosition);
             return distance <= fingerTipToPalmThreshold;
         }
 
-        private bool TryGetPalmWorldPose(PullHand hand, out Pose palmPose)
+        private bool TryGetPalmTrackingPose(PullHand hand, out Pose palmPose)
         {
             palmPose = Pose.identity;
 
@@ -372,44 +490,50 @@ namespace ArcaneVR.Input
                 return false;
             }
 
-            if (TryGetJointWorldPose(xrHand, XRHandJointID.Palm, out palmPose))
+            if (TryGetJointTrackingPose(xrHand, XRHandJointID.Palm, out palmPose))
             {
                 return true;
             }
 
-            return TryGetRootWorldPose(xrHand, out palmPose);
+            return TryGetRootTrackingPose(xrHand, out palmPose);
         }
 
-        private bool TryGetJointWorldPose(XRHand hand, XRHandJointID jointId, out Pose worldPose)
+        private bool TryGetJointTrackingPose(XRHand hand, XRHandJointID jointId, out Pose trackingPose)
         {
             XRHandJoint joint = hand.GetJoint(jointId);
 
             if (!joint.TryGetPose(out Pose localPose))
             {
-                worldPose = Pose.identity;
+                trackingPose = Pose.identity;
                 return false;
             }
 
-            worldPose = ToWorldPose(localPose.position, localPose.rotation);
+            trackingPose = localPose;
             return true;
         }
 
-        private bool TryGetRootWorldPose(XRHand hand, out Pose worldPose)
+        private bool TryGetRootTrackingPose(XRHand hand, out Pose trackingPose)
         {
             if (!hand.isTracked)
             {
-                worldPose = Pose.identity;
+                trackingPose = Pose.identity;
                 return false;
             }
 
-            worldPose = ToWorldPose(hand.rootPose.position, hand.rootPose.rotation);
+            trackingPose = hand.rootPose;
             return true;
         }
 
-        private Pose ToWorldPose(Vector3 localPosition, Quaternion localRotation)
+        private Vector3 ToWorldPoint(Vector3 localPosition)
         {
-            Transform origin = xrOriginRoot != null ? xrOriginRoot : transform;
-            return new Pose(origin.TransformPoint(localPosition), origin.rotation * localRotation);
+            Transform origin = movementRoot != null ? movementRoot : xrOriginRoot != null ? xrOriginRoot : transform;
+            return origin.TransformPoint(localPosition);
+        }
+
+        private Vector3 ToWorldVector(Vector3 localVector)
+        {
+            Transform origin = movementRoot != null ? movementRoot : xrOriginRoot != null ? xrOriginRoot : transform;
+            return origin.TransformVector(localVector);
         }
 
         private XRHand GetXRHand(PullHand hand)

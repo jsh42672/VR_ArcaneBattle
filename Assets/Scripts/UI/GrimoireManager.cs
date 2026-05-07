@@ -11,6 +11,24 @@ namespace ArcaneVR.UI
         public event Action OnGrimoireOpen;
         public event Action OnGrimoireClose;
 
-        // TODO: Implement
+        public bool IsOpen { get; private set; }
+
+        public void Open()
+        {
+            if (IsOpen)
+                return;
+
+            IsOpen = true;
+            OnGrimoireOpen?.Invoke();
+        }
+
+        public void Close()
+        {
+            if (!IsOpen)
+                return;
+
+            IsOpen = false;
+            OnGrimoireClose?.Invoke();
+        }
     }
 }
