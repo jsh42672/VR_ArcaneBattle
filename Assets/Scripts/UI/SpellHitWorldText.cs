@@ -48,6 +48,17 @@ namespace ArcaneVR.UI
             textMesh.color = GetElementColor(element);
         }
 
+        public void ShowHit(SpellHitData hitData)
+        {
+            if (hitData == null)
+                return;
+
+            EnsureTextMesh();
+            textMesh.text =
+                $"Hit: {hitData.element} | {hitData.statusEffect} | DMG: {hitData.damage:0.#} | MAG: {hitData.statusMagnitude:0.##}";
+            textMesh.color = GetElementColor(hitData.element);
+        }
+
         private void SetIdleText()
         {
             if (textMesh == null)

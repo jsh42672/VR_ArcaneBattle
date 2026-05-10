@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnitySceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace ArcaneVR.Scene
 {
@@ -15,6 +16,32 @@ namespace ArcaneVR.Scene
     {
         public event Action<SceneType> OnSceneLoaded;
 
-        // TODO: Implement
+        public SceneType CurrentSceneType { get; private set; } = SceneType.Unknown;
+
+        private void OnEnable()
+        {
+            UnitySceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            UnitySceneManager.sceneLoaded -= HandleSceneLoaded;
+        }
+
+        public void NotifyCurrentSceneLoaded()
+        {
+            SetCurrentScene(SceneType.Unknown);
+        }
+
+        private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            SetCurrentScene(SceneType.Unknown);
+        }
+
+        private void SetCurrentScene(SceneType sceneType)
+        {
+            CurrentSceneType = sceneType;
+            OnSceneLoaded?.Invoke(CurrentSceneType);
+        }
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using ArcaneVR.Core;
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Hands;
@@ -23,42 +24,77 @@ public class ArcaneTestHub : MonoBehaviour
     Material m_TargetHitMaterial;
 
     float m_NextFireTime;
+    float m_NextHudRefreshTime;
+    float m_NextSubsystemRefreshTime;
     float m_LastHitTime = -99f;
     int m_HitCount;
     bool m_RightTriggerWasPressed;
     bool m_RightPrimaryWasPressed;
     bool m_RightPinchWasPressed;
 
+    [Header("Legacy Test Hub")]
+    [SerializeField] bool m_AllowLegacyRuntimeObjects;
+    [SerializeField] bool m_EnableLegacyHud;
+    [SerializeField] bool m_EnableLegacyProjectileFire;
+    [SerializeField] bool m_EnableLegacyTarget;
+    [SerializeField] float m_HudRefreshInterval = 0.1f;
+    [SerializeField] float m_SubsystemRefreshInterval = 0.5f;
+
     void Awake()
     {
+        if (!m_AllowLegacyRuntimeObjects)
+            DisableLegacyRuntimeObjects();
+
         m_XrOrigin = FindXrOrigin();
         m_MainCamera = Camera.main;
-        CreateMaterials();
-        CreateHud();
-        CreateTarget();
+
+        if (m_EnableLegacyHud || m_EnableLegacyProjectileFire || m_EnableLegacyTarget)
+            CreateMaterials();
+
+        if (m_EnableLegacyHud)
+            CreateHud();
+
+        if (m_EnableLegacyTarget)
+            CreateTarget();
     }
 
     void Update()
     {
+        if (!m_AllowLegacyRuntimeObjects)
+            DisableLegacyRuntimeObjects();
+
         if (m_XrOrigin == null)
             m_XrOrigin = FindXrOrigin();
 
         if (m_MainCamera == null)
             m_MainCamera = Camera.main;
 
-        RefreshHandSubsystem();
-        HandleFireInput();
-        UpdateHud();
+        if (m_EnableLegacyProjectileFire && Time.unscaledTime >= m_NextSubsystemRefreshTime)
+        {
+            m_NextSubsystemRefreshTime = Time.unscaledTime + Mathf.Max(0.1f, m_SubsystemRefreshInterval);
+            RefreshHandSubsystem();
+        }
+
+        if (m_EnableLegacyProjectileFire)
+            HandleFireInput();
+
+        if (m_EnableLegacyHud && Time.unscaledTime >= m_NextHudRefreshTime)
+        {
+            m_NextHudRefreshTime = Time.unscaledTime + Mathf.Max(0.05f, m_HudRefreshInterval);
+            UpdateHud();
+        }
     }
 
     Transform FindXrOrigin()
     {
-        var origin = GameObject.Find("XR Origin");
-        if (origin != null)
-            return origin.transform;
+        return ArcanePlayerRigResolver.FindPlayerRigTransform() ?? transform;
+    }
 
-        origin = GameObject.Find("XROriginCameraRig");
-        return origin != null ? origin.transform : transform;
+    void DisableLegacyRuntimeObjects()
+    {
+        m_EnableLegacyHud = false;
+        m_EnableLegacyProjectileFire = false;
+        m_EnableLegacyTarget = false;
     }
 
     void CreateMaterials()
@@ -187,7 +223,7 @@ public class ArcaneTestHub : MonoBehaviour
 
     bool SpaceWasPressed()
     {
-#if ENABLE_INPUT_SYSTEM
+#if UNITY_EDITOR && ENABLE_INPUT_SYSTEM
         var keyboard = UnityEngine.InputSystem.Keyboard.current;
         return keyboard != null && keyboard.spaceKey.wasPressedThisFrame;
 #else
@@ -212,6 +248,9 @@ public class ArcaneTestHub : MonoBehaviour
 
     bool Fire(Vector3 position, Vector3 direction, string source)
     {
+        if (!m_EnableLegacyProjectileFire)
+            return false;
+
         if (Time.time < m_NextFireTime)
             return false;
 
@@ -355,7 +394,7 @@ public class ArcaneTestHub : MonoBehaviour
         m_HudBuilder.AppendLine("ARCANE TEST HUB");
         m_HudBuilder.AppendLine("Right trigger/A: bolt");
         m_HudBuilder.AppendLine("Right hand pinch: bolt");
-        m_HudBuilder.AppendLine("Y/F1: diagnostics");
+        m_HudBuilder.AppendLine(Application.isEditor ? "Y/F1: diagnostics" : "Y: diagnostics");
         m_HudBuilder.AppendLine();
         m_HudBuilder.Append("Cooldown: ");
         m_HudBuilder.AppendLine(cooldown <= 0f ? "READY" : cooldown.ToString("0.0"));

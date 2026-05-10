@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#111318"/>
+  <text x="600" y="62" text-anchor="middle" fill="#f4f7fb" font-family="Arial, sans-serif" font-size="34" font-weight="700">
+    Triangle Cast Mode Gesture - current interpretation
+  </text>
+  <text x="600" y="105" text-anchor="middle" fill="#aeb8c8" font-family="Arial, sans-serif" font-size="22">
+    Back of both hands faces the player/HMD. Index tips touch each other. Thumb tips touch each other. Center remains open.
+  </text>
+
+  <defs>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .label { font-family: Arial, sans-serif; fill: #f4f7fb; font-size: 22px; font-weight: 700; }
+      .small { font-family: Arial, sans-serif; fill: #aeb8c8; font-size: 18px; }
+      .hand { fill: #d7b28d; stroke: #f5d2ad; stroke-width: 5; stroke-linejoin: round; stroke-linecap: round; }
+      .nail { fill: #f2e4d8; stroke: #d0b8a2; stroke-width: 2; }
+      .joint { fill: #7de3ff; stroke: #ffffff; stroke-width: 3; filter: url(#glow); }
+      .line { stroke: #7de3ff; stroke-width: 8; stroke-linecap: round; filter: url(#glow); }
+      .warn { fill: #ffcc66; font-family: Arial, sans-serif; font-size: 18px; }
+    </style>
+  </defs>
+
+  <g transform="translate(0,10)">
+    <path class="line" d="M496 210 L704 210"/>
+    <path class="line" d="M520 478 L680 478"/>
+    <path class="line" d="M496 210 L520 478"/>
+    <path class="line" d="M704 210 L680 478"/>
+    <path d="M516 235 L684 235 L660 452 L540 452 Z" fill="#7de3ff" opacity="0.12"/>
+
+    <circle class="joint" cx="496" cy="210" r="16"/>
+    <circle class="joint" cx="704" cy="210" r="16"/>
+    <circle class="joint" cx="520" cy="478" r="16"/>
+    <circle class="joint" cx="680" cy="478" r="16"/>
+
+    <text x="600" y="344" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="28" font-weight="700">
+      open triangular space
+    </text>
+  </g>
+
+  <!-- Left hand, back visible -->
+  <g transform="translate(0,0)">
+    <path class="hand" d="M430 555
+      C392 548 365 527 350 493
+      L315 408
+      C307 388 318 373 337 382
+      L374 445
+      L356 281
+      C352 253 371 237 389 260
+      L430 410
+      L456 204
+      C461 176 484 170 496 199
+      L512 411
+      L538 276
+      C544 249 566 244 575 273
+      L573 426
+      L610 337
+      C622 312 644 313 648 342
+      L613 490
+      C594 545 528 572 430 555 Z"/>
+    <ellipse class="nail" cx="474" cy="219" rx="14" ry="23" transform="rotate(8 474 219)"/>
+    <ellipse class="nail" cx="381" cy="284" rx="13" ry="21" transform="rotate(-12 381 284)"/>
+    <ellipse class="nail" cx="560" cy="294" rx="13" ry="21" transform="rotate(6 560 294)"/>
+    <ellipse class="nail" cx="625" cy="354" rx="12" ry="20" transform="rotate(18 625 354)"/>
+    <text class="label" x="285" y="620">Left hand</text>
+    <text class="small" x="285" y="648">back/nails visible</text>
+  </g>
+
+  <!-- Right hand, back visible -->
+  <g transform="translate(1200,0) scale(-1,1)">
+    <path class="hand" d="M430 555
+      C392 548 365 527 350 493
+      L315 408
+      C307 388 318 373 337 382
+      L374 445
+      L356 281
+      C352 253 371 237 389 260
+      L430 410
+      L456 204
+      C461 176 484 170 496 199
+      L512 411
+      L538 276
+      C544 249 566 244 575 273
+      L573 426
+      L610 337
+      C622 312 644 313 648 342
+      L613 490
+      C594 545 528 572 430 555 Z"/>
+    <ellipse class="nail" cx="474" cy="219" rx="14" ry="23" transform="rotate(8 474 219)"/>
+    <ellipse class="nail" cx="381" cy="284" rx="13" ry="21" transform="rotate(-12 381 284)"/>
+    <ellipse class="nail" cx="560" cy="294" rx="13" ry="21" transform="rotate(6 560 294)"/>
+    <ellipse class="nail" cx="625" cy="354" rx="12" ry="20" transform="rotate(18 625 354)"/>
+  </g>
+
+  <text class="label" x="915" y="620">Right hand</text>
+  <text class="small" x="915" y="648">back/nails visible</text>
+
+  <g>
+    <text class="label" x="82" y="154">Detection points</text>
+    <text class="small" x="82" y="188">1. left index tip near right index tip</text>
+    <text class="small" x="82" y="216">2. left thumb tip near right thumb tip</text>
+    <text class="small" x="82" y="244">3. each hand's index-thumb gap stays open</text>
+    <text class="small" x="82" y="272">4. middle/ring/little fingers mostly open</text>
+  </g>
+
+  <text class="warn" x="600" y="715" text-anchor="middle">
+    Important: current code detects tip distances and open fingers. It does not truly read fingernail direction, only a loose facing check.
+  </text>
+</svg>

@@ -1,4 +1,5 @@
 using UnityEngine;
+using ArcaneVR.Core;
 
 public class BattleArenaSpawner : MonoBehaviour
 {
@@ -16,12 +17,7 @@ public class BattleArenaSpawner : MonoBehaviour
             spawnPoint = GameObject.FindGameObjectWithTag("Respawn");
         }
         
-        // Find XR Origin
-        GameObject player = GameObject.Find("XR Origin");
-        if (player == null)
-        {
-            player = GameObject.FindGameObjectWithTag("Player");
-        }
+        GameObject player = ArcanePlayerRigResolver.FindPlayerRigGameObject();
         
         if (player != null && spawnPoint != null)
         {

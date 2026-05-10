@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#101216"/>
+  <defs>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .title { font-family: Arial, sans-serif; fill: #f7f9fc; font-size: 34px; font-weight: 700; }
+      .sub { font-family: Arial, sans-serif; fill: #b6c0cf; font-size: 21px; }
+      .label { font-family: Arial, sans-serif; fill: #f7f9fc; font-size: 22px; font-weight: 700; }
+      .note { font-family: Arial, sans-serif; fill: #b6c0cf; font-size: 18px; }
+      .hand { fill: #e7bea0; stroke: #ffd8bd; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+      .fingerBack { fill: #d9aa88; stroke: #f1c5a8; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; opacity: 0.92; }
+      .contact { fill: #7ee7ff; stroke: #ffffff; stroke-width: 4; filter: url(#glow); }
+      .frame { fill: none; stroke: #7ee7ff; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; filter: url(#glow); }
+      .aperture { fill: #7ee7ff; opacity: 0.12; stroke: #7ee7ff; stroke-width: 3; }
+      .arrow { stroke: #ffcf6b; stroke-width: 4; stroke-linecap: round; marker-end: url(#arrowHead); }
+    </style>
+    <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#ffcf6b"/>
+    </marker>
+  </defs>
+
+  <text class="title" x="600" y="58" text-anchor="middle">Triangle / Viewfinder Cast Mode Gesture</text>
+  <text class="sub" x="600" y="99" text-anchor="middle">
+    Revised interpretation: make a target frame with both hands, like a camera/viewfinder around the enemy.
+  </text>
+
+  <!-- central magic aperture -->
+  <g>
+    <polygon class="aperture" points="600,175 438,505 762,505"/>
+    <path class="frame" d="M600 175 L438 505"/>
+    <path class="frame" d="M600 175 L762 505"/>
+    <path class="frame" d="M438 505 L762 505"/>
+    <circle class="contact" cx="600" cy="175" r="17"/>
+    <circle class="contact" cx="438" cy="505" r="17"/>
+    <circle class="contact" cx="762" cy="505" r="17"/>
+    <text class="label" x="600" y="355" text-anchor="middle">open target window</text>
+  </g>
+
+  <!-- left hand -->
+  <g>
+    <!-- folded/visible non-frame fingers behind the index side -->
+    <path class="fingerBack" d="M323 304 C278 296 244 311 224 346 C205 378 212 411 240 424 C267 437 295 420 304 390"/>
+    <path class="fingerBack" d="M358 334 C310 329 276 345 260 379 C246 411 258 439 286 447 C314 454 339 435 345 405"/>
+    <path class="fingerBack" d="M389 367 C348 367 319 383 309 414 C300 443 315 466 342 469 C369 472 390 452 392 424"/>
+
+    <!-- palm -->
+    <path class="hand" d="M351 552
+      C305 531 285 486 302 441
+      C319 394 361 370 401 392
+      L457 459
+      C468 472 466 490 453 501
+      L430 520
+      C410 540 382 567 351 552 Z"/>
+
+    <!-- index finger making left side of frame -->
+    <path class="hand" d="M406 395
+      C438 334 492 246 567 169
+      C585 151 616 162 604 184
+      C527 271 480 364 443 467"/>
+
+    <!-- thumb making bottom-left side -->
+    <path class="hand" d="M429 517
+      C469 508 523 504 600 504
+      C619 504 626 532 606 539
+      C531 550 481 549 438 535"/>
+
+    <text class="label" x="182" y="618">Left hand</text>
+    <text class="note" x="182" y="647">index forms left edge</text>
+    <text class="note" x="182" y="675">thumb forms bottom-left edge</text>
+  </g>
+
+  <!-- right hand -->
+  <g transform="translate(1200,0) scale(-1,1)">
+    <path class="fingerBack" d="M323 304 C278 296 244 311 224 346 C205 378 212 411 240 424 C267 437 295 420 304 390"/>
+    <path class="fingerBack" d="M358 334 C310 329 276 345 260 379 C246 411 258 439 286 447 C314 454 339 435 345 405"/>
+    <path class="fingerBack" d="M389 367 C348 367 319 383 309 414 C300 443 315 466 342 469 C369 472 390 452 392 424"/>
+
+    <path class="hand" d="M351 552
+      C305 531 285 486 302 441
+      C319 394 361 370 401 392
+      L457 459
+      C468 472 466 490 453 501
+      L430 520
+      C410 540 382 567 351 552 Z"/>
+
+    <path class="hand" d="M406 395
+      C438 334 492 246 567 169
+      C585 151 616 162 604 184
+      C527 271 480 364 443 467"/>
+
+    <path class="hand" d="M429 517
+      C469 508 523 504 600 504
+      C619 504 626 532 606 539
+      C531 550 481 549 438 535"/>
+  </g>
+
+  <text class="label" x="1018" y="618" text-anchor="end">Right hand</text>
+  <text class="note" x="1018" y="647" text-anchor="end">index forms right edge</text>
+  <text class="note" x="1018" y="675" text-anchor="end">thumb forms bottom-right edge</text>
+
+  <!-- callouts -->
+  <g>
+    <line class="arrow" x1="600" y1="142" x2="600" y2="166"/>
+    <text class="note" x="600" y="132" text-anchor="middle" fill="#ffcf6b">index fingertips meet at top</text>
+
+    <line class="arrow" x1="438" y1="548" x2="438" y2="516"/>
+    <line class="arrow" x1="762" y1="548" x2="762" y2="516"/>
+    <text class="note" x="600" y="585" text-anchor="middle" fill="#ffcf6b">thumb tips meet along the bottom frame</text>
+  </g>
+
+  <text class="note" x="600" y="725" text-anchor="middle">
+    This is closer to the reference: a viewfinder/target-frame gesture, not just two horizontal fingertip contacts.
+  </text>
+</svg>

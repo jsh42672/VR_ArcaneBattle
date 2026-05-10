@@ -1,3 +1,4 @@
+using ArcaneVR.Combat;
 using ArcaneVR.Spell;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -16,11 +17,15 @@ namespace ArcaneVR.Input
         [SerializeField] private GestureDetector gestureDetector;
         [SerializeField] private SpellCaster spellCaster;
         [SerializeField] private HandPullMovementController handPullMovement;
+        [SerializeField] private CombinationChecker combinationChecker;
+        [SerializeField] private CombatManager combatManager;
+        [SerializeField] private VoiceRecognizer voiceRecognizer;
         [SerializeField] private bool attachToHead = true;
         [SerializeField] private Vector3 localRootPosition = new Vector3(0f, 0f, 2.65f);
         [SerializeField] private Vector3 fallbackWorldPosition = new Vector3(0f, 1.45f, 3.1f);
         [SerializeField] private float textCharacterSize = 0.008f;
         [SerializeField] private int fontSize = 50;
+        [SerializeField] private float statusRefreshInterval = 0.1f;
         [SerializeField] private bool showDetailedDebug;
         [SerializeField] private bool showCastDebug;
 
@@ -31,13 +36,15 @@ namespace ArcaneVR.Input
         private readonly TextMesh[] prototypeDebugTexts = new TextMesh[2];
         private TextMesh spellCasterText;
         private TextMesh movementText;
+        private TextMesh arcaneStateText;
         private Transform overlayRoot;
+        private float nextStatusRefreshTime;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void CreateForHandTestScene()
         {
             var sceneName = SceneManager.GetActiveScene().name;
-            if (!IsPrototypeScene(sceneName))
+            if (!ShouldAutoCreateOverlay(sceneName))
                 return;
 
             if (FindAnyObjectByType<HandGestureDebugOverlay>() != null)
@@ -58,6 +65,21 @@ namespace ArcaneVR.Input
                    sceneName == "TestScene_Input";
         }
 
+        public static bool ShouldAutoCreateOverlay(string sceneName)
+        {
+            return sceneName.StartsWith("HandTest") ||
+                   sceneName == "TestScene_GestureProto" ||
+                   sceneName == "TestScene_Input";
+        }
+
+        public static bool IsGestureOverlayScene(string sceneName)
+        {
+            return IsPrototypeScene(sceneName) ||
+                   sceneName == "World" ||
+                   sceneName == "BattleSceen2" ||
+                   sceneName == "BattleScene2";
+        }
+
         public void Configure(GestureDetector detector)
         {
             gestureDetector = detector;
@@ -66,6 +88,15 @@ namespace ArcaneVR.Input
 
             if (handPullMovement == null)
                 handPullMovement = FindAnyObjectByType<HandPullMovementController>();
+
+            if (combinationChecker == null)
+                combinationChecker = FindAnyObjectByType<CombinationChecker>();
+
+            if (combatManager == null)
+                combatManager = FindAnyObjectByType<CombatManager>();
+
+            if (voiceRecognizer == null)
+                voiceRecognizer = FindAnyObjectByType<VoiceRecognizer>();
         }
 
         private void Awake()
@@ -78,6 +109,15 @@ namespace ArcaneVR.Input
 
             if (handPullMovement == null)
                 handPullMovement = FindAnyObjectByType<HandPullMovementController>();
+
+            if (combinationChecker == null)
+                combinationChecker = FindAnyObjectByType<CombinationChecker>();
+
+            if (combatManager == null)
+                combatManager = FindAnyObjectByType<CombatManager>();
+
+            if (voiceRecognizer == null)
+                voiceRecognizer = FindAnyObjectByType<VoiceRecognizer>();
 
             BuildOverlay();
         }
@@ -93,7 +133,20 @@ namespace ArcaneVR.Input
             if (handPullMovement == null)
                 handPullMovement = FindAnyObjectByType<HandPullMovementController>();
 
+            if (combinationChecker == null)
+                combinationChecker = FindAnyObjectByType<CombinationChecker>();
+
+            if (combatManager == null)
+                combatManager = FindAnyObjectByType<CombatManager>();
+
+            if (voiceRecognizer == null)
+                voiceRecognizer = FindAnyObjectByType<VoiceRecognizer>();
+
             AttachOverlay();
+            if (Time.unscaledTime < nextStatusRefreshTime)
+                return;
+
+            nextStatusRefreshTime = Time.unscaledTime + Mathf.Max(0.05f, statusRefreshInterval);
             RefreshStatuses();
         }
 
@@ -109,7 +162,8 @@ namespace ArcaneVR.Input
             if (showCastDebug)
                 spellCasterText = CreateText("CAST: waiting", new Vector3(-0.78f, -0.52f, 0f), TextAnchor.MiddleLeft, Color.gray);
 
-            movementText = CreateText("MOVE: waiting", new Vector3(-0.78f, -0.52f, 0f), TextAnchor.MiddleLeft, Color.gray);
+            movementText = CreateText("MOVE: waiting", new Vector3(-0.78f, showCastDebug ? -0.62f : -0.52f, 0f), TextAnchor.MiddleLeft, Color.gray);
+            arcaneStateText = CreateText("ARCANE: waiting", new Vector3(-0.78f, showCastDebug ? -0.72f : -0.62f, 0f), TextAnchor.MiddleLeft, Color.gray);
         }
 
         private void BuildHandTextBlock(int handIndex, string title, float x, TextAnchor anchor)
@@ -221,6 +275,19 @@ namespace ArcaneVR.Input
                     movementText.color = handPullMovement.IsPulling ? Color.green : Color.gray;
                 }
             }
+
+            if (arcaneStateText != null)
+            {
+                var comboText = combinationChecker != null
+                    ? $"Combo:{ToMark(combinationChecker.IsComboReady)} {combinationChecker.LeftDeclaredElement}/{combinationChecker.RightDeclaredElement} {combinationChecker.CurrentComboCandidate}"
+                    : "Combo:missing";
+                var manaText = combatManager != null
+                    ? $"Mana:{combatManager.CurrentMana:0.#}/{combatManager.MaxMana:0.#}{(combatManager.IsManaDisrupted ? " DISRUPT" : string.Empty)}"
+                    : "Mana:missing";
+                var voiceText = voiceRecognizer != null ? $"Voice:{voiceRecognizer.ShortStatusText}" : "Voice:missing";
+                arcaneStateText.text = $"ARCANE {manaText} | {voiceText} | {comboText}";
+                arcaneStateText.color = combinationChecker != null && combinationChecker.IsComboReady ? Color.cyan : Color.white;
+            }
         }
 
         private void SetHandStatuses(
@@ -255,7 +322,8 @@ namespace ArcaneVR.Input
             {
                 var tracked = handStatus.Contains("tracked:True") ||
                               handStatus.Contains("tracked:true") ||
-                              handStatus.Contains("XRRouter");
+                              handStatus.Contains("XRRouter") ||
+                              fingerDebug.hasData;
                 handStatusText.text = showDetailedDebug ? handStatus : (tracked ? "TRACK: OK" : "TRACK: WAIT");
                 handStatusText.color = tracked ? Color.green : Color.yellow;
             }
@@ -288,8 +356,13 @@ namespace ArcaneVR.Input
             if (statusText == null)
                 return;
 
-            statusText.text = active ? "O" : "X";
+            statusText.text = ToMark(active);
             statusText.color = active ? Color.green : Color.red;
+        }
+
+        private static string ToMark(bool active)
+        {
+            return active ? "O" : "X";
         }
     }
 }

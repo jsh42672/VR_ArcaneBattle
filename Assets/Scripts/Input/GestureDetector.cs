@@ -75,7 +75,8 @@ namespace ArcaneVR.Input
         [SerializeField] private float stablePoseDuration = 0.1f;
         [SerializeField] private float grimoireHoldDuration = 0.3f;
         [SerializeField] private float combineDistance = 0.16f;
-        [SerializeField] private float pushVelocity = 0.25f;
+        [SerializeField] private float pushVelocity = 0.45f;
+        [SerializeField] private float combinePushCooldown = 0.7f;
 
         [Header("Debug Detection")]
         [SerializeField] private bool openPalmDetectionEnabled = true;
@@ -112,6 +113,7 @@ namespace ArcaneVR.Input
         [Header("Temporary Bone Angle Debug")]
         [SerializeField] private bool showBoneAngleDebug = false;
         [SerializeField] private bool debugRightHandAngles = true;
+        [SerializeField] private bool showPrototypeDebugLog;
 
         [Header("Gesture Spell Prototype")]
         [SerializeField] private float prototypePoseHoldTime = 0.3f;
@@ -138,6 +140,7 @@ namespace ArcaneVR.Input
         public event Action OnPoseCleared;
         public event Action<bool, PoseType> OnHandPoseConfirmed;
         public event Action<bool> OnHandPoseCleared;
+        public event Action OnCombinePushDetected;
 
         private readonly List<XRHandSubsystem> handSubsystems = new List<XRHandSubsystem>();
 
@@ -180,6 +183,9 @@ namespace ArcaneVR.Input
         private string rightPrototypeDebug = "R: waiting";
         private int debugBindingLogFrame;
         private bool routerEventsSubscribed;
+        private Vector3 previousCombineMidpoint;
+        private bool hasPreviousCombineMidpoint;
+        private float lastCombinePushTime = -999f;
 
         private struct PrototypeFingerCurls
         {
@@ -217,6 +223,13 @@ namespace ArcaneVR.Input
             : BuildHandBindingLog("R", rightOvrHand, debugSkeletonRight);
         public string CurrentLeftPrototypeDebug => leftPrototypeDebug;
         public string CurrentRightPrototypeDebug => rightPrototypeDebug;
+        public bool IsCombineCandidate { get; private set; }
+        public float CurrentCombineForwardSpeed { get; private set; }
+
+        private float WithOvrFingerMargin(float curlThreshold)
+        {
+            return Mathf.Clamp01(curlThreshold + Mathf.Max(0f, ovrFingerExtensionMargin));
+        }
 
         private bool IsRouterDrivingPoses =>
             useXrHandsStaticGestureRouter &&
@@ -309,7 +322,7 @@ namespace ArcaneVR.Input
             var leftPose = DetectHandPose(true, out var leftPalmPosition);
             var rightPose = DetectHandPose(false, out var rightPalmPosition);
 
-            if (TryDetectCombine(leftPalmPosition, rightPalmPosition))
+            if (UpdateCombineState(leftPalmPosition, rightPalmPosition))
             {
                 leftPose = PoseId.Combine;
                 rightPose = PoseId.Combine;
@@ -444,6 +457,7 @@ namespace ArcaneVR.Input
             {
                 PoseType.OpenPalm => PoseId.OpenPalm,
                 PoseType.Fist => PoseId.Fist,
+                PoseType.ThumbsUp => PoseId.Horn,
                 _ => PoseId.None
             };
         }
@@ -588,11 +602,10 @@ namespace ArcaneVR.Input
             var middlePositionCurl = CalculateFingerCurl(middleBase, middleMiddle, middleDistal, middleTip);
             var ringPositionCurl = CalculateFingerCurl(ringBase, ringMiddle, ringDistal, ringTip);
             var pinkyPositionCurl = CalculateFingerCurl(pinkyBase, pinkyMiddle, pinkyDistal, pinkyTip);
-            var thumbExtended = thumbCurl < gunThumbMaxCurl;
-            var indexExtended = indexPositionCurl < gunIndexMaxCurl;
-            var middleExtended = middlePositionCurl < gunMiddleFistRejectCurl;
-            var ringExtended = ringPositionCurl < gunRingMinCurl;
-            var pinkyExtended = pinkyPositionCurl < gunPinkyMinCurl;
+            var indexExtended = indexPositionCurl < WithOvrFingerMargin(gunIndexMaxCurl);
+            var middleExtended = middlePositionCurl < WithOvrFingerMargin(gunMiddleFistRejectCurl);
+            var ringExtended = ringPositionCurl < WithOvrFingerMargin(gunRingMinCurl);
+            var pinkyExtended = pinkyPositionCurl < WithOvrFingerMargin(gunPinkyMinCurl);
             var pointerAimDirection = hand.IsPointerPoseValid && hand.PointerPose != null ? hand.PointerPose.forward : Vector3.zero;
             var indexDebugMaxCurl = IsGunPointingForward(indexBase, indexTip, middleBase, middleTip, pointerAimDirection)
                 ? gunForwardIndexOpenAngle
@@ -682,11 +695,11 @@ namespace ArcaneVR.Input
             return new FingerPoseDebug
             {
                 hasData = true,
-                thumbExtended = thumbCurl < gunThumbMaxCurl,
-                indexExtended = indexCurl < indexMaxCurl,
-                middleExtended = middleCurl < gunMiddleFistRejectCurl,
-                ringExtended = ringCurl < gunRingMinCurl,
-                pinkyExtended = pinkyCurl < gunPinkyMinCurl,
+                thumbExtended = thumbCurl < WithOvrFingerMargin(gunThumbMaxCurl),
+                indexExtended = indexCurl < WithOvrFingerMargin(indexMaxCurl),
+                middleExtended = middleCurl < WithOvrFingerMargin(gunMiddleFistRejectCurl),
+                ringExtended = ringCurl < WithOvrFingerMargin(gunRingMinCurl),
+                pinkyExtended = pinkyCurl < WithOvrFingerMargin(gunPinkyMinCurl),
                 thumbCurl = thumbCurl,
                 indexCurl = indexCurl,
                 middleCurl = middleCurl,
@@ -926,7 +939,7 @@ namespace ArcaneVR.Input
 
                     OnHandPoseConfirmed?.Invoke(isLeft, detected);
                     OnPoseConfirmed?.Invoke(detected);
-                    Debug.Log($"[POSE CONFIRMED] {(isLeft ? "L" : "R")} {detected}");
+                    LogPrototypeDebug($"[POSE CONFIRMED] {(isLeft ? "L" : "R")} {detected}");
                 }
             }
             else
@@ -937,7 +950,7 @@ namespace ArcaneVR.Input
                     ClearPrototypePose(isLeft);
             }
 
-            if (Time.frameCount % 60 == 0)
+            if (showPrototypeDebugLog && Time.frameCount % 60 == 0)
             {
                 Debug.Log($"[POSE] {(isLeft ? "L" : "R")} Candidate:{candidatePose} Confirmed:{confirmedPose} Timer:{holdTimer:F2}s");
                 Debug.Log($"[POSEDBG] {prototypeDebug}");
@@ -1102,7 +1115,7 @@ namespace ArcaneVR.Input
 
             OnHandPoseCleared?.Invoke(isLeft);
             OnPoseCleared?.Invoke();
-            Debug.Log($"[POSE CLEARED] {(isLeft ? "L" : "R")}");
+            LogPrototypeDebug($"[POSE CLEARED] {(isLeft ? "L" : "R")}");
         }
 
         private void UpdateLeftFistMovement(bool isLeft, bool fistDetected)
@@ -1120,7 +1133,7 @@ namespace ArcaneVR.Input
                         leftFistMovementConfirmed = true;
                         leftFistMovementReleaseTimer = 0f;
                         OnLeftFistStart?.Invoke();
-                        Debug.Log("[MOVE] Left fist grabbed");
+                        LogPrototypeDebug("[MOVE] Left fist grabbed");
                     }
                 }
                 else
@@ -1153,7 +1166,13 @@ namespace ArcaneVR.Input
             leftFistMovementHoldTimer = 0f;
             leftFistMovementReleaseTimer = 0f;
             OnLeftFistEnd?.Invoke();
-            Debug.Log("[MOVE] Left fist released");
+            LogPrototypeDebug("[MOVE] Left fist released");
+        }
+
+        private void LogPrototypeDebug(string message)
+        {
+            if (showPrototypeDebugLog)
+                Debug.Log(message);
         }
 
         private static float GetBoneAngle(OVRSkeleton skeleton, params OVRSkeleton.BoneId[] boneIds)
@@ -1414,10 +1433,10 @@ namespace ArcaneVR.Input
             var middleCurl = CalculateFingerCurl(middleBase, middleMiddle, middleDistal, middleTip);
             var ringCurl = CalculateFingerCurl(ringBase, ringMiddle, ringDistal, ringTip);
             var littleCurl = CalculateFingerCurl(littleBase, littleMiddle, littleDistal, littleTip);
-            var indexExtended = indexCurl < gunIndexMaxCurl;
-            var middleExtended = middleCurl < gunMiddleFistRejectCurl;
-            var ringExtended = ringCurl < gunRingMinCurl;
-            var littleExtended = littleCurl < gunPinkyMinCurl;
+            var indexExtended = indexCurl < WithOvrFingerMargin(gunIndexMaxCurl);
+            var middleExtended = middleCurl < WithOvrFingerMargin(gunMiddleFistRejectCurl);
+            var ringExtended = ringCurl < WithOvrFingerMargin(gunRingMinCurl);
+            var littleExtended = littleCurl < WithOvrFingerMargin(gunPinkyMinCurl);
             var indexDebugMaxCurl = IsGunPointingForward(indexBase, indexTip, middleBase, middleTip, Vector3.zero)
                 ? gunForwardIndexMaxCurl
                 : gunIndexMaxCurl;
@@ -1527,12 +1546,42 @@ namespace ArcaneVR.Input
             return Vector3.Dot(velocity, headForward) >= PushVelocity ? PoseId.FistPush : PoseId.Fist;
         }
 
-        private bool TryDetectCombine(Vector3 leftPalmPosition, Vector3 rightPalmPosition)
+        private bool UpdateCombineState(Vector3 leftPalmPosition, Vector3 rightPalmPosition)
         {
-            if (leftPalmPosition == Vector3.zero || rightPalmPosition == Vector3.zero)
-                return false;
+            CurrentCombineForwardSpeed = 0f;
 
-            return Vector3.Distance(leftPalmPosition, rightPalmPosition) <= CombineDistance;
+            if (leftPalmPosition == Vector3.zero || rightPalmPosition == Vector3.zero)
+            {
+                IsCombineCandidate = false;
+                hasPreviousCombineMidpoint = false;
+                return false;
+            }
+
+            IsCombineCandidate = Vector3.Distance(leftPalmPosition, rightPalmPosition) <= CombineDistance;
+            if (!IsCombineCandidate)
+            {
+                hasPreviousCombineMidpoint = false;
+                return false;
+            }
+
+            var midpoint = (leftPalmPosition + rightPalmPosition) * 0.5f;
+            if (hasPreviousCombineMidpoint && Time.deltaTime > 0f)
+            {
+                var velocity = (midpoint - previousCombineMidpoint) / Time.deltaTime;
+                var headForward = Camera.main != null ? Camera.main.transform.forward : transform.forward;
+                CurrentCombineForwardSpeed = Vector3.Dot(velocity, headForward);
+
+                if (CurrentCombineForwardSpeed >= PushVelocity &&
+                    Time.time - lastCombinePushTime >= combinePushCooldown)
+                {
+                    lastCombinePushTime = Time.time;
+                    OnCombinePushDetected?.Invoke();
+                }
+            }
+
+            previousCombineMidpoint = midpoint;
+            hasPreviousCombineMidpoint = true;
+            return true;
         }
 
         private void UpdateStablePose(bool isLeft, PoseId detectedPose)

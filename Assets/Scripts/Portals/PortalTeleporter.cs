@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using ArcaneVR.Core;
 
 public class PortalTeleporter : MonoBehaviour
 {
@@ -46,9 +47,7 @@ public class PortalTeleporter : MonoBehaviour
     
     bool IsPlayer(Collider other)
     {
-        return other.CompareTag("Player") || 
-               other.name.Contains("XR Origin") ||
-               other.GetComponentInParent<CharacterController>() != null;
+        return ArcanePlayerRigResolver.IsPlayerCollider(other);
     }
     
     void EnterBattleArena()

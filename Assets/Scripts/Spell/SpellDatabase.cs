@@ -22,6 +22,8 @@ namespace ArcaneVR.Spell
             public float projectileSpeed = 15f;
             public StatusEffect statusEffect;
             public float statusDuration = 3f;
+            public float statusMagnitude = 1f;
+            public float statusTickInterval = 0.5f;
         }
 
         [Serializable]
@@ -32,6 +34,8 @@ namespace ArcaneVR.Spell
             public StatusEffect statusEffect;
             public float damage = 10f;
             public float statusDuration = 3f;
+            public float statusMagnitude = 1f;
+            public float statusTickInterval = 0.5f;
             public float projectileSpeed = 10f;
             public GameObject prefab;
         }
@@ -44,7 +48,11 @@ namespace ArcaneVR.Spell
 
         public SpellData Get(SpellId id)
         {
-            return spells != null ? spells.Find(spell => spell.spellId == id) : null;
+            var data = spells != null ? spells.Find(spell => spell.spellId == id) : null;
+            if (data != null)
+                ApplyMissingRuntimeDefaults(data);
+
+            return data;
         }
 
         public bool TryGet(SpellId id, out SpellData data)
@@ -55,7 +63,11 @@ namespace ArcaneVR.Spell
 
         public PoseSpellData Get(PoseType pose)
         {
-            return poseSpells != null ? poseSpells.Find(spell => spell.pose == pose) : null;
+            var data = poseSpells != null ? poseSpells.Find(spell => spell.pose == pose) : null;
+            if (data != null)
+                ApplyMissingRuntimeDefaults(data);
+
+            return data;
         }
 
         public bool TryGet(PoseType pose, out PoseSpellData data)
@@ -106,27 +118,33 @@ namespace ArcaneVR.Spell
                 2,
                 16f,
                 StatusEffect.Stagger,
-                3f),
+                3f,
+                1.2f,
+                0f),
                 overwriteExistingValues);
 
             EnsureDefaultSpell(CreateDefaultSpell(
                 SpellId.Combo_IceThunder,
                 ElementType.Ice,
-                22f,
+                18f,
                 2,
                 17f,
                 StatusEffect.Slow,
-                4f),
+                4f,
+                1f,
+                0f),
                 overwriteExistingValues);
 
             EnsureDefaultSpell(CreateDefaultSpell(
                 SpellId.Combo_ThunderFire,
                 ElementType.Thunder,
-                30f,
+                34f,
                 2,
                 19f,
                 StatusEffect.Burn,
-                5f),
+                5f,
+                3.5f,
+                0.75f),
                 overwriteExistingValues);
 
             RemoveDuplicateEntries();
@@ -255,7 +273,9 @@ namespace ArcaneVR.Spell
             int manaCost,
             float projectileSpeed,
             StatusEffect statusEffect,
-            float statusDuration)
+            float statusDuration,
+            float statusMagnitude = -1f,
+            float statusTickInterval = -1f)
         {
             return new SpellData
             {
@@ -265,7 +285,9 @@ namespace ArcaneVR.Spell
                 manaCost = manaCost,
                 projectileSpeed = projectileSpeed,
                 statusEffect = statusEffect,
-                statusDuration = statusDuration
+                statusDuration = statusDuration,
+                statusMagnitude = statusMagnitude >= 0f ? statusMagnitude : ResolveDefaultMagnitude(statusEffect),
+                statusTickInterval = statusTickInterval >= 0f ? statusTickInterval : ResolveDefaultTickInterval(statusEffect)
             };
         }
 
@@ -278,6 +300,8 @@ namespace ArcaneVR.Spell
             destination.projectileSpeed = source.projectileSpeed;
             destination.statusEffect = source.statusEffect;
             destination.statusDuration = source.statusDuration;
+            destination.statusMagnitude = source.statusMagnitude;
+            destination.statusTickInterval = source.statusTickInterval;
         }
 
         private static PoseSpellData CreateDefaultPoseSpell(
@@ -286,7 +310,9 @@ namespace ArcaneVR.Spell
             StatusEffect statusEffect,
             float damage,
             float statusDuration,
-            float projectileSpeed)
+            float projectileSpeed,
+            float statusMagnitude = -1f,
+            float statusTickInterval = -1f)
         {
             return new PoseSpellData
             {
@@ -295,6 +321,8 @@ namespace ArcaneVR.Spell
                 statusEffect = statusEffect,
                 damage = damage,
                 statusDuration = statusDuration,
+                statusMagnitude = statusMagnitude >= 0f ? statusMagnitude : ResolveDefaultMagnitude(statusEffect),
+                statusTickInterval = statusTickInterval >= 0f ? statusTickInterval : ResolveDefaultTickInterval(statusEffect),
                 projectileSpeed = projectileSpeed
             };
         }
@@ -306,7 +334,49 @@ namespace ArcaneVR.Spell
             destination.statusEffect = source.statusEffect;
             destination.damage = source.damage;
             destination.statusDuration = source.statusDuration;
+            destination.statusMagnitude = source.statusMagnitude;
+            destination.statusTickInterval = source.statusTickInterval;
             destination.projectileSpeed = source.projectileSpeed;
+        }
+
+        private static void ApplyMissingRuntimeDefaults(SpellData data)
+        {
+            if (data.statusMagnitude <= 0f)
+                data.statusMagnitude = ResolveDefaultMagnitude(data.statusEffect);
+
+            if (data.statusTickInterval < 0f)
+                data.statusTickInterval = 0f;
+
+            if (data.statusTickInterval <= 0f && data.statusEffect == StatusEffect.Burn)
+                data.statusTickInterval = ResolveDefaultTickInterval(data.statusEffect);
+        }
+
+        private static void ApplyMissingRuntimeDefaults(PoseSpellData data)
+        {
+            if (data.statusMagnitude <= 0f)
+                data.statusMagnitude = ResolveDefaultMagnitude(data.statusEffect);
+
+            if (data.statusTickInterval < 0f)
+                data.statusTickInterval = 0f;
+
+            if (data.statusTickInterval <= 0f && data.statusEffect == StatusEffect.Burn)
+                data.statusTickInterval = ResolveDefaultTickInterval(data.statusEffect);
+        }
+
+        private static float ResolveDefaultMagnitude(StatusEffect effect)
+        {
+            return effect switch
+            {
+                StatusEffect.Burn => 2f,
+                StatusEffect.Slow => 0.45f,
+                StatusEffect.Stagger => 1f,
+                _ => 0f
+            };
+        }
+
+        private static float ResolveDefaultTickInterval(StatusEffect effect)
+        {
+            return effect == StatusEffect.Burn ? 1f : 0f;
         }
     }
 }

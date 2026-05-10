@@ -8,6 +8,6 @@ namespace ArcaneVR.Combat
     /// </summary>
     public interface ISpellTarget
     {
-        void OnHit(ElementType element, StatusEffect statusEffect, float damage, float duration);
+        void OnHit(SpellHitData hitData);
     }
 }

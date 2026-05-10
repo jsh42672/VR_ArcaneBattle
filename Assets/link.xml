@@ -1,0 +1,9 @@
+<linker>
+  <assembly fullname="VoiceSDK.Runtime">
+    <type fullname="Oculus.Voice.AppVoiceExperience" preserve="all" />
+    <type fullname="Oculus.Voice.ObjectVoiceExperience" preserve="all" />
+  </assembly>
+  <assembly fullname="VoiceSDK.Dictation.Runtime">
+    <type fullname="Oculus.Voice.Dictation.AppDictationExperience" preserve="all" />
+  </assembly>
+</linker>

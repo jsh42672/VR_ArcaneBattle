@@ -9,6 +9,8 @@ namespace ArcaneVR.Input
     /// </summary>
     public class GestureEventRouter : MonoBehaviour
     {
+        [SerializeField] private bool showDebugLog;
+
         public event Action<PoseType> OnRightPoseConfirmed;
         public event Action OnRightPoseCleared;
         public event Action<PoseType> OnLeftPoseConfirmed;
@@ -57,7 +59,7 @@ namespace ArcaneVR.Input
             leftFistActive = true;
             DebugStatus = "XR Gesture Router: Left Fist start";
             OnLeftFistStart?.Invoke();
-            Debug.Log("[GESTURE] Left Fist start");
+            LogDebug("[GESTURE] Left Fist start");
         }
 
         public void OnOpenPalmEnd()
@@ -112,7 +114,7 @@ namespace ArcaneVR.Input
             leftFistActive = false;
             DebugStatus = "XR Gesture Router: Left Fist end";
             OnLeftFistEnd?.Invoke();
-            Debug.Log("[GESTURE] Left Fist end");
+            LogDebug("[GESTURE] Left Fist end");
         }
 
         private void MarkEvent()
@@ -128,7 +130,7 @@ namespace ArcaneVR.Input
             currentRightPose = pose;
             DebugStatus = $"XR Gesture Router: Right {pose}";
             OnRightPoseConfirmed?.Invoke(pose);
-            Debug.Log($"[GESTURE] Right pose: {pose}");
+            LogDebug($"[GESTURE] Right pose: {pose}");
         }
 
         private void SetLeftPose(PoseType pose)
@@ -139,7 +141,7 @@ namespace ArcaneVR.Input
             currentLeftPose = pose;
             DebugStatus = $"XR Gesture Router: Left {pose}";
             OnLeftPoseConfirmed?.Invoke(pose);
-            Debug.Log($"[GESTURE] Left pose: {pose}");
+            LogDebug($"[GESTURE] Left pose: {pose}");
         }
 
         private void ClearRightPoseIf(PoseType pose)
@@ -150,7 +152,7 @@ namespace ArcaneVR.Input
             currentRightPose = PoseType.None;
             DebugStatus = $"XR Gesture Router: Right cleared {pose}";
             OnRightPoseCleared?.Invoke();
-            Debug.Log($"[GESTURE] Right pose cleared: {pose}");
+            LogDebug($"[GESTURE] Right pose cleared: {pose}");
         }
 
         private void ClearLeftPoseIf(PoseType pose)
@@ -161,7 +163,13 @@ namespace ArcaneVR.Input
             currentLeftPose = PoseType.None;
             DebugStatus = $"XR Gesture Router: Left cleared {pose}";
             OnLeftPoseCleared?.Invoke();
-            Debug.Log($"[GESTURE] Left pose cleared: {pose}");
+            LogDebug($"[GESTURE] Left pose cleared: {pose}");
+        }
+
+        private void LogDebug(string message)
+        {
+            if (showDebugLog)
+                Debug.Log(message);
         }
     }
 }

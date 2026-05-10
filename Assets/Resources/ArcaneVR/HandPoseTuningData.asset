@@ -23,4 +23,4 @@ MonoBehaviour:
   curledDistance: 0.025
   relaxedDistance: 0.1
   combineDistance: 0.16
-  pushVelocity: 0.25
+  pushVelocity: 0.45

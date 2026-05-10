@@ -23,6 +23,6 @@ namespace ArcaneVR.Input
 
         [Header("Motion")]
         public float combineDistance = 0.16f;
-        public float pushVelocity = 0.25f;
+        public float pushVelocity = 0.45f;
     }
 }

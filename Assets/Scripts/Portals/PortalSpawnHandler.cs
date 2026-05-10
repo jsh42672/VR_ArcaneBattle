@@ -1,4 +1,5 @@
 using UnityEngine;
+using ArcaneVR.Core;
 
 public class PortalSpawnHandler : MonoBehaviour
 {
@@ -30,12 +31,7 @@ public class PortalSpawnHandler : MonoBehaviour
         
         if (targetPortal == null) return;
         
-        // Find XR Origin
-        GameObject player = GameObject.Find("XR Origin");
-        if (player == null)
-        {
-            player = GameObject.FindGameObjectWithTag("Player");
-        }
+        GameObject player = ArcanePlayerRigResolver.FindPlayerRigGameObject();
         
         if (player != null)
         {

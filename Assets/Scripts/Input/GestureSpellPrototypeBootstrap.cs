@@ -1,4 +1,5 @@
 using ArcaneVR.Combat;
+using ArcaneVR.Core;
 using ArcaneVR.Spell;
 using System.Reflection;
 using UnityEngine;
@@ -15,6 +16,7 @@ namespace ArcaneVR.Input
         private static readonly Color FloorColor = new Color(0.05f, 0.06f, 0.07f, 1f);
         private static readonly Color GridColor = new Color(0.16f, 0.38f, 0.56f, 1f);
         private static readonly Color MarkerColor = new Color(0.95f, 0.78f, 0.22f, 1f);
+        private static bool logHandBindingDebug;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void SetupPrototypeScene()
@@ -55,11 +57,7 @@ namespace ArcaneVR.Input
             if (spellCaster == null)
                 spellCaster = spellRoot.AddComponent<SpellCaster>();
 
-            var rightHand = FindOvrHand(false);
-            var leftHand = FindOvrHand(true);
-            var cameraRig = FindActiveOvrCameraRig();
-            NormalizeOvrHandParent(leftHand, true, cameraRig);
-            NormalizeOvrHandParent(rightHand, false, cameraRig);
+            NormalizeSceneOvrHands(out var leftHand, out var rightHand, out _);
 
             gestureDetector.BindHands(leftHand, rightHand);
 
@@ -86,9 +84,25 @@ namespace ArcaneVR.Input
             handPullMovement.ConfigurePrototype(playerRig, head);
 
             DisablePrototypeAuras();
-            EnsureDebugOverlay(gestureDetector);
+            if (HandGestureDebugOverlay.ShouldAutoCreateOverlay(sceneName))
+                EnsureDebugOverlay(gestureDetector);
+
             EnsureTestTarget();
             EnsureMovementReferenceWorld();
+        }
+
+        public static bool NormalizeSceneOvrHands(out OVRHand leftHand, out OVRHand rightHand, out OVRCameraRig cameraRig)
+        {
+            ConfigureOvrRuntime();
+
+            cameraRig = FindActiveOvrCameraRig();
+            leftHand = FindOvrHand(true);
+            rightHand = FindOvrHand(false);
+
+            NormalizeOvrHandParent(leftHand, true, cameraRig);
+            NormalizeOvrHandParent(rightHand, false, cameraRig);
+
+            return leftHand != null || rightHand != null;
         }
 
         private static OVRHand FindOvrHand(bool isLeft)
@@ -110,7 +124,7 @@ namespace ArcaneVR.Input
                 bestScore = score;
             }
 
-            if (bestHand != null)
+            if (bestHand != null && logHandBindingDebug)
                 Debug.Log($"[ArcaneVR] Bound {(isLeft ? "left" : "right")} OVRHand: {GetHierarchyPath(bestHand.transform)} score:{bestScore}");
 
             return bestHand;
@@ -176,6 +190,11 @@ namespace ArcaneVR.Input
 
             manager.trackingOriginType = OVRManager.TrackingOrigin.FloorLevel;
             manager.usePositionTracking = true;
+            manager.enableDynamicResolution = true;
+
+            var cameraRig = FindActiveOvrCameraRig();
+            if (cameraRig != null)
+                cameraRig.useFixedUpdateForTracking = false;
         }
 
         private static OVRCameraRig FindActiveOvrCameraRig()
@@ -308,10 +327,7 @@ namespace ArcaneVR.Input
             if (cameraRig != null)
                 rig = cameraRig.gameObject;
 
-            rig = rig ??
-                  GameObject.Find("XR Origin") ??
-                  GameObject.Find("OVRCameraRig") ??
-                  GameObject.Find("XROriginCameraRig");
+            rig = rig ?? ArcanePlayerRigResolver.FindPlayerRigGameObject();
             return rig != null ? rig.transform : null;
         }
 

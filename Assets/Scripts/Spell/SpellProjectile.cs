@@ -1,5 +1,6 @@
 using ArcaneVR.Boss;
 using ArcaneVR.Combat;
+using ArcaneVR.Core;
 using ArcaneVR.Input;
 using UnityEngine;
 
@@ -16,6 +17,8 @@ namespace ArcaneVR.Spell
         public float damage;
         public StatusEffect statusEffect;
         public float statusDuration;
+        public float statusMagnitude = 1f;
+        public float statusTickInterval = 0.5f;
         public PoseType prototypePose;
 
         private Vector3 direction = Vector3.forward;
@@ -31,7 +34,9 @@ namespace ArcaneVR.Spell
             StatusEffect newStatusEffect,
             float newStatusDuration,
             Vector3 newDirection,
-            CombatManager newCombatManager)
+            CombatManager newCombatManager,
+            float newStatusMagnitude = 1f,
+            float newStatusTickInterval = 0.5f)
         {
             spellId = newSpellId;
             element = newElement;
@@ -39,6 +44,8 @@ namespace ArcaneVR.Spell
             speed = newSpeed;
             statusEffect = newStatusEffect;
             statusDuration = newStatusDuration;
+            statusMagnitude = newStatusMagnitude;
+            statusTickInterval = Mathf.Max(0f, newStatusTickInterval);
             direction = newDirection.sqrMagnitude > 0.001f ? newDirection.normalized : transform.forward;
             combatManager = newCombatManager;
         }
@@ -55,7 +62,9 @@ namespace ArcaneVR.Spell
             ElementType newElement,
             StatusEffect newStatusEffect,
             float newDamage,
-            float newStatusDuration)
+            float newStatusDuration,
+            float newStatusMagnitude = 1f,
+            float newStatusTickInterval = 0.5f)
         {
             prototypePose = pose;
             spellId = SpellId.None;
@@ -64,8 +73,22 @@ namespace ArcaneVR.Spell
             speed = newSpeed;
             statusEffect = newStatusEffect;
             statusDuration = newStatusDuration;
+            statusMagnitude = newStatusMagnitude;
+            statusTickInterval = Mathf.Max(0f, newStatusTickInterval);
             direction = newDirection.sqrMagnitude > 0.001f ? newDirection.normalized : transform.forward;
             combatManager = null;
+        }
+
+        public SpellHitData GetHitData()
+        {
+            return new SpellHitData(
+                spellId,
+                element,
+                statusEffect,
+                damage,
+                statusDuration,
+                statusMagnitude,
+                statusTickInterval);
         }
 
         private void Awake()
@@ -90,14 +113,14 @@ namespace ArcaneVR.Spell
             if (hasHit || other.attachedRigidbody != null && other.attachedRigidbody.gameObject == gameObject)
                 return;
 
-            if (other.CompareTag("Player") || other.transform.root.CompareTag("Player"))
+            if (ArcanePlayerRigResolver.IsPlayerCollider(other))
                 return;
 
             var spellTarget = other.GetComponentInParent<ISpellTarget>();
             if (spellTarget != null)
             {
                 hasHit = true;
-                spellTarget.OnHit(element, statusEffect, damage, statusDuration);
+                spellTarget.OnHit(GetHitData());
                 Destroy(gameObject);
                 return;
             }

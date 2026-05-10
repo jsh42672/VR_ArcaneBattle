@@ -75,11 +75,19 @@ public class PT_PackageWelcomeWindow : EditorWindow
 
     static PT_PackageWelcomeWindow()
     {
-        if (!EditorPrefs.GetBool(PrefKey, false))
-        {
-            LoadAssets();
-            EditorApplication.update += ShowOnLoad;
-        }
+        EditorApplication.delayCall += TryShowOnEditorReady;
+    }
+
+    private static void TryShowOnEditorReady()
+    {
+        if (Application.isBatchMode || BuildPipeline.isBuildingPlayer)
+            return;
+
+        if (EditorPrefs.GetBool(PrefKey, false))
+            return;
+
+        LoadAssets();
+        EditorApplication.update += ShowOnLoad;
     }
 
     [MenuItem("Tools/Polytope/Welcome Screen")]

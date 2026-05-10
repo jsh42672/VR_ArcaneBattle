@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ArcaneVR.Core;
 using UnityEngine;
 using UnityEngine.XR.Hands;
 
@@ -35,10 +36,11 @@ namespace ArcaneVR.Input
 
         [Header("Pull Movement")]
         [SerializeField] private PullHandMode pullHandMode = PullHandMode.LeftOnly;
-        [SerializeField] private float pullMultiplier = 2.4f;
-        [SerializeField] private float maxMoveSpeed = 6.0f;
+        [SerializeField] private float pullMultiplier = 9.6f;
+        [SerializeField] private float maxMoveSpeed = 24.0f;
         [SerializeField] private float handMoveDeadZone = 0.003f;
         [SerializeField] private bool horizontalOnly = true;
+        [SerializeField] private bool applyMovementInLateUpdate = true;
         [SerializeField] private bool requirePullTowardBody = false;
         [SerializeField] private float towardBodyDotThreshold = 0.25f;
 
@@ -49,7 +51,7 @@ namespace ArcaneVR.Input
         [SerializeField] private float fallbackHeadHeight = 1.45f;
 
         [Header("Debug")]
-        [SerializeField] private bool showDebugLog = true;
+        [SerializeField] private bool showDebugLog;
 
         private readonly List<XRHandSubsystem> handSubsystems = new List<XRHandSubsystem>();
         private XRHandSubsystem handSubsystem;
@@ -57,6 +59,7 @@ namespace ArcaneVR.Input
         private PullHand activeHand = PullHand.None;
         private Vector3 previousHandTrackingPosition;
         private Vector3 lastMoveDelta;
+        private Vector3 pendingMoveDelta;
         private string lastDebugMessage = "Idle";
         private float nextSubsystemRefreshTime;
         private bool heightCorrectionApplied;
@@ -65,6 +68,8 @@ namespace ArcaneVR.Input
         public string ActiveHandName => activeHand.ToString();
         public Vector3 LastMoveDelta => lastMoveDelta;
         public string LastDebugMessage => lastDebugMessage;
+        public bool IsMovementSuppressed { get; private set; }
+        public string MovementSuppressionReason { get; private set; } = string.Empty;
 
         public bool HasLeftHand => IsHandTracked(PullHand.Left);
         public bool HasRightHand => IsHandTracked(PullHand.Right);
@@ -79,6 +84,31 @@ namespace ArcaneVR.Input
             headTransform = head != null ? head : headTransform;
             ResolveRigReferences();
             RefreshHandSubsystem();
+        }
+
+        public void SetMovementSuppressed(bool suppressed, string reason)
+        {
+            if (IsMovementSuppressed == suppressed &&
+                MovementSuppressionReason == (reason ?? string.Empty))
+            {
+                return;
+            }
+
+            IsMovementSuppressed = suppressed;
+            MovementSuppressionReason = suppressed ? string.IsNullOrWhiteSpace(reason) ? "Suppressed" : reason : string.Empty;
+
+            if (!suppressed)
+            {
+                lastDebugMessage = "Pull enabled";
+                return;
+            }
+
+            if (activeHand != PullHand.None)
+                EndPull();
+
+            pendingMoveDelta = Vector3.zero;
+            lastMoveDelta = Vector3.zero;
+            lastDebugMessage = $"Pull locked: {MovementSuppressionReason}";
         }
 
         private void Awake()
@@ -107,40 +137,43 @@ namespace ArcaneVR.Input
                 return;
             }
 
+            if (IsMovementSuppressed)
+            {
+                if (activeHand != PullHand.None)
+                    EndPull();
+
+                pendingMoveDelta = Vector3.zero;
+                lastMoveDelta = Vector3.zero;
+                lastDebugMessage = $"Pull locked: {MovementSuppressionReason}";
+                return;
+            }
+
             ApplyHeightCorrectionIfNeeded();
             UpdateHandPullMovement();
+        }
+
+        private void LateUpdate()
+        {
+            if (!applyMovementInLateUpdate || pendingMoveDelta.sqrMagnitude <= 0.0000001f)
+                return;
+
+            ApplyMoveDelta(pendingMoveDelta);
+            pendingMoveDelta = Vector3.zero;
         }
 
         private void ResolveRigReferences()
         {
             if (xrOriginRoot == null)
             {
-                GameObject origin = GameObject.Find("XR Origin");
-
-                if (origin == null)
-                {
-                    origin = GameObject.Find("OVRCameraRig");
-                }
-
-                if (origin == null)
-                {
-                    origin = GameObject.Find("XROriginCameraRig");
-                }
-
-                xrOriginRoot = origin != null ? origin.transform : transform;
+                xrOriginRoot = ArcanePlayerRigResolver.FindPlayerRigTransform() ?? transform;
             }
 
             movementRoot = ResolveMovementRoot(xrOriginRoot);
 
             if (headTransform == null)
             {
-                Camera mainCamera = Camera.main;
-
-                if (mainCamera != null)
-                {
-                    headTransform = mainCamera.transform;
-                }
-                else if (xrOriginRoot != null)
+                headTransform = ArcanePlayerRigResolver.FindHeadTransform();
+                if (headTransform == null && xrOriginRoot != null)
                 {
                     Transform centerEye = xrOriginRoot.Find("TrackingSpace/CenterEyeAnchor");
                     headTransform = centerEye != null ? centerEye : transform;
@@ -304,10 +337,13 @@ namespace ArcaneVR.Input
                 moveDelta = moveDelta.normalized * maxDistanceThisFrame;
             }
 
-            if (xrOriginRoot != null)
+            if (applyMovementInLateUpdate)
             {
-                Transform root = movementRoot != null ? movementRoot : xrOriginRoot;
-                root.position += moveDelta;
+                pendingMoveDelta += moveDelta;
+            }
+            else
+            {
+                ApplyMoveDelta(moveDelta);
             }
 
             lastMoveDelta = moveDelta;
@@ -317,10 +353,20 @@ namespace ArcaneVR.Input
                 $"Pulling: {activeHand}, Move=({moveDelta.x:F3}, {moveDelta.y:F3}, {moveDelta.z:F3})";
         }
 
+        private void ApplyMoveDelta(Vector3 moveDelta)
+        {
+            if (xrOriginRoot == null)
+                return;
+
+            Transform root = movementRoot != null ? movementRoot : xrOriginRoot;
+            root.position += moveDelta;
+        }
+
         private void EndPull()
         {
             lastDebugMessage = $"Pull End: {activeHand}";
             lastMoveDelta = Vector3.zero;
+            pendingMoveDelta = Vector3.zero;
 
             if (showDebugLog)
             {

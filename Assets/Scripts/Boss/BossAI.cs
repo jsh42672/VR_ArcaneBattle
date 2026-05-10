@@ -10,6 +10,35 @@ namespace ArcaneVR.Boss
     {
         public event Action<BossState> OnStateChanged;
 
-        // TODO: Implement
+        public BossState CurrentState { get; private set; } = BossState.Idle;
+
+        public void ChangeState(BossState nextState)
+        {
+            if (CurrentState == nextState)
+                return;
+
+            CurrentState = nextState;
+            OnStateChanged?.Invoke(CurrentState);
+        }
+
+        public void BeginCharge()
+        {
+            ChangeState(BossState.Charging);
+        }
+
+        public void EnterDefense()
+        {
+            ChangeState(BossState.Defense);
+        }
+
+        public void ExposeWeakness()
+        {
+            ChangeState(BossState.Weakness);
+        }
+
+        public void Die()
+        {
+            ChangeState(BossState.Dead);
+        }
     }
 }

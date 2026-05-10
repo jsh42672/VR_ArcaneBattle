@@ -34,16 +34,20 @@ namespace ArcaneVR.Combat
                 targetRenderer.material = CreateRuntimeMaterial(originalColor);
         }
 
-        public void OnHit(ElementType element, StatusEffect statusEffect, float damage, float duration)
+        public void OnHit(SpellHitData hitData)
         {
-            Debug.Log($"[TARGET] Hit: {element} | {statusEffect} | DMG:{damage} | DUR:{duration}s");
-            hitWorldText?.ShowHit(element, statusEffect, damage);
+            if (hitData == null)
+                return;
+
+            Debug.Log(
+                $"[TARGET] Hit: {hitData.element} | {hitData.statusEffect} | DMG:{hitData.damage} | DUR:{hitData.statusDuration}s | MAG:{hitData.statusMagnitude} | TICK:{hitData.statusTickInterval}");
+            hitWorldText?.ShowHit(hitData);
 
             if (targetRenderer == null)
                 return;
 
             StopAllCoroutines();
-            StartCoroutine(FlashColor(GetElementColor(element)));
+            StartCoroutine(FlashColor(GetElementColor(hitData.element)));
         }
 
         private System.Collections.IEnumerator FlashColor(Color flashColor)

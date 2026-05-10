@@ -274,13 +274,13 @@ namespace ArcaneVR.Editor
 
         private static void ConfigureRuntimeReferences(GestureDetector detector, GestureEventRouter router)
         {
-            foreach (var spellCaster in Object.FindObjectsByType<SpellCaster>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var spellCaster in Object.FindObjectsByType<SpellCaster>(FindObjectsInactive.Include))
             {
                 SetSerializedObjectReference(spellCaster, "gestureDetector", detector);
                 SetSerializedObjectReference(spellCaster, "gestureRouter", router);
             }
 
-            foreach (var movementController in Object.FindObjectsByType<MovementController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var movementController in Object.FindObjectsByType<MovementController>(FindObjectsInactive.Include))
             {
                 SetSerializedObjectReference(movementController, "gestureDetector", detector);
                 SetSerializedObjectReference(movementController, "gestureRouter", router);

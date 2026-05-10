@@ -13,6 +13,7 @@ namespace ArcaneVR.Spell
         [SerializeField] private SpellDatabase spellDatabase;
         [SerializeField] private CombinationChecker combinationChecker;
         [SerializeField] private CombatManager combatManager;
+        [SerializeField] private VoiceRecognizer voiceRecognizer;
         [SerializeField] private FeedbackManager feedbackManager;
         [SerializeField] private Transform leftHandSpawnPoint;
         [SerializeField] private Transform rightHandSpawnPoint;
@@ -21,6 +22,11 @@ namespace ArcaneVR.Spell
         [SerializeField] private float fallbackProjectileLifetime = 5f;
         [SerializeField] private bool useDebugPrimitiveProjectiles = true;
         [SerializeField] private float debugProjectileScale = 1f;
+        [SerializeField] private float voiceRefundMatchWindow = 3f;
+        [SerializeField] private float voiceRefundCooldown = 0.75f;
+        [SerializeField] private float voiceBoostDuration = 4f;
+        [SerializeField] private float voiceBoostDamageMultiplier = 1.25f;
+        [SerializeField] private float voiceBoostStatusMagnitudeMultiplier = 1.15f;
 
         [Header("Gesture Spell Prototype")]
         [SerializeField] private bool enableGesturePrototype;
@@ -36,24 +42,64 @@ namespace ArcaneVR.Spell
         [SerializeField] private float prototypeProjectileScale = 0.12f;
         [SerializeField] private float prototypeSpawnForwardOffset = 0.18f;
         [SerializeField] private float prototypeMinimumProjectileSpeed = 8f;
+        [SerializeField] private float prototypeFallbackManaCost = 1f;
+        [SerializeField] private float prototypeArmReadyDelay = 0.2f;
+        [SerializeField] private bool allowPrototypeCastWithoutVoice;
         [SerializeField] private bool prototypeAimAtViewCenter = true;
         [SerializeField] private float prototypeAimDistance = 18f;
+        [SerializeField] private bool showPrototypeArmedAura = true;
+        [SerializeField] private float prototypeAuraBaseSize = 0.055f;
+        [SerializeField] private float prototypeAuraBoostSize = 0.11f;
+        [SerializeField] private float prototypeAuraPulseDuration = 0.85f;
+        [SerializeField] private float prototypeAuraVoicePulseMultiplier = 4.5f;
+        [SerializeField] private float prototypeVoiceFeedbackVolume = 0.9f;
+        [SerializeField] private float prototypeArmFeedbackVolume = 0.45f;
+        [SerializeField] private float prototypeCastFeedbackVolume = 0.85f;
         [SerializeField] private GameObject spellPrefabOpenPalm;
         [SerializeField] private GameObject spellPrefabFist;
         [SerializeField] private GameObject spellPrefabThumbsUp;
 
         private PoseType currentPrototypePose = PoseType.None;
+        private PoseType prototypeArmedPose = PoseType.None;
+        private ElementType prototypeArmedElement = ElementType.None;
         private Vector3 previousPrototypeWristPosition;
+        private float prototypeArmedTime = -999f;
         private float prototypeCooldownTimer;
         private bool hasPreviousPrototypeWristPosition;
         private bool prototypeEventsSubscribed;
         private bool prototypeRouterEventsSubscribed;
+        private bool voiceEventsSubscribed;
         private bool prototypeReadyForThrust = true;
         private float prototypeLastForwardSpeed;
         private float prototypeLastHandForwardSpeed;
         private float prototypeLastHeadForwardSpeed;
         private float prototypeLastAwayFromHeadSpeed;
         private string prototypeDebugStatus = "CAST: waiting";
+        private bool prototypeVoiceBoosted;
+        private ElementType prototypeVoiceBoostElement = ElementType.None;
+        private float prototypeVoiceBoostTime = -999f;
+        private GameObject prototypeAuraRoot;
+        private ParticleSystem prototypeAuraParticles;
+        private ParticleSystem prototypeAuraBurstParticles;
+        private ParticleSystemRenderer prototypeAuraRenderer;
+        private Light prototypeAuraLight;
+        private Material prototypeAuraMaterial;
+        private AudioSource prototypeAuraAudioSource;
+        private float prototypeAuraPulseStartTime = -999f;
+        private float prototypeAuraPulseEndTime = -999f;
+        private float lastPrototypeArmSfxTime = -999f;
+        private ElementType lastPrototypeArmSfxElement = ElementType.None;
+        private SpellId lastComboReadySfxSpell = SpellId.None;
+        private float lastComboReadySfxTime = -999f;
+        private ElementType lastCastElement = ElementType.None;
+        private float lastCastTime = -999f;
+        private float lastVoiceRefundTime = -999f;
+        private SpellId lastCastSpellId = SpellId.None;
+        private string lastCastStatus = "Cast: idle";
+        private string lastManaCostStatus = "Cost: idle";
+        private string lastVoiceBoostStatus = "VoiceLink: waiting";
+        private float lastManaCost;
+        private float lastProcessedVoiceRecognitionTime = -999f;
 
         public SpellDatabase Database
         {
@@ -62,6 +108,26 @@ namespace ArcaneVR.Spell
         }
 
         public string PrototypeDebugStatus => prototypeDebugStatus;
+        public string LastCastStatus => lastCastStatus;
+        public string LastManaCostStatus => lastManaCostStatus;
+        public string LastVoiceBoostStatus => lastVoiceBoostStatus;
+        public SpellId LastCastSpellId => lastCastSpellId;
+        public ElementType LastCastElement => lastCastElement;
+        public float LastManaCost => lastManaCost;
+        public ElementType PrototypeArmedElement => prototypeArmedElement;
+        public bool IsPrototypeArmed => prototypeArmedElement != ElementType.None && prototypeArmedPose != PoseType.None;
+        public bool IsPrototypeVoiceBoosted => IsPrototypeVoiceBoostActive(prototypeArmedElement);
+        public float PrototypeLastForwardSpeed => prototypeLastForwardSpeed;
+        public string PrototypeArmStatus => IsPrototypeArmed
+            ? $"Arm {prototypeArmedElement} Voice {(IsPrototypeVoiceBoosted ? "O" : "X")} Link {(voiceEventsSubscribed ? "O" : "X")} Push {prototypeLastForwardSpeed:0.00}"
+            : lastCastStatus;
+        private float EffectivePrototypeAuraBaseSize => Mathf.Max(0.06f, prototypeAuraBaseSize);
+        private float EffectivePrototypeAuraBoostSize => Mathf.Max(0.12f, prototypeAuraBoostSize);
+        private float EffectivePrototypeAuraPulseDuration => Mathf.Max(0.85f, prototypeAuraPulseDuration);
+        private float EffectivePrototypeAuraVoicePulseMultiplier => Mathf.Max(4.5f, prototypeAuraVoicePulseMultiplier);
+        private float EffectivePrototypeVoiceFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.9f, prototypeVoiceFeedbackVolume));
+        private float EffectivePrototypeArmFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.35f, prototypeArmFeedbackVolume));
+        private float EffectivePrototypeCastFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.75f, prototypeCastFeedbackVolume));
 
         private void Awake()
         {
@@ -73,6 +139,9 @@ namespace ArcaneVR.Spell
 
             if (combatManager == null)
                 combatManager = FindAnyObjectByType<CombatManager>();
+
+            if (voiceRecognizer == null)
+                voiceRecognizer = FindAnyObjectByType<VoiceRecognizer>();
 
             if (feedbackManager == null)
                 feedbackManager = FindAnyObjectByType<FeedbackManager>();
@@ -92,7 +161,12 @@ namespace ArcaneVR.Spell
         private void OnEnable()
         {
             if (combinationChecker != null)
+            {
                 combinationChecker.OnCombinationSuccess += HandleCombinationSuccess;
+                combinationChecker.OnComboReadyChanged += HandleComboReadyChanged;
+            }
+
+            EnsureVoiceSubscription();
 
             SubscribePrototypeEvents();
             SubscribePrototypeRouterEvents();
@@ -101,7 +175,12 @@ namespace ArcaneVR.Spell
         private void OnDisable()
         {
             if (combinationChecker != null)
+            {
                 combinationChecker.OnCombinationSuccess -= HandleCombinationSuccess;
+                combinationChecker.OnComboReadyChanged -= HandleComboReadyChanged;
+            }
+
+            UnsubscribeVoiceEvents();
 
             UnsubscribePrototypeEvents();
             UnsubscribePrototypeRouterEvents();
@@ -109,12 +188,116 @@ namespace ArcaneVR.Spell
 
         private void Update()
         {
+            EnsureVoiceSubscription();
+            ProcessLatestVoiceRecognitionIfNeeded();
             UpdateGesturePrototypeCasting();
         }
 
         private void HandleCombinationSuccess(SpellId spellId)
         {
             Cast(spellId);
+        }
+
+        private void HandleComboReadyChanged(SpellId spellId, bool ready)
+        {
+            if (!ready || !SpellHitData.IsComboSpellId(spellId))
+                return;
+
+            if (lastComboReadySfxSpell == spellId && Time.time - lastComboReadySfxTime < 0.35f)
+                return;
+
+            lastComboReadySfxSpell = spellId;
+            lastComboReadySfxTime = Time.time;
+            lastCastStatus = $"Combo ready: {SpellHitData.GetDisplayName(spellId)}";
+            ArcaneSpellSfx.PlayCombo(
+                EnsurePrototypeFeedbackAudioSource(),
+                spellId,
+                ArcaneSpellSfxCue.ComboReady,
+                0.75f);
+        }
+
+        private void EnsureVoiceSubscription()
+        {
+            if (voiceRecognizer == null)
+            {
+                if (voiceEventsSubscribed)
+                    voiceEventsSubscribed = false;
+
+                voiceRecognizer = FindAnyObjectByType<VoiceRecognizer>();
+            }
+
+            if (voiceRecognizer == null || voiceEventsSubscribed)
+                return;
+
+            voiceRecognizer.OnVoiceCommand += HandleVoiceCommand;
+            voiceEventsSubscribed = true;
+            lastVoiceBoostStatus = "VoiceLink: subscribed";
+        }
+
+        private void UnsubscribeVoiceEvents()
+        {
+            if (!voiceEventsSubscribed || voiceRecognizer == null)
+                return;
+
+            voiceRecognizer.OnVoiceCommand -= HandleVoiceCommand;
+            voiceEventsSubscribed = false;
+            lastVoiceBoostStatus = "VoiceLink: unsubscribed";
+        }
+
+        private void HandleVoiceCommand(ElementType spokenElement)
+        {
+            if (spokenElement == ElementType.None)
+                return;
+
+            MarkVoiceRecognitionProcessed(spokenElement);
+
+            if (TryApplyPrototypeVoiceBoost(spokenElement))
+                return;
+
+            lastVoiceBoostStatus = IsPrototypeArmed
+                ? $"VoiceLink: heard {spokenElement}, armed {prototypeArmedElement}"
+                : $"VoiceLink: heard {spokenElement}, no arm";
+            lastCastStatus = IsPrototypeArmed
+                ? $"Voice mismatch: {spokenElement}/{prototypeArmedElement}"
+                : $"Voice heard: {spokenElement}";
+
+            var expectedElement = ResolveVoiceRefundElement();
+            if (expectedElement == ElementType.None || expectedElement != spokenElement)
+                return;
+
+            if (Time.time - lastVoiceRefundTime < voiceRefundCooldown)
+                return;
+
+            if (combatManager == null)
+                combatManager = FindAnyObjectByType<CombatManager>();
+
+            combatManager?.RefundVoiceMana();
+            lastVoiceRefundTime = Time.time;
+        }
+
+        private void ProcessLatestVoiceRecognitionIfNeeded()
+        {
+            if (voiceRecognizer == null ||
+                voiceRecognizer.LastRecognizedElement == ElementType.None ||
+                voiceRecognizer.LastRecognizedTime <= lastProcessedVoiceRecognitionTime + 0.001f)
+            {
+                return;
+            }
+
+            HandleVoiceCommand(voiceRecognizer.LastRecognizedElement);
+        }
+
+        private void MarkVoiceRecognitionProcessed(ElementType spokenElement)
+        {
+            if (voiceRecognizer != null &&
+                voiceRecognizer.LastRecognizedElement == spokenElement &&
+                voiceRecognizer.LastRecognizedTime > lastProcessedVoiceRecognitionTime)
+            {
+                lastProcessedVoiceRecognitionTime = voiceRecognizer.LastRecognizedTime;
+                return;
+            }
+
+            lastProcessedVoiceRecognitionTime = Time.time;
         }
 
         public void ConfigureGesturePrototype(GestureDetector detector, OVRHand hand, Transform spawnPoint, Transform spawnRoot)
@@ -204,7 +387,7 @@ namespace ArcaneVR.Spell
         private void HandleRightPrototypePoseConfirmed(PoseType pose)
         {
             if (currentPrototypePose != pose)
-                prototypeReadyForThrust = true;
+                prototypeReadyForThrust = false;
 
             currentPrototypePose = pose;
             hasPreviousPrototypeWristPosition = false;
@@ -213,6 +396,7 @@ namespace ArcaneVR.Spell
         private void HandleRightPrototypePoseCleared()
         {
             currentPrototypePose = PoseType.None;
+            ClearPrototypeArm();
             hasPreviousPrototypeWristPosition = false;
             prototypeReadyForThrust = true;
         }
@@ -228,8 +412,10 @@ namespace ArcaneVR.Spell
             prototypeCooldownTimer -= Time.deltaTime;
             ResolvePrototypeReferences();
             SyncPrototypePoseFromDetector();
+            UpdatePrototypeArmingState(currentPrototypePose);
 
             var spawnPoint = ResolvePrototypeSpawnPoint();
+            UpdatePrototypeAura(spawnPoint);
             if (spawnPoint == null || Time.deltaTime <= 0f)
             {
                 prototypeDebugStatus = "CAST: no spawn point";
@@ -242,7 +428,7 @@ namespace ArcaneVR.Spell
             {
                 previousPrototypeWristPosition = thrustPosition;
                 hasPreviousPrototypeWristPosition = true;
-                prototypeDebugStatus = $"CAST pose:{currentPrototypePose} speed:0.00/{prototypeThrustThreshold:0.00} init";
+                prototypeDebugStatus = $"CAST {PrototypeArmStatus} speed:0.00/{prototypeThrustThreshold:0.00} init";
                 return;
             }
 
@@ -253,20 +439,33 @@ namespace ArcaneVR.Spell
             var forwardSpeed = ResolvePrototypeForwardSpeed(spawnPoint, thrustPosition, wristVelocity);
             prototypeLastForwardSpeed = forwardSpeed;
             prototypeDebugStatus =
-                $"CAST pose:{currentPrototypePose} speed:{forwardSpeed:0.00}/{prototypeThrustThreshold:0.00} aim:{prototypeLastHandForwardSpeed:0.00} head:{prototypeLastHeadForwardSpeed:0.00} away:{prototypeLastAwayFromHeadSpeed:0.00} cd:{Mathf.Max(0f, prototypeCooldownTimer):0.00}";
+                $"CAST {PrototypeArmStatus} speed:{forwardSpeed:0.00}/{prototypeThrustThreshold:0.00} cd:{Mathf.Max(0f, prototypeCooldownTimer):0.00}";
 
             if (forwardSpeed < prototypeThrustThreshold * 0.25f)
                 prototypeReadyForThrust = true;
 
+            var armReady = IsPrototypeArmed &&
+                           currentPrototypePose == prototypeArmedPose &&
+                           Time.time - prototypeArmedTime >= prototypeArmReadyDelay;
+
             if (forwardSpeed <= prototypeThrustThreshold ||
-                currentPrototypePose == PoseType.None ||
+                !armReady ||
                 prototypeCooldownTimer > 0f ||
                 !prototypeReadyForThrust)
             {
                 return;
             }
 
-            FirePrototypeSpell(currentPrototypePose, castOrigin, fireDirection);
+            if (!allowPrototypeCastWithoutVoice && !IsPrototypeVoiceBoostActive(prototypeArmedElement))
+            {
+                prototypeReadyForThrust = false;
+                lastCastStatus = $"Blocked: say {prototypeArmedElement}";
+                lastManaCostStatus = "Cost: waiting voice";
+                prototypeDebugStatus = $"CAST blocked:{prototypeArmedElement} voice required";
+                return;
+            }
+
+            FirePrototypeSpell(prototypeArmedPose, castOrigin, fireDirection);
             prototypeCooldownTimer = prototypeCooldown;
             prototypeReadyForThrust = false;
         }
@@ -276,7 +475,10 @@ namespace ArcaneVR.Spell
             if (gestureRouter != null && gestureRouter.HasReceivedGestureEvent)
             {
                 if (currentPrototypePose != gestureRouter.CurrentRightPose)
+                {
                     currentPrototypePose = gestureRouter.CurrentRightPose;
+                    prototypeReadyForThrust = false;
+                }
                 return;
             }
 
@@ -288,7 +490,67 @@ namespace ArcaneVR.Spell
                 detectorPose = ConvertPoseIdToPrototypePose(gestureDetector.CurrentRightPose);
 
             if (currentPrototypePose != detectorPose)
+            {
                 currentPrototypePose = detectorPose;
+                prototypeReadyForThrust = false;
+            }
+        }
+
+        private void UpdatePrototypeArmingState(PoseType pose)
+        {
+            var element = ResolveDefaultPrototypeElement(pose);
+            if (pose == PoseType.None || element == ElementType.None)
+            {
+                ClearPrototypeArm();
+                return;
+            }
+
+            if (prototypeArmedPose == pose && prototypeArmedElement == element)
+                return;
+
+            prototypeArmedPose = pose;
+            prototypeArmedElement = element;
+            prototypeArmedTime = Time.time;
+            prototypeVoiceBoosted = false;
+            prototypeVoiceBoostElement = ElementType.None;
+            prototypeVoiceBoostTime = -999f;
+            prototypeReadyForThrust = false;
+            lastCastStatus = $"Armed: {element}";
+            PlayPrototypeElementArmFeedback(element);
+        }
+
+        private void ClearPrototypeArm()
+        {
+            prototypeArmedPose = PoseType.None;
+            prototypeArmedElement = ElementType.None;
+            prototypeArmedTime = -999f;
+            prototypeVoiceBoosted = false;
+            prototypeVoiceBoostElement = ElementType.None;
+            prototypeVoiceBoostTime = -999f;
+            StopPrototypeAura();
+        }
+
+        private bool TryApplyPrototypeVoiceBoost(ElementType spokenElement)
+        {
+            if (!IsPrototypeArmed || spokenElement != prototypeArmedElement)
+                return false;
+
+            prototypeVoiceBoosted = true;
+            prototypeVoiceBoostElement = spokenElement;
+            prototypeVoiceBoostTime = Time.time;
+            lastCastStatus = $"Armed: {prototypeArmedElement} voice+";
+            lastVoiceBoostStatus = $"VoiceLink: boosted {spokenElement}";
+            prototypeDebugStatus = $"CAST armed:{prototypeArmedElement} voice boost";
+            PlayPrototypeVoiceBoostFeedback(spokenElement);
+            return true;
+        }
+
+        private bool IsPrototypeVoiceBoostActive(ElementType element)
+        {
+            return element != ElementType.None &&
+                   prototypeVoiceBoosted &&
+                   prototypeVoiceBoostElement == element &&
+                   Time.time - prototypeVoiceBoostTime <= voiceBoostDuration;
         }
 
         private static PoseType ConvertPoseIdToPrototypePose(PoseId pose)
@@ -337,6 +599,457 @@ namespace ArcaneVR.Spell
                 return prototypeHand.transform;
 
             return rightHandSpawnPoint != null ? rightHandSpawnPoint : leftHandSpawnPoint;
+        }
+
+        private void UpdatePrototypeAura(Transform spawnPoint)
+        {
+            if (!showPrototypeArmedAura || !IsPrototypeArmed || spawnPoint == null)
+            {
+                StopPrototypeAura();
+                return;
+            }
+
+            EnsurePrototypeAura(spawnPoint);
+            if (prototypeAuraRoot == null)
+                return;
+
+            var boosted = IsPrototypeVoiceBoostActive(prototypeArmedElement);
+            var pulse = GetPrototypeAuraPulse01();
+            var color = boosted
+                ? Color.Lerp(GetElementColor(prototypeArmedElement), Color.white, 0.25f + pulse * 0.25f)
+                : GetElementColor(prototypeArmedElement);
+
+            var auraTransform = prototypeAuraRoot.transform;
+            if (auraTransform.parent != spawnPoint)
+                auraTransform.SetParent(spawnPoint, false);
+
+            auraTransform.localPosition = Vector3.zero;
+            auraTransform.localRotation = Quaternion.identity;
+            auraTransform.localScale = Vector3.one * Mathf.Lerp(1f, 2.6f, pulse);
+
+            if (!prototypeAuraRoot.activeSelf)
+                prototypeAuraRoot.SetActive(true);
+
+            ApplyAuraColor(color, boosted, pulse);
+            if (prototypeAuraParticles != null && !prototypeAuraParticles.isPlaying)
+                prototypeAuraParticles.Play(true);
+        }
+
+        private void EnsurePrototypeAura(Transform spawnPoint)
+        {
+            if (prototypeAuraRoot != null)
+                return;
+
+            prototypeAuraRoot = new GameObject("ArcaneArmedAura_Right");
+            prototypeAuraRoot.name = "ArcaneArmedAura_Right";
+            prototypeAuraRoot.hideFlags = HideFlags.DontSave;
+            prototypeAuraRoot.transform.SetParent(spawnPoint, false);
+            prototypeAuraRoot.transform.localPosition = Vector3.zero;
+            prototypeAuraRoot.transform.localRotation = Quaternion.identity;
+            prototypeAuraRoot.transform.localScale = Vector3.one;
+
+            prototypeAuraParticles = prototypeAuraRoot.AddComponent<ParticleSystem>();
+            ConfigurePrototypeAuraParticles(prototypeAuraParticles);
+
+            prototypeAuraRenderer = prototypeAuraRoot.GetComponent<ParticleSystemRenderer>();
+            prototypeAuraMaterial = CreateAuraMaterial(new Color(1f, 1f, 1f, 0.7f));
+            if (prototypeAuraRenderer != null && prototypeAuraMaterial != null)
+            {
+                prototypeAuraRenderer.material = prototypeAuraMaterial;
+                prototypeAuraRenderer.renderMode = ParticleSystemRenderMode.Billboard;
+                prototypeAuraRenderer.sortingFudge = 2f;
+                prototypeAuraRenderer.maxParticleSize = 0.16f;
+            }
+            else if (prototypeAuraRenderer != null)
+            {
+                prototypeAuraRenderer.enabled = false;
+            }
+
+            prototypeAuraBurstParticles = CreatePrototypeAuraBurstParticles(prototypeAuraRoot.transform, prototypeAuraMaterial);
+
+            prototypeAuraLight = prototypeAuraRoot.AddComponent<Light>();
+            prototypeAuraLight.type = LightType.Point;
+            prototypeAuraLight.range = 0.45f;
+            prototypeAuraLight.intensity = 0.55f;
+
+            prototypeAuraAudioSource = prototypeAuraRoot.AddComponent<AudioSource>();
+            ConfigurePrototypeFeedbackAudioSource(prototypeAuraAudioSource);
+
+            prototypeAuraRoot.SetActive(false);
+        }
+
+        private AudioSource EnsurePrototypeFeedbackAudioSource()
+        {
+            var spawnPoint = ResolvePrototypeSpawnPoint();
+            if (showPrototypeArmedAura && spawnPoint != null)
+            {
+                EnsurePrototypeAura(spawnPoint);
+                if (prototypeAuraRoot != null && !prototypeAuraRoot.activeSelf)
+                    prototypeAuraRoot.SetActive(true);
+            }
+
+            if (prototypeAuraAudioSource == null)
+            {
+                prototypeAuraAudioSource = GetComponent<AudioSource>();
+                if (prototypeAuraAudioSource == null)
+                    prototypeAuraAudioSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            ConfigurePrototypeFeedbackAudioSource(prototypeAuraAudioSource);
+            return prototypeAuraAudioSource;
+        }
+
+        private static void ConfigurePrototypeFeedbackAudioSource(AudioSource audioSource)
+        {
+            if (audioSource == null)
+                return;
+
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;
+            audioSource.rolloffMode = AudioRolloffMode.Linear;
+            audioSource.minDistance = 0.15f;
+            audioSource.maxDistance = 8f;
+            audioSource.dopplerLevel = 0f;
+            audioSource.ignoreListenerPause = true;
+            audioSource.mute = false;
+            audioSource.volume = 1f;
+        }
+
+        private ParticleSystem CreatePrototypeAuraBurstParticles(Transform parent, Material material)
+        {
+            var burstObject = new GameObject("ArcaneVoiceConfirmBurst")
+            {
+                hideFlags = HideFlags.DontSave
+            };
+            burstObject.transform.SetParent(parent, false);
+            burstObject.transform.localPosition = Vector3.zero;
+            burstObject.transform.localRotation = Quaternion.identity;
+            burstObject.transform.localScale = Vector3.one;
+
+            var particles = burstObject.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.playOnAwake = false;
+            main.loop = false;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.28f, 0.72f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.22f, 0.52f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.22f);
+            main.startColor = new Color(1f, 1f, 1f, 0.95f);
+            main.maxParticles = 180;
+
+            var emission = particles.emission;
+            emission.enabled = false;
+
+            var shape = particles.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.035f;
+            shape.radiusThickness = 0.2f;
+
+            var noise = particles.noise;
+            noise.enabled = true;
+            noise.strength = 0.08f;
+            noise.frequency = 2.5f;
+            noise.scrollSpeed = 0.6f;
+
+            var sizeOverLifetime = particles.sizeOverLifetime;
+            sizeOverLifetime.enabled = true;
+            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(
+                1f,
+                new AnimationCurve(
+                    new Keyframe(0f, 0.2f),
+                    new Keyframe(0.12f, 1.35f),
+                    new Keyframe(1f, 0f)));
+
+            var colorOverLifetime = particles.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            var fade = new Gradient();
+            fade.SetKeys(
+                new[]
+                {
+                    new GradientColorKey(Color.white, 0f),
+                    new GradientColorKey(Color.white, 1f)
+                },
+                new[]
+                {
+                    new GradientAlphaKey(0f, 0f),
+                    new GradientAlphaKey(1f, 0.1f),
+                    new GradientAlphaKey(0.8f, 0.45f),
+                    new GradientAlphaKey(0f, 1f)
+                });
+            colorOverLifetime.color = fade;
+
+            var renderer = burstObject.GetComponent<ParticleSystemRenderer>();
+            if (renderer != null && material != null)
+            {
+                renderer.material = material;
+                renderer.renderMode = ParticleSystemRenderMode.Billboard;
+                renderer.sortingFudge = 3f;
+                renderer.maxParticleSize = 0.35f;
+            }
+            else if (renderer != null)
+            {
+                renderer.enabled = false;
+            }
+
+            return particles;
+        }
+
+        private void ConfigurePrototypeAuraParticles(ParticleSystem particles)
+        {
+            var main = particles.main;
+            main.playOnAwake = false;
+            main.loop = true;
+            main.duration = 1f;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            main.startLifetime = 0.45f;
+            main.startSpeed = 0.035f;
+            main.startSize = EffectivePrototypeAuraBaseSize;
+            main.startColor = new Color(1f, 1f, 1f, 0.65f);
+            main.maxParticles = 240;
+
+            var emission = particles.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 48f;
+
+            var shape = particles.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.075f;
+            shape.radiusThickness = 0.55f;
+
+            var noise = particles.noise;
+            noise.enabled = true;
+            noise.strength = 0.035f;
+            noise.frequency = 1.7f;
+            noise.scrollSpeed = 0.25f;
+
+            var sizeOverLifetime = particles.sizeOverLifetime;
+            sizeOverLifetime.enabled = true;
+            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(
+                1f,
+                new AnimationCurve(
+                    new Keyframe(0f, 0.35f),
+                    new Keyframe(0.22f, 1f),
+                    new Keyframe(1f, 0.15f)));
+
+            var colorOverLifetime = particles.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            var fade = new Gradient();
+            fade.SetKeys(
+                new[]
+                {
+                    new GradientColorKey(Color.white, 0f),
+                    new GradientColorKey(Color.white, 1f)
+                },
+                new[]
+                {
+                    new GradientAlphaKey(0f, 0f),
+                    new GradientAlphaKey(1f, 0.2f),
+                    new GradientAlphaKey(0f, 1f)
+                });
+            colorOverLifetime.color = fade;
+        }
+
+        private void StopPrototypeAura()
+        {
+            if (prototypeAuraRoot == null)
+                return;
+
+            if (prototypeAuraParticles != null)
+                prototypeAuraParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            if (prototypeAuraBurstParticles != null)
+                prototypeAuraBurstParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            prototypeAuraRoot.SetActive(false);
+        }
+
+        private void ApplyAuraColor(Color color, bool boosted, float pulse)
+        {
+            var auraColor = Color.Lerp(color, Color.white, Mathf.Clamp01(pulse * 0.4f));
+            auraColor.a = Mathf.Clamp01((boosted ? 0.78f : 0.52f) + pulse * 0.16f);
+
+            var boost01 = boosted ? 1f : 0f;
+            var startSize = Mathf.Lerp(EffectivePrototypeAuraBaseSize, EffectivePrototypeAuraBoostSize, boost01);
+            startSize *= Mathf.Lerp(1f, EffectivePrototypeAuraVoicePulseMultiplier, pulse);
+
+            if (prototypeAuraParticles != null)
+            {
+                var main = prototypeAuraParticles.main;
+                main.startColor = auraColor;
+                main.startSize = Mathf.Max(0.018f, startSize);
+                main.startSpeed = Mathf.Lerp(0.045f, 0.095f, boost01) + pulse * 0.11f;
+
+                var emission = prototypeAuraParticles.emission;
+                emission.rateOverTime = Mathf.Lerp(62f, 130f, boost01) + pulse * 360f;
+
+                var shape = prototypeAuraParticles.shape;
+                shape.radius = Mathf.Lerp(0.09f, 0.18f, boost01) + pulse * 0.18f;
+            }
+
+            if (prototypeAuraBurstParticles != null)
+            {
+                var main = prototypeAuraBurstParticles.main;
+                main.startColor = auraColor;
+            }
+
+            if (prototypeAuraMaterial != null)
+            {
+                if (prototypeAuraMaterial.HasProperty("_BaseColor"))
+                    prototypeAuraMaterial.SetColor("_BaseColor", auraColor);
+                if (prototypeAuraMaterial.HasProperty("_Color"))
+                    prototypeAuraMaterial.SetColor("_Color", auraColor);
+            }
+
+            if (prototypeAuraRenderer != null)
+                prototypeAuraRenderer.enabled = prototypeAuraMaterial != null;
+
+            if (prototypeAuraLight != null)
+            {
+                prototypeAuraLight.color = color;
+                prototypeAuraLight.range = Mathf.Lerp(0.55f, 0.95f, boost01) + pulse * 0.55f;
+                prototypeAuraLight.intensity = Mathf.Lerp(0.8f, 1.75f, boost01) + pulse * 3.6f;
+            }
+        }
+
+        private float GetPrototypeAuraPulse01()
+        {
+            if (Time.time >= prototypeAuraPulseEndTime)
+                return 0f;
+
+            var duration = Mathf.Max(0.01f, prototypeAuraPulseEndTime - prototypeAuraPulseStartTime);
+            var normalized = Mathf.Clamp01((Time.time - prototypeAuraPulseStartTime) / duration);
+            return 1f - Mathf.SmoothStep(0f, 1f, normalized);
+        }
+
+        private void PlayPrototypeElementArmFeedback(ElementType element)
+        {
+            if (element == ElementType.None)
+                return;
+
+            if (lastPrototypeArmSfxElement == element && Time.time - lastPrototypeArmSfxTime < 0.28f)
+                return;
+
+            lastPrototypeArmSfxElement = element;
+            lastPrototypeArmSfxTime = Time.time;
+
+            var spawnPoint = ResolvePrototypeSpawnPoint();
+            if (showPrototypeArmedAura && spawnPoint != null)
+            {
+                EnsurePrototypeAura(spawnPoint);
+                if (prototypeAuraRoot != null && !prototypeAuraRoot.activeSelf)
+                    prototypeAuraRoot.SetActive(true);
+
+                prototypeAuraPulseStartTime = Time.time;
+                prototypeAuraPulseEndTime = Time.time + 0.18f;
+                ApplyAuraColor(GetElementColor(element), false, 0.35f);
+                prototypeAuraParticles?.Emit(18);
+            }
+
+            ArcaneSpellSfx.Play(
+                EnsurePrototypeFeedbackAudioSource(),
+                element,
+                ArcaneSpellSfxCue.ElementArm,
+                EffectivePrototypeArmFeedbackVolume);
+        }
+
+        private void PlayPrototypeVoiceBoostFeedback(ElementType element)
+        {
+            prototypeAuraPulseStartTime = Time.time;
+            prototypeAuraPulseEndTime = Time.time + EffectivePrototypeAuraPulseDuration;
+
+            var spawnPoint = ResolvePrototypeSpawnPoint();
+            if (showPrototypeArmedAura && spawnPoint != null)
+            {
+                EnsurePrototypeAura(spawnPoint);
+                if (prototypeAuraRoot != null && !prototypeAuraRoot.activeSelf)
+                    prototypeAuraRoot.SetActive(true);
+
+                var color = Color.Lerp(GetElementColor(element), Color.white, 0.25f);
+                prototypeAuraRoot.transform.localScale = Vector3.one * 2.6f;
+                ApplyAuraColor(color, true, 1f);
+                prototypeAuraParticles?.Emit(90);
+                prototypeAuraBurstParticles?.Emit(110);
+            }
+
+            ArcaneSpellSfx.Play(
+                EnsurePrototypeFeedbackAudioSource(),
+                element,
+                ArcaneSpellSfxCue.VoiceConfirm,
+                EffectivePrototypeVoiceFeedbackVolume);
+        }
+
+        private static Material CreateAuraMaterial(Color color)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Unlit") ??
+                         Shader.Find("Sprites/Default") ??
+                         Shader.Find("Unlit/Color") ??
+                         Shader.Find("Hidden/Internal-Colored");
+            if (shader == null)
+                return null;
+
+            var material = new Material(shader)
+            {
+                name = "ArcaneRuntimeAuraMaterial",
+                hideFlags = HideFlags.DontSave,
+                renderQueue = 3000
+            };
+
+            if (material.HasProperty("_Surface"))
+                material.SetFloat("_Surface", 1f);
+            if (material.HasProperty("_SrcBlend"))
+                material.SetFloat("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            if (material.HasProperty("_DstBlend"))
+                material.SetFloat("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            if (material.HasProperty("_ZWrite"))
+                material.SetFloat("_ZWrite", 0f);
+            if (material.HasProperty("_BaseColor"))
+                material.SetColor("_BaseColor", color);
+            if (material.HasProperty("_Color"))
+                material.SetColor("_Color", color);
+
+            var particleTexture = CreateAuraParticleTexture();
+            if (material.HasProperty("_BaseMap"))
+                material.SetTexture("_BaseMap", particleTexture);
+            if (material.HasProperty("_MainTex"))
+                material.SetTexture("_MainTex", particleTexture);
+
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.EnableKeyword("_ALPHABLEND_ON");
+            return material;
+        }
+
+        private static Texture2D CreateAuraParticleTexture()
+        {
+            const int size = 32;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                name = "ArcaneRuntimeAuraParticleTexture",
+                hideFlags = HideFlags.DontSave,
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            var pixels = new Color32[size * size];
+
+            for (var y = 0; y < size; y++)
+            {
+                for (var x = 0; x < size; x++)
+                {
+                    var u = ((x + 0.5f) / size) * 2f - 1f;
+                    var v = ((y + 0.5f) / size) * 2f - 1f;
+                    var distance = Mathf.Sqrt(u * u + v * v);
+                    var alpha = Mathf.Clamp01(1f - distance);
+                    alpha *= alpha;
+                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
+                }
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            return texture;
         }
 
         private Vector3 ResolvePrototypeCastOrigin(Transform fallback)
@@ -642,6 +1355,44 @@ namespace ArcaneVR.Spell
             var statusEffect = data != null ? data.statusEffect : ResolveDefaultPrototypeStatusEffect(pose);
             var damage = data != null ? data.damage : ResolveDefaultPrototypeDamage(pose);
             var statusDuration = data != null ? data.statusDuration : ResolveDefaultPrototypeStatusDuration(pose);
+            var statusMagnitude = data != null ? data.statusMagnitude : ResolveDefaultPrototypeStatusMagnitude(statusEffect);
+            var statusTickInterval = data != null ? data.statusTickInterval : ResolveDefaultPrototypeStatusTickInterval(statusEffect);
+            var spellId = ResolvePrototypeSpellId(pose);
+            var manaCost = ResolvePrototypeManaCost(spellId);
+            var voiceBoosted = IsPrototypeVoiceBoostActive(element);
+            if (voiceBoosted)
+            {
+                damage *= Mathf.Max(1f, voiceBoostDamageMultiplier);
+                statusMagnitude *= Mathf.Max(1f, voiceBoostStatusMagnitudeMultiplier);
+            }
+
+            if (combatManager == null)
+                combatManager = FindAnyObjectByType<CombatManager>();
+
+            if (combatManager == null)
+            {
+                RecordCastBlocked(spellId, element, manaCost, "Cost: no CombatManager");
+                prototypeDebugStatus = $"CAST blocked:{pose} no CombatManager";
+                return;
+            }
+
+            if (!combatManager.TryConsumeMana(manaCost))
+            {
+                RecordCastBlocked(spellId, element, manaCost, $"Cost: NoMana {combatManager.CurrentMana:0.#}/{manaCost:0.#}");
+                prototypeDebugStatus = $"CAST blocked:{pose} no mana {combatManager.CurrentMana:0.#}/{manaCost:0.#}";
+                return;
+            }
+
+            lastManaCost = manaCost;
+            var manaAfterConsume = combatManager.CurrentMana;
+            lastManaCostStatus = $"Cost: Paid {manaCost:0.#} -> {manaAfterConsume:0.#}";
+            if (voiceBoosted && Time.time - lastVoiceRefundTime >= voiceRefundCooldown)
+            {
+                combatManager.RefundVoiceMana();
+                lastVoiceRefundTime = Time.time;
+                lastManaCostStatus = $"Cost: Paid {manaCost:0.#} -> {combatManager.CurrentMana:0.#} voice+";
+            }
+
             var projectileSpeed = Mathf.Max(
                 prototypeMinimumProjectileSpeed,
                 data != null ? data.projectileSpeed : prototypeSpellSpeed);
@@ -660,9 +1411,71 @@ namespace ArcaneVR.Spell
                 projectile = projectileObject.AddComponent<SpellProjectile>();
 
             EnsurePrototypeProjectilePhysics(projectileObject);
-            projectile.InitializePrototype(pose, projectileSpeed, direction, element, statusEffect, damage, statusDuration);
-            prototypeDebugStatus = $"CAST fired:{pose} {element}/{statusEffect} speed:{prototypeLastForwardSpeed:0.00}";
+            projectile.InitializePrototype(
+                pose,
+                projectileSpeed,
+                direction,
+                element,
+                statusEffect,
+                damage,
+                statusDuration,
+                statusMagnitude,
+                statusTickInterval);
+            projectile.spellId = spellId;
+            RememberCastElement(element);
+            lastCastSpellId = spellId;
+            lastCastStatus = voiceBoosted
+                ? $"Cast: {element} {spellId} voice+"
+                : $"Cast: {element} {spellId}";
+            prototypeDebugStatus = voiceBoosted
+                ? $"CAST fired:{pose} {element}/{statusEffect} voice+ speed:{prototypeLastForwardSpeed:0.00}"
+                : $"CAST fired:{pose} {element}/{statusEffect} speed:{prototypeLastForwardSpeed:0.00}";
+            PlayPrototypeSpellCastFeedback(element);
+            prototypeVoiceBoosted = false;
+            prototypeVoiceBoostElement = ElementType.None;
+            prototypeVoiceBoostTime = -999f;
             Debug.Log($"[SPELL CAST] {pose} | {element} | {statusEffect} | DMG:{damage} | Dir:{direction}");
+        }
+
+        private void PlayPrototypeSpellCastFeedback(ElementType element)
+        {
+            if (element == ElementType.None)
+                return;
+
+            ArcaneSpellSfx.Play(
+                EnsurePrototypeFeedbackAudioSource(),
+                element,
+                ArcaneSpellSfxCue.SpellCast,
+                EffectivePrototypeCastFeedbackVolume);
+        }
+
+        private void RecordCastBlocked(SpellId spellId, ElementType element, float manaCost, string costStatus)
+        {
+            lastCastSpellId = spellId;
+            lastCastElement = element;
+            lastManaCost = manaCost;
+            lastManaCostStatus = costStatus;
+            lastCastStatus = $"Blocked: {element} {spellId}";
+        }
+
+        private SpellId ResolvePrototypeSpellId(PoseType pose)
+        {
+            return pose switch
+            {
+                PoseType.OpenPalm => SpellId.Single_Pointer,
+                PoseType.Fist => SpellId.Single_Wave,
+                PoseType.ThumbsUp => SpellId.Single_Strike,
+                _ => SpellId.None
+            };
+        }
+
+        private float ResolvePrototypeManaCost(SpellId spellId)
+        {
+            if (spellDatabase == null)
+                spellDatabase = Resources.Load<SpellDatabase>("ArcaneVR/SpellDatabase");
+
+            var spellData = spellDatabase != null ? spellDatabase.Get(spellId) : null;
+            return spellData != null ? Mathf.Max(0f, spellData.manaCost) : Mathf.Max(0f, prototypeFallbackManaCost);
         }
 
         private SpellDatabase.PoseSpellData ResolvePrototypeSpellData(PoseType pose)
@@ -797,6 +1610,22 @@ namespace ArcaneVR.Spell
             };
         }
 
+        private static float ResolveDefaultPrototypeStatusMagnitude(StatusEffect statusEffect)
+        {
+            return statusEffect switch
+            {
+                StatusEffect.Burn => 2f,
+                StatusEffect.Slow => 0.45f,
+                StatusEffect.Stagger => 1f,
+                _ => 0f
+            };
+        }
+
+        private static float ResolveDefaultPrototypeStatusTickInterval(StatusEffect statusEffect)
+        {
+            return statusEffect == StatusEffect.Burn ? 1f : 0f;
+        }
+
         public bool Cast(SpellId spellId)
         {
             if (spellDatabase == null)
@@ -809,11 +1638,28 @@ namespace ArcaneVR.Spell
             if (data == null)
             {
                 Debug.LogWarning($"SpellDatabase has no entry for {spellId}.");
+                lastCastStatus = $"Blocked: missing {spellId}";
+                lastManaCostStatus = "Cost: missing data";
                 return false;
             }
 
-            if (combatManager != null && !combatManager.TryConsumeMana(data.manaCost))
+            if (combatManager == null)
+                combatManager = FindAnyObjectByType<CombatManager>();
+
+            if (combatManager == null)
+            {
+                RecordCastBlocked(spellId, data.element, data.manaCost, "Cost: no CombatManager");
                 return false;
+            }
+
+            if (!combatManager.TryConsumeMana(data.manaCost))
+            {
+                RecordCastBlocked(spellId, data.element, data.manaCost, $"Cost: NoMana {combatManager.CurrentMana:0.#}/{data.manaCost:0.#}");
+                return false;
+            }
+
+            lastManaCost = data.manaCost;
+            lastManaCostStatus = $"Cost: Paid {data.manaCost:0.#} -> {combatManager.CurrentMana:0.#}";
 
             var spawnPoint = ResolveSpawnPoint(spellId);
             var spawnPosition = spawnPoint != null ? spawnPoint.position : transform.position;
@@ -837,14 +1683,67 @@ namespace ArcaneVR.Spell
                 data.statusEffect,
                 data.statusDuration,
                 direction,
-                combatManager);
+                combatManager,
+                data.statusMagnitude,
+                data.statusTickInterval);
+            RememberCastElement(element);
+            lastCastSpellId = spellId;
+            lastCastStatus = SpellHitData.IsComboSpellId(spellId)
+                ? $"Cast: {SpellHitData.GetDisplayName(spellId)}"
+                : $"Cast: {element} {spellId}";
 
             if (spellSpawnRoot != null)
                 projectileObject.transform.SetParent(spellSpawnRoot, true);
 
             Destroy(projectileObject, fallbackProjectileLifetime);
             feedbackManager?.OnSpellCast(spellId);
+            PlaySpellCastFeedback(spellId, element);
             return true;
+        }
+
+        private void PlaySpellCastFeedback(SpellId spellId, ElementType element)
+        {
+            var audioSource = EnsurePrototypeFeedbackAudioSource();
+            if (SpellHitData.IsComboSpellId(spellId))
+            {
+                ArcaneSpellSfx.PlayCombo(
+                    audioSource,
+                    spellId,
+                    ArcaneSpellSfxCue.ComboCast,
+                    EffectivePrototypeCastFeedbackVolume);
+
+                prototypeAuraPulseStartTime = Time.time;
+                prototypeAuraPulseEndTime = Time.time + 0.35f;
+                prototypeAuraBurstParticles?.Emit(120);
+                return;
+            }
+
+            ArcaneSpellSfx.Play(
+                audioSource,
+                element,
+                ArcaneSpellSfxCue.SpellCast,
+                EffectivePrototypeCastFeedbackVolume);
+        }
+
+        private ElementType ResolveVoiceRefundElement()
+        {
+            if (combinationChecker != null && combinationChecker.CurrentElement != ElementType.None)
+                return combinationChecker.CurrentElement;
+
+            var prototypeElement = ResolveDefaultPrototypeElement(currentPrototypePose);
+            if (prototypeElement != ElementType.None)
+                return prototypeElement;
+
+            return Time.time - lastCastTime <= voiceRefundMatchWindow ? lastCastElement : ElementType.None;
+        }
+
+        private void RememberCastElement(ElementType element)
+        {
+            if (element == ElementType.None)
+                return;
+
+            lastCastElement = element;
+            lastCastTime = Time.time;
         }
 
         private Transform ResolveSpawnPoint(SpellId spellId)

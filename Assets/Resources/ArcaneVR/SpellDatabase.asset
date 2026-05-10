@@ -21,6 +21,8 @@ MonoBehaviour:
     projectileSpeed: 18
     statusEffect: 1
     statusDuration: 4
+    statusMagnitude: 2
+    statusTickInterval: 1
   - spellId: 2
     element: 2
     prefab: {fileID: 647664199890191740, guid: ec39cfcc6455d1b44a90a57bf15166d7, type: 3}
@@ -29,6 +31,8 @@ MonoBehaviour:
     projectileSpeed: 12
     statusEffect: 2
     statusDuration: 3
+    statusMagnitude: 0.45
+    statusTickInterval: 0
   - spellId: 3
     element: 3
     prefab: {fileID: 357080079533716389, guid: 0dffd89118a9819428de7928cf668f54, type: 3}
@@ -37,6 +41,8 @@ MonoBehaviour:
     projectileSpeed: 20
     statusEffect: 3
     statusDuration: 1
+    statusMagnitude: 1
+    statusTickInterval: 0
   - spellId: 4
     element: 1
     prefab: {fileID: 4382499408830527743, guid: 697582119625e654daae8ae344d8f899, type: 3}
@@ -45,28 +51,36 @@ MonoBehaviour:
     projectileSpeed: 16
     statusEffect: 3
     statusDuration: 3
+    statusMagnitude: 1.2
+    statusTickInterval: 0
   - spellId: 5
     element: 2
     prefab: {fileID: 1157306479389005453, guid: 66eee5f75a9a5df4da0738acd153c605, type: 3}
-    damage: 22
+    damage: 18
     manaCost: 2
     projectileSpeed: 17
     statusEffect: 2
     statusDuration: 4
+    statusMagnitude: 1
+    statusTickInterval: 0
   - spellId: 6
     element: 3
     prefab: {fileID: 4838282869563444037, guid: 787fa1fc46f85de44ab2f6b248fe796c, type: 3}
-    damage: 30
+    damage: 34
     manaCost: 2
     projectileSpeed: 19
     statusEffect: 1
     statusDuration: 5
+    statusMagnitude: 3.5
+    statusTickInterval: 0.75
   poseSpells:
   - pose: 1
     element: 1
     statusEffect: 1
     damage: 10
     statusDuration: 3
+    statusMagnitude: 2
+    statusTickInterval: 1
     projectileSpeed: 10
     prefab: {fileID: 0}
   - pose: 2
@@ -74,6 +88,8 @@ MonoBehaviour:
     statusEffect: 2
     damage: 8
     statusDuration: 3
+    statusMagnitude: 0.45
+    statusTickInterval: 0
     projectileSpeed: 10
     prefab: {fileID: 0}
   - pose: 3
@@ -81,5 +97,7 @@ MonoBehaviour:
     statusEffect: 3
     damage: 12
     statusDuration: 1
+    statusMagnitude: 1
+    statusTickInterval: 0
     projectileSpeed: 12
     prefab: {fileID: 0}

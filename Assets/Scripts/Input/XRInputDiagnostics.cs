@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using ArcaneVR.Core;
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Hands;
@@ -88,12 +89,7 @@ public class XRInputDiagnostics : MonoBehaviour
 
     Transform FindXrOrigin()
     {
-        var origin = GameObject.Find("XR Origin");
-        if (origin != null)
-            return origin.transform;
-
-        origin = GameObject.Find("XROriginCameraRig");
-        return origin != null ? origin.transform : null;
+        return ArcanePlayerRigResolver.FindPlayerRigTransform();
     }
 
     void CreateMaterials()
@@ -179,7 +175,7 @@ public class XRInputDiagnostics : MonoBehaviour
 
     bool F1WasPressed()
     {
-#if ENABLE_INPUT_SYSTEM
+#if UNITY_EDITOR && ENABLE_INPUT_SYSTEM
         var keyboard = UnityEngine.InputSystem.Keyboard.current;
         return keyboard != null && keyboard.f1Key.wasPressedThisFrame;
 #else
@@ -359,7 +355,7 @@ public class XRInputDiagnostics : MonoBehaviour
         m_Text.AppendLine("Controllers: move, trigger, grip, A/B/X/Y.");
         m_Text.AppendLine("Hands: put controllers down, then pinch thumb + index.");
         m_Text.AppendLine();
-        m_Text.Append("XR Origin: ");
+        m_Text.Append("Player Rig: ");
         m_Text.AppendLine(m_XrOrigin != null ? m_XrOrigin.name : "not found");
         m_Text.Append("Hand subsystem: ");
         m_Text.AppendLine(m_HandSubsystem != null && m_HandSubsystem.running ? "running" : "not running");
