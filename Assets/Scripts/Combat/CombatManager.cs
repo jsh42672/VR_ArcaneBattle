@@ -9,6 +9,11 @@ namespace ArcaneVR.Combat
     /// </summary>
     public class CombatManager : MonoBehaviour
     {
+        [Header("Player Health")]
+        [SerializeField] private float currentHP = 100f;
+        [SerializeField] private float maxHP = 100f;
+
+        [Header("Mana")]
         [SerializeField] private float currentMana = 4f;
         [SerializeField] private float maxMana = 4f;
         [SerializeField] private float manaRegenPerSecond = 0.35f;
@@ -19,11 +24,17 @@ namespace ArcaneVR.Combat
 
         public event Action<float> OnPlayerHit;
         public event Action<float, ElementType> OnBossHit;
+        public event Action<float, float> OnPlayerHealthChanged;
+        public event Action OnPlayerDefeated;
         public event Action<float, float> OnManaChanged;
         public event Action<float, float> OnManaDisrupted;
 
         private float disruptionRemaining;
+        private bool playerDefeatedNotified;
 
+        public float CurrentHP => currentHP;
+        public float MaxHP => maxHP;
+        public bool IsPlayerDefeated => currentHP <= 0f;
         public float CurrentMana => currentMana;
         public float MaxMana => maxMana;
         public float ManaRegenPerSecond => manaRegenPerSecond;
@@ -33,7 +44,9 @@ namespace ArcaneVR.Combat
 
         private void Awake()
         {
+            currentHP = Mathf.Clamp(currentHP <= 0f ? maxHP : currentHP, 0f, maxHP);
             currentMana = Mathf.Clamp(currentMana, 0f, maxMana);
+            NotifyPlayerHealthChanged();
             NotifyManaChanged();
         }
 
@@ -87,6 +100,7 @@ namespace ArcaneVR.Combat
                 return;
 
             OnPlayerHit?.Invoke(damage);
+            SetPlayerHP(currentHP - damage);
         }
 
         public void ApplyPlayerHit(SpellHitData hitData)
@@ -107,6 +121,19 @@ namespace ArcaneVR.Combat
 
             disruptionRemaining = Mathf.Max(disruptionRemaining, duration);
             OnManaDisrupted?.Invoke(Mathf.Max(0f, manaDamage), disruptionRemaining);
+        }
+
+        public void HealPlayer(float amount)
+        {
+            if (amount <= 0f)
+                return;
+
+            SetPlayerHP(currentHP + amount);
+        }
+
+        public void RestorePlayerHealth()
+        {
+            SetPlayerHP(maxHP);
         }
 
         public void ApplyBossHit(SpellProjectile projectile)
@@ -133,6 +160,30 @@ namespace ArcaneVR.Combat
 
             currentMana = nextMana;
             NotifyManaChanged();
+        }
+
+        private void SetPlayerHP(float value)
+        {
+            var nextHP = Mathf.Clamp(value, 0f, maxHP);
+            if (Mathf.Approximately(currentHP, nextHP))
+                return;
+
+            currentHP = nextHP;
+            if (currentHP > 0f)
+                playerDefeatedNotified = false;
+
+            NotifyPlayerHealthChanged();
+
+            if (currentHP <= 0f && !playerDefeatedNotified)
+            {
+                playerDefeatedNotified = true;
+                OnPlayerDefeated?.Invoke();
+            }
+        }
+
+        private void NotifyPlayerHealthChanged()
+        {
+            OnPlayerHealthChanged?.Invoke(currentHP, maxHP);
         }
 
         private void NotifyManaChanged()
