@@ -4,12 +4,26 @@ namespace ArcaneVR.Combat
 {
     public class BossPatternCombatBridge : MonoBehaviour
     {
-        [SerializeField] private DodgeDetector dodgeDetector;
-        [SerializeField] private BarrierController barrierController;
-        [SerializeField] private GolemCombatTarget golemTarget;
-        [SerializeField] private float defaultResponseWindowDuration = 1.2f;
-        [SerializeField] private float defaultChargeCounterDuration = 3f;
-        [SerializeField] private float defaultGolemBarrierDuration = 8f;
+        [SerializeField]
+        private DodgeDetector dodgeDetector;
+
+        [SerializeField]
+        private BarrierController barrierController;
+
+        [SerializeField]
+        private GolemCombatTarget golemTarget;
+
+        [SerializeField]
+        private ConstraintController constraintController;
+
+        [SerializeField]
+        private float defaultResponseWindowDuration = 1.2f;
+
+        [SerializeField]
+        private float defaultChargeCounterDuration = 3f;
+
+        [SerializeField]
+        private float defaultGolemBarrierDuration = 8f;
 
         public string LastBridgeStatus { get; private set; } = "Bridge: idle";
 
@@ -47,6 +61,7 @@ namespace ArcaneVR.Combat
         {
             ResolveReferences();
             golemTarget?.BeginChargeCounterWindow(duration);
+            constraintController?.BeginConstraint(duration);
             LastBridgeStatus = "Charge counter window";
         }
 
@@ -72,6 +87,9 @@ namespace ArcaneVR.Combat
 
             if (golemTarget == null)
                 golemTarget = FindAnyObjectByType<GolemCombatTarget>();
+
+            if (constraintController == null)
+                constraintController = FindAnyObjectByType<ConstraintController>();
         }
     }
 }

@@ -7,19 +7,45 @@ namespace ArcaneVR.Combat
 {
     public class GolemCombatTarget : MonoBehaviour, ISpellTarget
     {
-        [SerializeField] private float maxHealth = 300f;
-        [SerializeField] private float currentHealth = 300f;
-        [SerializeField, Range(0f, 1f)] private float barrierDamageMultiplier = 0.2f;
-        [SerializeField] private float weakDamageMultiplier = 1.5f;
-        [SerializeField] private float weakDuration = 5f;
-        [SerializeField] private float staggerDuration = 2.5f;
-        [SerializeField] private float slowDuration = 3f;
-        [SerializeField] private float burnDuration = 4f;
-        [SerializeField] private float defaultChargeCounterDuration = 3f;
-        [SerializeField] private float defaultBarrierDuration = 8f;
+        [SerializeField]
+        private float maxHealth = 300f;
+
+        [SerializeField]
+        private float currentHealth = 300f;
+
+        [SerializeField, Range(0f, 1f)]
+        private float barrierDamageMultiplier = 0.2f;
+
+        [SerializeField]
+        private float weakDamageMultiplier = 1.5f;
+
+        [SerializeField]
+        private float weakDuration = 5f;
+
+        [SerializeField]
+        private float staggerDuration = 2.5f;
+
+        [SerializeField]
+        private float slowDuration = 3f;
+
+        [SerializeField]
+        private float burnDuration = 4f;
+
+        [SerializeField]
+        private float defaultChargeCounterDuration = 3f;
+
+        [SerializeField]
+        private float defaultBarrierDuration = 8f;
 
         public event Action<float, float> OnHealthChanged;
         public event Action<string> OnCombatCueChanged;
+        public event Action<float, ElementType> OnDamageApplied;
+        public event Action OnDefeated;
+        public event Action OnBarrierStarted;
+        public event Action OnBarrierBroken;
+        public event Action OnWeaknessExposed;
+        public event Action OnChargeCounterSucceeded;
+        public event Action<StatusEffect> OnStatusApplied;
 
         private Coroutine weakRoutine;
         private Coroutine staggerRoutine;
@@ -28,6 +54,7 @@ namespace ArcaneVR.Combat
         private Coroutine barrierRoutine;
         private Coroutine chargeRoutine;
         private float cueHoldUntilTime;
+        private bool defeatedNotified;
 
         public float CurrentHealth => currentHealth;
         public float MaxHealth => maxHealth;
@@ -41,7 +68,11 @@ namespace ArcaneVR.Combat
 
         private void Awake()
         {
-            currentHealth = Mathf.Clamp(currentHealth <= 0f ? maxHealth : currentHealth, 0f, maxHealth);
+            currentHealth = Mathf.Clamp(
+                currentHealth <= 0f ? maxHealth : currentHealth,
+                0f,
+                maxHealth
+            );
             NotifyHealthChanged();
         }
 
@@ -50,10 +81,12 @@ namespace ArcaneVR.Combat
             if (hitData == null)
                 return;
 
-            var resolvedChargeCounter = IsChargeCounterWindowOpen && hitData.IncludesElement(ElementType.Thunder);
-            var brokeBarrier = IsBarrierActive &&
-                               hitData.IncludesElement(ElementType.Ice) &&
-                               hitData.IncludesElement(ElementType.Thunder);
+            var resolvedChargeCounter =
+                IsChargeCounterWindowOpen && hitData.IncludesElement(ElementType.Thunder);
+            var brokeBarrier =
+                IsBarrierActive
+                && hitData.IncludesElement(ElementType.Ice)
+                && hitData.IncludesElement(ElementType.Thunder);
             var triggeredOverload = hitData.spellId == SpellId.Combo_ThunderFire && IsWeakExposed;
 
             if (resolvedChargeCounter)
@@ -69,7 +102,8 @@ namespace ArcaneVR.Combat
             ApplyDamage(
                 CalculateDamage(hitData),
                 hitData.element,
-                resolvedChargeCounter || brokeBarrier || triggeredOverload);
+                resolvedChargeCounter || brokeBarrier || triggeredOverload
+            );
         }
 
         public void BeginBarrier()
@@ -87,6 +121,8 @@ namespace ArcaneVR.Combat
 
         public void BreakBarrier(string cue = "BARRIER BREAK")
         {
+            bool wasBarrierActive = IsBarrierActive;
+
             if (barrierRoutine != null)
             {
                 StopCoroutine(barrierRoutine);
@@ -94,6 +130,12 @@ namespace ArcaneVR.Combat
             }
 
             IsBarrierActive = false;
+
+            if (wasBarrierActive)
+            {
+                OnBarrierBroken?.Invoke();
+            }
+
             ExposeWeakness(weakDuration);
             SetCue(cue, 1.1f, true);
         }
@@ -122,11 +164,24 @@ namespace ArcaneVR.Combat
                 return;
 
             currentHealth = Mathf.Max(0f, currentHealth - damage);
+
+            OnDamageApplied?.Invoke(damage, sourceElement);
             NotifyHealthChanged();
+
             if (currentHealth <= 0f)
+            {
                 SetCue("DEAD", 0f, true);
+
+                if (!defeatedNotified)
+                {
+                    defeatedNotified = true;
+                    OnDefeated?.Invoke();
+                }
+            }
             else if (sourceElement != ElementType.None && !suppressHitCue)
+            {
                 SetCue($"HIT {sourceElement}");
+            }
         }
 
         private float CalculateDamage(SpellHitData hitData)
@@ -173,6 +228,9 @@ namespace ArcaneVR.Combat
             }
 
             IsChargeCounterWindowOpen = false;
+
+            OnChargeCounterSucceeded?.Invoke();
+
             StartStagger(staggerDuration);
             ExposeWeakness(weakDuration);
             SetCue("STAGGER", 1.15f, true);
@@ -191,6 +249,8 @@ namespace ArcaneVR.Combat
             if (staggerRoutine != null)
                 StopCoroutine(staggerRoutine);
 
+            OnStatusApplied?.Invoke(StatusEffect.Stagger);
+
             staggerRoutine = StartCoroutine(TimedStagger(Mathf.Max(0.1f, duration)));
         }
 
@@ -198,6 +258,8 @@ namespace ArcaneVR.Combat
         {
             if (slowRoutine != null)
                 StopCoroutine(slowRoutine);
+
+            OnStatusApplied?.Invoke(StatusEffect.Slow);
 
             slowRoutine = StartCoroutine(TimedSlow(Mathf.Max(0.1f, duration)));
         }
@@ -207,12 +269,15 @@ namespace ArcaneVR.Combat
             if (burnRoutine != null)
                 StopCoroutine(burnRoutine);
 
+            OnStatusApplied?.Invoke(StatusEffect.Burn);
+
             burnRoutine = StartCoroutine(TimedBurn(hitData.Clone()));
         }
 
         private IEnumerator TimedBarrier(float duration)
         {
             IsBarrierActive = true;
+            OnBarrierStarted?.Invoke();
             SetCue("BARRIER", 0f, true);
             yield return new WaitForSeconds(duration);
             IsBarrierActive = false;
@@ -234,10 +299,15 @@ namespace ArcaneVR.Combat
         private IEnumerator TimedWeakness(float duration)
         {
             IsWeakExposed = true;
+            OnWeaknessExposed?.Invoke();
+
             SetCue("WEAK");
+
             yield return new WaitForSeconds(duration);
+
             IsWeakExposed = false;
             weakRoutine = null;
+
             if (!IsChargeCounterWindowOpen && !IsBarrierActive && !IsStaggered)
                 SetCue("IDLE");
         }
@@ -292,7 +362,10 @@ namespace ArcaneVR.Combat
             if (CurrentCombatCue == cue)
             {
                 if (minimumVisibleDuration > 0f)
-                    cueHoldUntilTime = Mathf.Max(cueHoldUntilTime, Time.time + minimumVisibleDuration);
+                    cueHoldUntilTime = Mathf.Max(
+                        cueHoldUntilTime,
+                        Time.time + minimumVisibleDuration
+                    );
                 return;
             }
 
