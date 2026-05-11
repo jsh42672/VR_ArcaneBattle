@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Portal_Dragon
   m_EditorClassIdentifier: Assembly-CSharp::PortalData
   portalID: portal_dragon
-  displayName: Dragon Arena
-  targetSceneName: BattleScene_Dragon
+  displayName: Fire Coloseum
+  targetSceneName: FireColoseum
   returnPosition: {x: 12.34, y: 19.47363, z: 2.97}
   returnRotationY: 0
   glowColor: {r: 1, g: 0, b: 0, a: 1}

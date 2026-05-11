@@ -36,13 +36,22 @@ namespace ArcaneVR.Input
 
         [Header("Pull Movement")]
         [SerializeField] private PullHandMode pullHandMode = PullHandMode.LeftOnly;
-        [SerializeField] private float pullMultiplier = 9.6f;
-        [SerializeField] private float maxMoveSpeed = 24.0f;
+        [SerializeField] private float pullMultiplier = 28.8f;
+        [SerializeField] private float maxMoveSpeed = 72.0f;
         [SerializeField] private float handMoveDeadZone = 0.003f;
         [SerializeField] private bool horizontalOnly = true;
         [SerializeField] private bool applyMovementInLateUpdate = true;
         [SerializeField] private bool requirePullTowardBody = false;
         [SerializeField] private float towardBodyDotThreshold = 0.25f;
+
+        [Header("Ground Follow")]
+        [SerializeField] private bool followGroundHeight = true;
+        [SerializeField] private LayerMask groundLayerMask = ~0;
+        [SerializeField] private float groundProbeUpDistance = 2.0f;
+        [SerializeField] private float groundProbeDownDistance = 8.0f;
+        [SerializeField, Range(0f, 1f)] private float minimumGroundNormalY = 0.45f;
+        [SerializeField] private float maxGroundSnapUpPerFrame = 0.75f;
+        [SerializeField] private float maxGroundSnapDownPerFrame = 2.5f;
 
         [Header("Player Height")]
         [SerializeField] private bool autoCorrectLowHeadHeight = true;
@@ -54,6 +63,8 @@ namespace ArcaneVR.Input
         [SerializeField] private bool showDebugLog;
 
         private readonly List<XRHandSubsystem> handSubsystems = new List<XRHandSubsystem>();
+        private readonly HashSet<string> movementSuppressionReasons = new HashSet<string>();
+        private const string DefaultSuppressionReason = "Suppressed";
         private XRHandSubsystem handSubsystem;
 
         private PullHand activeHand = PullHand.None;
@@ -88,27 +99,37 @@ namespace ArcaneVR.Input
 
         public void SetMovementSuppressed(bool suppressed, string reason)
         {
-            if (IsMovementSuppressed == suppressed &&
-                MovementSuppressionReason == (reason ?? string.Empty))
+            var normalizedReason = NormalizeSuppressionReason(reason);
+            var wasSuppressed = IsMovementSuppressed;
+
+            if (suppressed)
+                movementSuppressionReasons.Add(normalizedReason);
+            else
+                movementSuppressionReasons.Remove(normalizedReason);
+
+            IsMovementSuppressed = movementSuppressionReasons.Count > 0;
+            MovementSuppressionReason = IsMovementSuppressed
+                ? string.Join(", ", movementSuppressionReasons)
+                : string.Empty;
+
+            if (!IsMovementSuppressed)
             {
+                if (wasSuppressed)
+                    lastDebugMessage = "Pull enabled";
                 return;
             }
 
-            IsMovementSuppressed = suppressed;
-            MovementSuppressionReason = suppressed ? string.IsNullOrWhiteSpace(reason) ? "Suppressed" : reason : string.Empty;
-
-            if (!suppressed)
-            {
-                lastDebugMessage = "Pull enabled";
-                return;
-            }
-
-            if (activeHand != PullHand.None)
+            if (!wasSuppressed && activeHand != PullHand.None)
                 EndPull();
 
             pendingMoveDelta = Vector3.zero;
             lastMoveDelta = Vector3.zero;
             lastDebugMessage = $"Pull locked: {MovementSuppressionReason}";
+        }
+
+        private static string NormalizeSuppressionReason(string reason)
+        {
+            return string.IsNullOrWhiteSpace(reason) ? DefaultSuppressionReason : reason.Trim();
         }
 
         private void Awake()
@@ -359,7 +380,86 @@ namespace ArcaneVR.Input
                 return;
 
             Transform root = movementRoot != null ? movementRoot : xrOriginRoot;
+            float previousGroundY = 0f;
+            var shouldFollowGround = followGroundHeight &&
+                                     horizontalOnly &&
+                                     moveDelta.sqrMagnitude > 0.0000001f &&
+                                     TryGetGroundHeightUnderHead(out previousGroundY);
+
             root.position += moveDelta;
+
+            if (!shouldFollowGround || !TryGetGroundHeightUnderHead(out var nextGroundY))
+                return;
+
+            var groundDelta = nextGroundY - previousGroundY;
+            if (groundDelta > 0f)
+                groundDelta = Mathf.Min(groundDelta, Mathf.Max(0f, maxGroundSnapUpPerFrame));
+            else
+                groundDelta = Mathf.Max(groundDelta, -Mathf.Max(0f, maxGroundSnapDownPerFrame));
+
+            if (Mathf.Abs(groundDelta) <= 0.0001f)
+                return;
+
+            root.position += Vector3.up * groundDelta;
+        }
+
+        private bool TryGetGroundHeightUnderHead(out float groundY)
+        {
+            groundY = 0f;
+
+            if (!followGroundHeight || headTransform == null)
+                return false;
+
+            var upDistance = Mathf.Max(0.1f, groundProbeUpDistance);
+            var downDistance = Mathf.Max(0.1f, groundProbeDownDistance);
+            var probeOrigin = headTransform.position + Vector3.up * upDistance;
+            var maxDistance = upDistance + downDistance;
+            var hits = Physics.RaycastAll(
+                probeOrigin,
+                Vector3.down,
+                maxDistance,
+                groundLayerMask,
+                QueryTriggerInteraction.Ignore);
+
+            if (hits == null || hits.Length == 0)
+                return false;
+
+            var bestDistance = float.PositiveInfinity;
+            var foundGround = false;
+
+            foreach (var hit in hits)
+            {
+                if (hit.collider == null ||
+                    hit.normal.y < minimumGroundNormalY ||
+                    IsOwnRigCollider(hit.collider) ||
+                    hit.distance >= bestDistance)
+                {
+                    continue;
+                }
+
+                bestDistance = hit.distance;
+                groundY = hit.point.y;
+                foundGround = true;
+            }
+
+            return foundGround;
+        }
+
+        private bool IsOwnRigCollider(Collider candidate)
+        {
+            if (candidate == null)
+                return false;
+
+            var candidateTransform = candidate.transform;
+            return IsSameOrChild(candidateTransform, xrOriginRoot) ||
+                   IsSameOrChild(candidateTransform, movementRoot);
+        }
+
+        private static bool IsSameOrChild(Transform candidate, Transform root)
+        {
+            return candidate != null &&
+                   root != null &&
+                   (candidate == root || candidate.IsChildOf(root));
         }
 
         private void EndPull()

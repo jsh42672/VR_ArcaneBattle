@@ -76,8 +76,13 @@ namespace ArcaneVR.Input
         {
             return IsPrototypeScene(sceneName) ||
                    sceneName == "World" ||
+                   sceneName == "World_main" ||
+                   sceneName == "Tutorial" ||
                    sceneName == "BattleSceen2" ||
-                   sceneName == "BattleScene2";
+                   sceneName == "BattleScene2" ||
+                   sceneName == "FireColoseum" ||
+                   sceneName == "IceColoseum" ||
+                   sceneName == "ElectricColoseum";
         }
 
         public void Configure(GestureDetector detector)
