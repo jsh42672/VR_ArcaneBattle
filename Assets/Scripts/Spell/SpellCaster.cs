@@ -1501,31 +1501,14 @@ namespace ArcaneVR.Spell
         {
             var projectileObject = new GameObject($"PrototypeSpell_{pose}");
             projectileObject.transform.SetPositionAndRotation(position, rotation);
-            var color = GetPrototypeSpellColor(pose, element);
 
             var collider = projectileObject.AddComponent<SphereCollider>();
             collider.isTrigger = true;
             collider.radius = prototypeProjectileScale * 0.5f;
 
-            var visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            visual.name = $"{pose}_Sphere";
-            visual.transform.SetParent(projectileObject.transform, false);
-            visual.transform.localPosition = Vector3.zero;
-            visual.transform.localScale = Vector3.one * prototypeProjectileScale;
-
-            var visualCollider = visual.GetComponent<Collider>();
-            if (visualCollider != null)
-                Destroy(visualCollider);
-
-            var renderer = visual.GetComponent<Renderer>();
-            if (renderer != null)
-                renderer.material = CreateDebugMaterial(color);
-
-            var light = projectileObject.AddComponent<Light>();
-            light.type = LightType.Point;
-            light.color = color;
-            light.range = 1.4f;
-            light.intensity = 2f;
+            var visualScale = Mathf.Max(0.45f, prototypeProjectileScale / 0.12f);
+            var vfx = projectileObject.AddComponent<ArcaneSpellProjectileVfx>();
+            vfx.Configure(ResolvePrototypeSpellId(pose), element, visualScale);
 
             return projectileObject;
         }
@@ -1548,22 +1531,6 @@ namespace ArcaneVR.Spell
 
             rigidbody.useGravity = false;
             rigidbody.isKinematic = true;
-        }
-
-        private static Color GetPrototypePoseColor(PoseType pose)
-        {
-            return pose switch
-            {
-                PoseType.OpenPalm => new Color(1f, 0.2f, 0.2f, 1f),
-                PoseType.Fist => new Color(0.2f, 0.4f, 1f, 1f),
-                PoseType.ThumbsUp => new Color(1f, 0.86f, 0f, 1f),
-                _ => Color.white
-            };
-        }
-
-        private static Color GetPrototypeSpellColor(PoseType pose, ElementType element)
-        {
-            return element == ElementType.None ? GetPrototypePoseColor(pose) : GetElementColor(element);
         }
 
         private static ElementType ResolveDefaultPrototypeElement(PoseType pose)
@@ -1789,79 +1756,11 @@ namespace ArcaneVR.Spell
 
         private void CreateDebugProjectileVisual(SpellId spellId, ElementType element, Transform parent)
         {
-            var color = GetElementColor(element);
-            switch (spellId)
-            {
-                case SpellId.Single_Pointer:
-                    AddPrimitiveVisual("Pointer_Sphere", PrimitiveType.Sphere, parent, Vector3.zero, Vector3.one * 0.18f, color);
-                    break;
-                case SpellId.Single_Wave:
-                    AddPrimitiveVisual("Wave_Plate", PrimitiveType.Cube, parent, Vector3.zero, new Vector3(0.48f, 0.08f, 0.18f), color);
-                    AddPrimitiveVisual("Wave_Crest", PrimitiveType.Sphere, parent, new Vector3(0f, 0.08f, 0f), new Vector3(0.28f, 0.08f, 0.16f), Color.Lerp(color, Color.white, 0.35f));
-                    break;
-                case SpellId.Single_Strike:
-                    AddPrimitiveVisual("Strike_Capsule", PrimitiveType.Capsule, parent, Vector3.zero, new Vector3(0.18f, 0.38f, 0.18f), color);
-                    parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(90f, 0f, 0f);
-                    break;
-                case SpellId.Combo_FireIce:
-                    AddPrimitiveVisual("FireIce_LeftOrb", PrimitiveType.Sphere, parent, new Vector3(-0.13f, 0f, 0f), Vector3.one * 0.18f, GetElementColor(ElementType.Fire));
-                    AddPrimitiveVisual("FireIce_RightOrb", PrimitiveType.Sphere, parent, new Vector3(0.13f, 0f, 0f), Vector3.one * 0.18f, GetElementColor(ElementType.Ice));
-                    break;
-                case SpellId.Combo_IceThunder:
-                    AddPrimitiveVisual("IceThunder_Cylinder", PrimitiveType.Cylinder, parent, Vector3.zero, new Vector3(0.24f, 0.16f, 0.24f), Color.Lerp(GetElementColor(ElementType.Ice), GetElementColor(ElementType.Thunder), 0.5f));
-                    parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(90f, 0f, 0f);
-                    break;
-                case SpellId.Combo_ThunderFire:
-                    AddPrimitiveVisual("ThunderFire_Diamond", PrimitiveType.Cube, parent, Vector3.zero, Vector3.one * 0.28f, Color.Lerp(GetElementColor(ElementType.Thunder), GetElementColor(ElementType.Fire), 0.45f));
-                    parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(45f, 45f, 0f);
-                    break;
-                default:
-                    AddPrimitiveVisual("Fallback_Sphere", PrimitiveType.Sphere, parent, Vector3.zero, Vector3.one * 0.18f, color);
-                    break;
-            }
+            var vfx = parent.gameObject.GetComponent<ArcaneSpellProjectileVfx>();
+            if (vfx == null)
+                vfx = parent.gameObject.AddComponent<ArcaneSpellProjectileVfx>();
 
-            var light = parent.gameObject.AddComponent<Light>();
-            light.type = LightType.Point;
-            light.color = color;
-            light.range = IsSingleSpell(spellId) ? 1.4f : 2.2f;
-            light.intensity = IsSingleSpell(spellId) ? 1.6f : 2.6f;
-        }
-
-        private void AddPrimitiveVisual(string name, PrimitiveType primitiveType, Transform parent, Vector3 localPosition, Vector3 localScale, Color color)
-        {
-            var visual = GameObject.CreatePrimitive(primitiveType);
-            visual.name = name;
-            visual.transform.SetParent(parent, false);
-            visual.transform.localPosition = localPosition;
-            visual.transform.localScale = localScale * debugProjectileScale;
-
-            var collider = visual.GetComponent<Collider>();
-            if (collider != null)
-            {
-                collider.enabled = false;
-                Destroy(collider);
-            }
-
-            var renderer = visual.GetComponent<Renderer>();
-            if (renderer != null)
-                renderer.material = CreateDebugMaterial(color);
-        }
-
-        private static Material CreateDebugMaterial(Color color)
-        {
-            var shader = Shader.Find("Universal Render Pipeline/Unlit") ??
-                         Shader.Find("Universal Render Pipeline/Lit") ??
-                         Shader.Find("Sprites/Default") ??
-                         Shader.Find("Unlit/Color") ??
-                         Shader.Find("Hidden/Internal-Colored") ??
-                         Shader.Find("Standard");
-            var material = new Material(shader);
-            if (material.HasProperty("_BaseColor"))
-                material.SetColor("_BaseColor", color);
-            else if (material.HasProperty("_Color"))
-                material.SetColor("_Color", color);
-
-            return material;
+            vfx.Configure(spellId, element, debugProjectileScale);
         }
 
         private static Color GetElementColor(ElementType element)
