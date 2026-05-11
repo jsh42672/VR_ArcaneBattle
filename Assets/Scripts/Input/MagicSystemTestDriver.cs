@@ -23,8 +23,10 @@ namespace ArcaneVR.Input
         [SerializeField] private ArcaneActionModeController actionModeController;
         [SerializeField] private HandPullMovementController handPullMovement;
         [SerializeField] private BarrierController barrierController;
+        [SerializeField] private BarrierPlayerDamageBridge barrierPlayerDamageBridge;
         [SerializeField] private BossPatternCombatBridge bossPatternBridge;
         [SerializeField] private GolemCombatTarget golemTarget;
+        [SerializeField] private BossElementStatusVfx golemStatusVfx;
         [SerializeField] private CombatDodgeDetector dodgeDetector;
         [SerializeField] private GestureConflictDiagnostics gestureDiagnostics;
         [SerializeField] private ArcaneDebugStatusPanel debugStatusPanel;
@@ -330,6 +332,9 @@ namespace ArcaneVR.Input
             if (barrierController == null)
                 barrierController = FindAnyObjectByType<BarrierController>() ?? gameObject.AddComponent<BarrierController>();
 
+            if (barrierPlayerDamageBridge == null)
+                barrierPlayerDamageBridge = FindAnyObjectByType<BarrierPlayerDamageBridge>() ?? gameObject.AddComponent<BarrierPlayerDamageBridge>();
+
             if (bossPatternBridge == null)
                 bossPatternBridge = FindAnyObjectByType<BossPatternCombatBridge>() ?? gameObject.AddComponent<BossPatternCombatBridge>();
 
@@ -338,6 +343,9 @@ namespace ArcaneVR.Input
 
             if (golemTarget == null)
                 golemTarget = ResolveOrCreateGolemTarget();
+
+            if (golemTarget != null && golemStatusVfx == null)
+                golemStatusVfx = golemTarget.GetComponent<BossElementStatusVfx>() ?? golemTarget.gameObject.AddComponent<BossElementStatusVfx>();
 
             if (gestureDiagnostics == null)
                 gestureDiagnostics = FindAnyObjectByType<GestureConflictDiagnostics>() ?? gameObject.AddComponent<GestureConflictDiagnostics>();
