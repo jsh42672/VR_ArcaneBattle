@@ -36,22 +36,33 @@ namespace ArcaneVR.Input
 
         [Header("Pull Movement")]
         [SerializeField] private PullHandMode pullHandMode = PullHandMode.LeftOnly;
-        [SerializeField] private float pullMultiplier = 28.8f;
-        [SerializeField] private float maxMoveSpeed = 72.0f;
+        [SerializeField] private float pullMultiplier = 9.6f;
+        [SerializeField] private float maxMoveSpeed = 24.0f;
         [SerializeField] private float handMoveDeadZone = 0.003f;
         [SerializeField] private bool horizontalOnly = true;
         [SerializeField] private bool applyMovementInLateUpdate = true;
         [SerializeField] private bool requirePullTowardBody = false;
         [SerializeField] private float towardBodyDotThreshold = 0.25f;
 
-        [Header("Ground Follow")]
-        [SerializeField] private bool followGroundHeight = true;
-        [SerializeField] private LayerMask groundLayerMask = ~0;
-        [SerializeField] private float groundProbeUpDistance = 2.0f;
-        [SerializeField] private float groundProbeDownDistance = 8.0f;
-        [SerializeField, Range(0f, 1f)] private float minimumGroundNormalY = 0.45f;
-        [SerializeField] private float maxGroundSnapUpPerFrame = 0.75f;
-        [SerializeField] private float maxGroundSnapDownPerFrame = 2.5f;
+        [Header("Collision Movement")]
+        [SerializeField] private bool useCharacterController = true;
+        [SerializeField] private bool autoCreateCharacterController = true;
+        [SerializeField] private bool allowTransformFallback = false;
+        [SerializeField] private CharacterController characterController;
+
+        [Header("Character Controller Shape")]
+        [SerializeField] private bool updateControllerShapeFromHead = true;
+        [SerializeField] private float controllerRadius = 0.28f;
+        [SerializeField] private float controllerMinHeight = 1.0f;
+        [SerializeField] private float controllerMaxHeight = 2.2f;
+        [SerializeField] private float controllerSkinWidth = 0.05f;
+        [SerializeField] private float controllerStepOffset = 0.35f;
+        [SerializeField] private float controllerSlopeLimit = 55f;
+
+        [Header("Grounding")]
+        [SerializeField] private float gravity = -9.81f;
+        [SerializeField] private float groundedStickVelocity = -2.0f;
+        [SerializeField] private float terminalFallSpeed = -20.0f;
 
         [Header("Player Height")]
         [SerializeField] private bool autoCorrectLowHeadHeight = true;
@@ -63,22 +74,27 @@ namespace ArcaneVR.Input
         [SerializeField] private bool showDebugLog;
 
         private readonly List<XRHandSubsystem> handSubsystems = new List<XRHandSubsystem>();
-        private readonly HashSet<string> movementSuppressionReasons = new HashSet<string>();
-        private const string DefaultSuppressionReason = "Suppressed";
-        private XRHandSubsystem handSubsystem;
 
+        private XRHandSubsystem handSubsystem;
         private PullHand activeHand = PullHand.None;
+
         private Vector3 previousHandTrackingPosition;
         private Vector3 lastMoveDelta;
         private Vector3 pendingMoveDelta;
+
         private string lastDebugMessage = "Idle";
         private float nextSubsystemRefreshTime;
         private bool heightCorrectionApplied;
+
+        private float verticalVelocity;
+        private bool movementAppliedThisFrame;
+        private bool warnedNoCharacterController;
 
         public bool IsPulling => activeHand != PullHand.None;
         public string ActiveHandName => activeHand.ToString();
         public Vector3 LastMoveDelta => lastMoveDelta;
         public string LastDebugMessage => lastDebugMessage;
+
         public bool IsMovementSuppressed { get; private set; }
         public string MovementSuppressionReason { get; private set; } = string.Empty;
 
@@ -86,6 +102,7 @@ namespace ArcaneVR.Input
         public bool HasRightHand => IsHandTracked(PullHand.Right);
         public bool IsLeftFist => IsFist(PullHand.Left);
         public bool IsRightFist => IsFist(PullHand.Right);
+
         public bool HasHandSubsystem => handSubsystem != null;
         public bool IsHandSubsystemRunning => handSubsystem != null && handSubsystem.running;
 
@@ -93,56 +110,76 @@ namespace ArcaneVR.Input
         {
             xrOriginRoot = rigRoot != null ? rigRoot : xrOriginRoot;
             headTransform = head != null ? head : headTransform;
+
             ResolveRigReferences();
+            ResolveCharacterController();
             RefreshHandSubsystem();
         }
 
         public void SetMovementSuppressed(bool suppressed, string reason)
         {
-            var normalizedReason = NormalizeSuppressionReason(reason);
-            var wasSuppressed = IsMovementSuppressed;
-
-            if (suppressed)
-                movementSuppressionReasons.Add(normalizedReason);
-            else
-                movementSuppressionReasons.Remove(normalizedReason);
-
-            IsMovementSuppressed = movementSuppressionReasons.Count > 0;
-            MovementSuppressionReason = IsMovementSuppressed
-                ? string.Join(", ", movementSuppressionReasons)
-                : string.Empty;
-
-            if (!IsMovementSuppressed)
+            if (IsMovementSuppressed == suppressed &&
+                MovementSuppressionReason == (reason ?? string.Empty))
             {
-                if (wasSuppressed)
-                    lastDebugMessage = "Pull enabled";
                 return;
             }
 
-            if (!wasSuppressed && activeHand != PullHand.None)
+            IsMovementSuppressed = suppressed;
+            MovementSuppressionReason = suppressed
+                ? string.IsNullOrWhiteSpace(reason) ? "Suppressed" : reason
+                : string.Empty;
+
+            if (!suppressed)
+            {
+                lastDebugMessage = "Pull enabled";
+                return;
+            }
+
+            if (activeHand != PullHand.None)
+            {
                 EndPull();
+            }
 
             pendingMoveDelta = Vector3.zero;
             lastMoveDelta = Vector3.zero;
+            verticalVelocity = 0f;
             lastDebugMessage = $"Pull locked: {MovementSuppressionReason}";
-        }
-
-        private static string NormalizeSuppressionReason(string reason)
-        {
-            return string.IsNullOrWhiteSpace(reason) ? DefaultSuppressionReason : reason.Trim();
         }
 
         private void Awake()
         {
             ResolveRigReferences();
+            ResolveCharacterController();
             RefreshHandSubsystem();
+        }
+
+        private void OnEnable()
+        {
+            movementAppliedThisFrame = false;
+            pendingMoveDelta = Vector3.zero;
+        }
+
+        private void OnDisable()
+        {
+            activeHand = PullHand.None;
+            pendingMoveDelta = Vector3.zero;
+            lastMoveDelta = Vector3.zero;
+            verticalVelocity = 0f;
         }
 
         private void Update()
         {
+            movementAppliedThisFrame = false;
+
             if (xrOriginRoot == null || movementRoot == null || headTransform == null)
             {
                 ResolveRigReferences();
+                ResolveCharacterController();
+            }
+
+            if (useCharacterController && characterController == null)
+            {
+                ResolveCharacterController();
             }
 
             if (autoRefreshHandSubsystem && Time.time >= nextSubsystemRefreshTime)
@@ -155,28 +192,52 @@ namespace ArcaneVR.Input
             {
                 lastDebugMessage = "Waiting for XRHandSubsystem";
                 lastMoveDelta = Vector3.zero;
+
+                ApplyPassiveGravityIfNeeded();
                 return;
             }
 
             if (IsMovementSuppressed)
             {
                 if (activeHand != PullHand.None)
+                {
                     EndPull();
+                }
 
                 pendingMoveDelta = Vector3.zero;
                 lastMoveDelta = Vector3.zero;
+                verticalVelocity = 0f;
                 lastDebugMessage = $"Pull locked: {MovementSuppressionReason}";
                 return;
             }
 
             ApplyHeightCorrectionIfNeeded();
             UpdateHandPullMovement();
+
+            if (!applyMovementInLateUpdate)
+            {
+                ApplyPassiveGravityIfNeeded();
+            }
         }
 
         private void LateUpdate()
         {
-            if (!applyMovementInLateUpdate || pendingMoveDelta.sqrMagnitude <= 0.0000001f)
+            if (!applyMovementInLateUpdate)
+            {
                 return;
+            }
+
+            if (ShouldUseCharacterController())
+            {
+                ApplyMoveDelta(pendingMoveDelta);
+                pendingMoveDelta = Vector3.zero;
+                return;
+            }
+
+            if (pendingMoveDelta.sqrMagnitude <= 0.0000001f)
+            {
+                return;
+            }
 
             ApplyMoveDelta(pendingMoveDelta);
             pendingMoveDelta = Vector3.zero;
@@ -194,6 +255,7 @@ namespace ArcaneVR.Input
             if (headTransform == null)
             {
                 headTransform = ArcanePlayerRigResolver.FindHeadTransform();
+
                 if (headTransform == null && xrOriginRoot != null)
                 {
                     Transform centerEye = xrOriginRoot.Find("TrackingSpace/CenterEyeAnchor");
@@ -223,6 +285,7 @@ namespace ArcaneVR.Input
             if (ovrCameraRig != null)
             {
                 ovrCameraRig.EnsureGameObjectIntegrity();
+
                 if (ovrCameraRig.trackingSpace != null)
                 {
                     return ovrCameraRig.trackingSpace;
@@ -231,6 +294,104 @@ namespace ArcaneVR.Input
 
             Transform trackingSpace = rigRoot.Find("TrackingSpace");
             return trackingSpace != null ? trackingSpace : rigRoot;
+        }
+
+        private void ResolveCharacterController()
+        {
+            if (!useCharacterController)
+            {
+                return;
+            }
+
+            if (characterController != null)
+            {
+                ConfigureCharacterControllerDefaults();
+                return;
+            }
+
+            Transform root = movementRoot != null ? movementRoot : xrOriginRoot;
+            if (root == null)
+            {
+                root = transform;
+            }
+
+            characterController = root.GetComponent<CharacterController>();
+
+            if (characterController == null && xrOriginRoot != null)
+            {
+                characterController = xrOriginRoot.GetComponent<CharacterController>();
+            }
+
+            if (characterController == null && root.parent != null)
+            {
+                characterController = root.GetComponentInParent<CharacterController>();
+            }
+
+            if (characterController == null)
+            {
+                characterController = root.GetComponentInChildren<CharacterController>(true);
+            }
+
+            if (characterController == null && autoCreateCharacterController)
+            {
+                characterController = root.gameObject.AddComponent<CharacterController>();
+                lastDebugMessage = $"CharacterController created on {root.name}";
+            }
+
+            ConfigureCharacterControllerDefaults();
+        }
+
+        private void ConfigureCharacterControllerDefaults()
+        {
+            if (characterController == null)
+            {
+                return;
+            }
+
+            characterController.radius = Mathf.Max(0.05f, controllerRadius);
+            characterController.skinWidth = Mathf.Max(0.01f, controllerSkinWidth);
+            characterController.stepOffset = Mathf.Max(0f, controllerStepOffset);
+            characterController.slopeLimit = Mathf.Clamp(controllerSlopeLimit, 0f, 89f);
+            characterController.minMoveDistance = 0f;
+            characterController.detectCollisions = true;
+            characterController.enableOverlapRecovery = true;
+
+            UpdateCharacterControllerShape();
+        }
+
+        private void UpdateCharacterControllerShape()
+        {
+            if (!updateControllerShapeFromHead || characterController == null)
+            {
+                return;
+            }
+
+            Transform controllerTransform = characterController.transform;
+
+            float headLocalY = fallbackHeadHeight;
+            float headLocalX = 0f;
+            float headLocalZ = 0f;
+
+            if (headTransform != null)
+            {
+                Vector3 headLocal = controllerTransform.InverseTransformPoint(headTransform.position);
+                headLocalY = headLocal.y;
+                headLocalX = headLocal.x;
+                headLocalZ = headLocal.z;
+            }
+
+            float height = Mathf.Clamp(
+                headLocalY,
+                Mathf.Max(controllerMinHeight, controllerRadius * 2f),
+                Mathf.Max(controllerMaxHeight, controllerMinHeight)
+            );
+
+            characterController.height = height;
+            characterController.center = new Vector3(
+                headLocalX,
+                height * 0.5f,
+                headLocalZ
+            );
         }
 
         private void RefreshHandSubsystem()
@@ -242,6 +403,7 @@ namespace ArcaneVR.Input
 
             handSubsystems.Clear();
             SubsystemManager.GetSubsystems(handSubsystems);
+
             handSubsystem = null;
 
             foreach (XRHandSubsystem subsystem in handSubsystems)
@@ -342,6 +504,7 @@ namespace ArcaneVR.Input
             }
 
             Vector3 currentHandWorldPosition = ToWorldPoint(currentHandTrackingPosition);
+
             if (requirePullTowardBody && !IsPullingTowardBody(currentHandWorldPosition, handWorldDelta))
             {
                 lastMoveDelta = Vector3.zero;
@@ -351,8 +514,13 @@ namespace ArcaneVR.Input
             }
 
             Vector3 moveDelta = -handWorldDelta * pullMultiplier;
-            float maxDistanceThisFrame = maxMoveSpeed * Time.deltaTime;
 
+            if (horizontalOnly)
+            {
+                moveDelta = Vector3.ProjectOnPlane(moveDelta, Vector3.up);
+            }
+
+            float maxDistanceThisFrame = maxMoveSpeed * Time.deltaTime;
             if (moveDelta.magnitude > maxDistanceThisFrame)
             {
                 moveDelta = moveDelta.normalized * maxDistanceThisFrame;
@@ -377,89 +545,109 @@ namespace ArcaneVR.Input
         private void ApplyMoveDelta(Vector3 moveDelta)
         {
             if (xrOriginRoot == null)
-                return;
-
-            Transform root = movementRoot != null ? movementRoot : xrOriginRoot;
-            float previousGroundY = 0f;
-            var shouldFollowGround = followGroundHeight &&
-                                     horizontalOnly &&
-                                     moveDelta.sqrMagnitude > 0.0000001f &&
-                                     TryGetGroundHeightUnderHead(out previousGroundY);
-
-            root.position += moveDelta;
-
-            if (!shouldFollowGround || !TryGetGroundHeightUnderHead(out var nextGroundY))
-                return;
-
-            var groundDelta = nextGroundY - previousGroundY;
-            if (groundDelta > 0f)
-                groundDelta = Mathf.Min(groundDelta, Mathf.Max(0f, maxGroundSnapUpPerFrame));
-            else
-                groundDelta = Mathf.Max(groundDelta, -Mathf.Max(0f, maxGroundSnapDownPerFrame));
-
-            if (Mathf.Abs(groundDelta) <= 0.0001f)
-                return;
-
-            root.position += Vector3.up * groundDelta;
-        }
-
-        private bool TryGetGroundHeightUnderHead(out float groundY)
-        {
-            groundY = 0f;
-
-            if (!followGroundHeight || headTransform == null)
-                return false;
-
-            var upDistance = Mathf.Max(0.1f, groundProbeUpDistance);
-            var downDistance = Mathf.Max(0.1f, groundProbeDownDistance);
-            var probeOrigin = headTransform.position + Vector3.up * upDistance;
-            var maxDistance = upDistance + downDistance;
-            var hits = Physics.RaycastAll(
-                probeOrigin,
-                Vector3.down,
-                maxDistance,
-                groundLayerMask,
-                QueryTriggerInteraction.Ignore);
-
-            if (hits == null || hits.Length == 0)
-                return false;
-
-            var bestDistance = float.PositiveInfinity;
-            var foundGround = false;
-
-            foreach (var hit in hits)
             {
-                if (hit.collider == null ||
-                    hit.normal.y < minimumGroundNormalY ||
-                    IsOwnRigCollider(hit.collider) ||
-                    hit.distance >= bestDistance)
-                {
-                    continue;
-                }
-
-                bestDistance = hit.distance;
-                groundY = hit.point.y;
-                foundGround = true;
+                return;
             }
 
-            return foundGround;
+            if (ShouldUseCharacterController())
+            {
+                ApplyCharacterControllerMove(moveDelta);
+                return;
+            }
+
+            ApplyTransformFallback(moveDelta);
         }
 
-        private bool IsOwnRigCollider(Collider candidate)
+        private bool ShouldUseCharacterController()
         {
-            if (candidate == null)
-                return false;
-
-            var candidateTransform = candidate.transform;
-            return IsSameOrChild(candidateTransform, xrOriginRoot) ||
-                   IsSameOrChild(candidateTransform, movementRoot);
+            return useCharacterController &&
+                   characterController != null &&
+                   characterController.enabled &&
+                   characterController.gameObject.activeInHierarchy;
         }
 
-        private static bool IsSameOrChild(Transform candidate, Transform root)
+        private void ApplyCharacterControllerMove(Vector3 horizontalMoveDelta)
         {
-            return candidate != null &&
-                   root != null &&
-                   (candidate == root || candidate.IsChildOf(root));
+            if (characterController == null)
+            {
+                return;
+            }
+
+            UpdateCharacterControllerShape();
+
+            if (horizontalOnly)
+            {
+                horizontalMoveDelta = Vector3.ProjectOnPlane(horizontalMoveDelta, Vector3.up);
+            }
+
+            if (characterController.isGrounded && verticalVelocity < 0f)
+            {
+                verticalVelocity = groundedStickVelocity;
+            }
+            else
+            {
+                verticalVelocity += gravity * Time.deltaTime;
+                verticalVelocity = Mathf.Max(verticalVelocity, terminalFallSpeed);
+            }
+
+            Vector3 verticalMoveDelta = Vector3.up * (verticalVelocity * Time.deltaTime);
+            Vector3 finalMoveDelta = horizontalMoveDelta + verticalMoveDelta;
+
+            CollisionFlags collisionFlags = characterController.Move(finalMoveDelta);
+            movementAppliedThisFrame = true;
+
+            if ((collisionFlags & CollisionFlags.Below) != 0 && verticalVelocity < 0f)
+            {
+                verticalVelocity = groundedStickVelocity;
+            }
+
+            if ((collisionFlags & CollisionFlags.Above) != 0 && verticalVelocity > 0f)
+            {
+                verticalVelocity = 0f;
+            }
+        }
+
+        private void ApplyPassiveGravityIfNeeded()
+        {
+            if (movementAppliedThisFrame)
+            {
+                return;
+            }
+
+            if (!ShouldUseCharacterController())
+            {
+                return;
+            }
+
+            ApplyCharacterControllerMove(Vector3.zero);
+        }
+
+        private void ApplyTransformFallback(Vector3 moveDelta)
+        {
+            if (!allowTransformFallback)
+            {
+                if (!warnedNoCharacterController)
+                {
+                    warnedNoCharacterController = true;
+                    Debug.LogWarning(
+                        "[HandPullMovement] CharacterController is missing or disabled. " +
+                        "Transform fallback is disabled to prevent floating through uneven ground. " +
+                        "Enable autoCreateCharacterController or assign a CharacterController."
+                    );
+                }
+
+                lastDebugMessage = "Movement blocked: CharacterController missing";
+                return;
+            }
+
+            Transform root = movementRoot != null ? movementRoot : xrOriginRoot;
+            if (root == null)
+            {
+                return;
+            }
+
+            root.position += moveDelta;
+            movementAppliedThisFrame = true;
         }
 
         private void EndPull()
@@ -507,8 +695,13 @@ namespace ArcaneVR.Input
                 return;
             }
 
-            movementRoot.position += Vector3.up * lift;
+            Transform target = characterController != null
+                ? characterController.transform
+                : movementRoot;
+
+            target.position += Vector3.up * lift;
             heightCorrectionApplied = true;
+
             lastDebugMessage = $"Height corrected +{lift:F2}m";
 
             if (showDebugLog)
@@ -672,13 +865,23 @@ namespace ArcaneVR.Input
 
         private Vector3 ToWorldPoint(Vector3 localPosition)
         {
-            Transform origin = movementRoot != null ? movementRoot : xrOriginRoot != null ? xrOriginRoot : transform;
+            Transform origin = movementRoot != null
+                ? movementRoot
+                : xrOriginRoot != null
+                    ? xrOriginRoot
+                    : transform;
+
             return origin.TransformPoint(localPosition);
         }
 
         private Vector3 ToWorldVector(Vector3 localVector)
         {
-            Transform origin = movementRoot != null ? movementRoot : xrOriginRoot != null ? xrOriginRoot : transform;
+            Transform origin = movementRoot != null
+                ? movementRoot
+                : xrOriginRoot != null
+                    ? xrOriginRoot
+                    : transform;
+
             return origin.TransformVector(localVector);
         }
 
