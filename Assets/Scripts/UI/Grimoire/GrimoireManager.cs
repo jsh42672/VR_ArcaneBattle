@@ -4,9 +4,6 @@ using UnityEngine.InputSystem;
 
 namespace ArcaneVR.UI
 {
-    /// <summary>
-    /// Handles Grimoire summoning and dismissal. Positions the grimoire in front of the player camera.
-    /// </summary>
     public class GrimoireManager : MonoBehaviour
     {
         [Header("References")]
@@ -23,20 +20,18 @@ namespace ArcaneVR.UI
         public event Action OnGrimoireOpen;
         public event Action OnGrimoireClose;
 
+        // 팀원 것에서 추가
+        public bool IsOpen => _isOpen;
+
         private bool _isOpen = false;
 
         private void Awake()
         {
             if (playerCamera == null)
-            {
                 playerCamera = Camera.main?.transform;
-            }
 
-            // Start with grimoire hidden
             if (grimoireCanvas != null)
-            {
                 grimoireCanvas.SetActive(false);
-            }
         }
 
         private void OnEnable()
@@ -51,9 +46,7 @@ namespace ArcaneVR.UI
         private void OnDisable()
         {
             if (toggleAction != null)
-            {
                 toggleAction.action.performed -= OnTogglePressed;
-            }
         }
 
         private void OnTogglePressed(InputAction.CallbackContext context)
@@ -64,34 +57,24 @@ namespace ArcaneVR.UI
         public void ToggleGrimoire()
         {
             _isOpen = !_isOpen;
-
-            if (_isOpen)
-            {
-                OpenGrimoire();
-            }
-            else
-            {
-                CloseGrimoire();
-            }
+            if (_isOpen) OpenGrimoire();
+            else CloseGrimoire();
         }
 
         private void OpenGrimoire()
         {
             if (grimoireCanvas == null) return;
 
-            // Position in front of camera
             if (playerCamera != null)
             {
                 Vector3 targetPos = playerCamera.position + (playerCamera.forward * spawnDistance);
                 targetPos.y += spawnHeightOffset;
-                
                 grimoireCanvas.transform.position = targetPos;
-                
-                // Make it look at the player (but keep it upright)
+
                 Vector3 lookAtPos = playerCamera.position;
-                lookAtPos.y = grimoireCanvas.transform.position.y; 
+                lookAtPos.y = grimoireCanvas.transform.position.y;
                 grimoireCanvas.transform.LookAt(lookAtPos);
-                grimoireCanvas.transform.Rotate(0, 180, 0); // UI faces the camera
+                grimoireCanvas.transform.Rotate(0, 180, 0);
             }
 
             grimoireCanvas.SetActive(true);
@@ -101,9 +84,8 @@ namespace ArcaneVR.UI
         private void CloseGrimoire()
         {
             if (grimoireCanvas != null)
-            {
                 grimoireCanvas.SetActive(false);
-            }
+
             OnGrimoireClose?.Invoke();
         }
     }

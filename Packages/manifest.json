@@ -14,9 +14,6 @@
     "com.meta.xr.sdk.movement": "https://github.com/oculus-samples/Unity-Movement.git#2d2fe7d8ce451e69be0599eee2f597b5935f8e04",
     "com.unity.ai.assistant": "2.7.0-pre.3",
     "com.unity.multiplayer.center": "1.0.1",
-<<<<<<< Updated upstream
-    "com.unity.xr.hands": "1.7.3",
-=======
     "com.unity.nuget.newtonsoft-json": "3.2.2",
     "com.unity.postprocessing": "3.5.4",
     "com.unity.render-pipelines.universal": "17.4.0",
@@ -25,7 +22,6 @@
     "com.unity.terrain-tools": "5.3.2",
     "com.unity.visualeffectgraph": "17.4.0",
     "com.unity.xr.hands": "1.7.2",
->>>>>>> Stashed changes
     "com.unity.xr.management": "4.6.0",
     "com.unity.xr.openxr": "1.16.1",
     "com.unity.modules.accessibility": "1.0.0",

@@ -3341,6 +3341,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: attack_golemn
       objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 3585a0e3a20334d40aa654d0be7b58da, type: 2}
     - target: {fileID: 8111781155169087978, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
       propertyPath: m_Enabled
       value: 1
