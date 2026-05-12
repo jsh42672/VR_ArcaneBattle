@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class PortalManager : MonoBehaviour
 {
+    private const string LastPortalKey = "LastPortalID";
+    private const string ReturnWorldSceneKey = "ReturnWorldScene";
+    private const string DefaultWorldSceneName = "World";
+
     private static PortalManager instance;
     
     public static PortalManager Instance
@@ -34,11 +38,24 @@ public class PortalManager : MonoBehaviour
     public void SavePortalEntry(string portalID)
     {
         currentPortalID = portalID;
-        PlayerPrefs.SetString("LastPortalID", portalID);
+        PlayerPrefs.SetString(LastPortalKey, portalID);
+    }
+
+    public void SavePortalEntry(string portalID, string worldSceneName)
+    {
+        SavePortalEntry(portalID);
+
+        if (!string.IsNullOrWhiteSpace(worldSceneName))
+            PlayerPrefs.SetString(ReturnWorldSceneKey, worldSceneName);
     }
     
     public string GetLastPortalID()
     {
-        return PlayerPrefs.GetString("LastPortalID", "");
+        return PlayerPrefs.GetString(LastPortalKey, "");
+    }
+
+    public string GetReturnWorldScene()
+    {
+        return PlayerPrefs.GetString(ReturnWorldSceneKey, DefaultWorldSceneName);
     }
 }

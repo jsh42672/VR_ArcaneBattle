@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Portal_Demon
   m_EditorClassIdentifier: Assembly-CSharp::PortalData
   portalID: portal_demon
-  displayName: Demon Arena
-  targetSceneName: BattleScene_Demon
+  displayName: Electric Coloseum
+  targetSceneName: ElectricColoseum
   returnPosition: {x: -7.66, y: 19.47363, z: 2.97}
   returnRotationY: 0
   glowColor: {r: 0.5, g: 0, b: 0.5, a: 1}

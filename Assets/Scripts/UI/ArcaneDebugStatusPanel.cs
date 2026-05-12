@@ -17,8 +17,10 @@ namespace ArcaneVR.UI
         [SerializeField] private VoiceRecognizer voiceRecognizer;
         [SerializeField] private SpellCaster spellCaster;
         [SerializeField] private GolemCombatTarget golemTarget;
+        [SerializeField] private BossElementStatusVfx bossStatusVfx;
         [SerializeField] private ArcaneActionModeController actionModeController;
         [SerializeField] private HandPullMovementController handPullMovement;
+        [SerializeField] private BarrierPlayerDamageBridge barrierPlayerDamageBridge;
         [SerializeField] private GestureConflictDiagnostics gestureDiagnostics;
         [SerializeField] private MagicSystemTestDriver testDriver;
         [SerializeField] private MetaVoiceSdkAutoBridge metaVoiceSdkBridge;
@@ -99,10 +101,14 @@ namespace ArcaneVR.UI
                 spellCaster = FindAnyObjectByType<SpellCaster>();
             if (golemTarget == null)
                 golemTarget = FindAnyObjectByType<GolemCombatTarget>();
+            if (bossStatusVfx == null)
+                bossStatusVfx = FindAnyObjectByType<BossElementStatusVfx>();
             if (actionModeController == null)
                 actionModeController = FindAnyObjectByType<ArcaneActionModeController>();
             if (handPullMovement == null)
                 handPullMovement = FindAnyObjectByType<HandPullMovementController>();
+            if (barrierPlayerDamageBridge == null)
+                barrierPlayerDamageBridge = FindAnyObjectByType<BarrierPlayerDamageBridge>();
             if (gestureDiagnostics == null)
                 gestureDiagnostics = FindAnyObjectByType<GestureConflictDiagnostics>();
             if (testDriver == null)
@@ -269,6 +275,11 @@ namespace ArcaneVR.UI
                 builder.Append(" | ");
             }
             builder.AppendLine(barrierController.LastResultText);
+            if (barrierPlayerDamageBridge != null)
+            {
+                builder.Append("HIT ");
+                builder.AppendLine(Compact(barrierPlayerDamageBridge.LastDamageStatus, 52));
+            }
         }
 
         private void AppendGolemStatus()
@@ -287,17 +298,30 @@ namespace ArcaneVR.UI
             builder.Append(Mark(golemTarget.IsWeakExposed));
             builder.Append(" C ");
             builder.Append(Mark(golemTarget.IsChargeCounterWindowOpen));
+            builder.Append(" Burn ");
+            builder.Append(Mark(golemTarget.IsBurning));
+            builder.Append(" Slow ");
+            builder.Append(golemTarget.MovementSpeedMultiplier.ToString("0.00"));
+            builder.Append(" Stag ");
+            builder.Append(Mark(golemTarget.IsStaggered));
             builder.Append(" HP ");
             builder.Append(golemTarget.CurrentHealth.ToString("0"));
             builder.Append("/");
             builder.AppendLine(golemTarget.MaxHealth.ToString("0"));
+            if (bossStatusVfx != null && showLowLevelDetails)
+            {
+                builder.Append("VFX ");
+                builder.AppendLine(Compact(bossStatusVfx.LastVfxStatus, 52));
+            }
         }
 
         private void AppendCastStatus()
         {
             builder.Append("CAST ");
             builder.Append(spellCaster != null ? spellCaster.PrototypeArmStatus : "missing");
-            builder.Append(" | Mana ");
+            builder.Append(" | HP ");
+            builder.Append(combatManager != null ? $"{combatManager.CurrentHP:0.#}/{combatManager.MaxHP:0.#}" : "-/-");
+            builder.Append(" Mana ");
             builder.Append(combatManager != null ? $"{combatManager.CurrentMana:0.#}/{combatManager.MaxMana:0.#}" : "-/-");
             builder.Append(" | ");
             builder.Append(spellCaster != null ? spellCaster.LastManaCostStatus : "Cost: missing");

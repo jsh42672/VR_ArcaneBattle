@@ -120,7 +120,9 @@ namespace ArcaneVR.Spell
             if (spellTarget != null)
             {
                 hasHit = true;
-                spellTarget.OnHit(GetHitData());
+                var hitData = GetHitData();
+                ArcaneSpellProjectileVfx.SpawnImpact(hitData, ResolveImpactPosition(other));
+                spellTarget.OnHit(hitData);
                 Destroy(gameObject);
                 return;
             }
@@ -130,6 +132,7 @@ namespace ArcaneVR.Spell
             if (hitTestTarget)
             {
                 hasHit = true;
+                ArcaneSpellProjectileVfx.SpawnImpact(GetHitData(), ResolveImpactPosition(other));
                 Debug.Log($"[HIT TestTarget] {element} | {statusEffect} | DMG:{damage}");
                 Destroy(gameObject);
                 return;
@@ -142,9 +145,21 @@ namespace ArcaneVR.Spell
             hasHit = true;
 
             if (boss != null && combatManager != null)
+            {
+                ArcaneSpellProjectileVfx.SpawnImpact(GetHitData(), ResolveImpactPosition(other));
                 combatManager.ApplyBossHit(this);
+            }
 
             Destroy(gameObject);
+        }
+
+        private Vector3 ResolveImpactPosition(Collider other)
+        {
+            if (other == null)
+                return transform.position;
+
+            var closest = other.ClosestPoint(transform.position);
+            return closest.sqrMagnitude > 0.0001f ? closest : transform.position;
         }
     }
 }

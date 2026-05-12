@@ -242,7 +242,7 @@ namespace ArcaneVR.Input
             if (handPullMovement == null)
                 return;
 
-            handPullMovement.SetMovementSuppressed(IsCastModeActive, IsCastModeActive ? "Cast Mode" : string.Empty);
+            handPullMovement.SetMovementSuppressed(IsCastModeActive, "Cast Mode");
         }
 
         private void UpdateTriangleFeedback()

@@ -23,9 +23,15 @@ namespace ArcaneVR.Input
         [SerializeField] private ArcaneActionModeController actionModeController;
         [SerializeField] private HandPullMovementController handPullMovement;
         [SerializeField] private BarrierController barrierController;
+        [SerializeField] private BarrierPlayerDamageBridge barrierPlayerDamageBridge;
         [SerializeField] private BossPatternCombatBridge bossPatternBridge;
         [SerializeField] private GolemCombatTarget golemTarget;
+        [SerializeField] private BossElementStatusVfx golemStatusVfx;
         [SerializeField] private CombatDodgeDetector dodgeDetector;
+        [SerializeField] private DodgePlayerDamageBridge dodgePlayerDamageBridge;
+        [SerializeField] private BossAttackTelegraphController bossAttackTelegraph;
+        [SerializeField] private BossAttackAnimatorBridge bossAttackAnimatorBridge;
+        [SerializeField] private BarrierVisualController barrierVisualController;
         [SerializeField] private GestureConflictDiagnostics gestureDiagnostics;
         [SerializeField] private ArcaneDebugStatusPanel debugStatusPanel;
         [SerializeField] private Transform spellSpawnRoot;
@@ -33,7 +39,7 @@ namespace ArcaneVR.Input
         [SerializeField] private float handRigNormalizeDuration = 3f;
         [SerializeField] private float handRigNormalizeInterval = 0.5f;
         [SerializeField] private float referenceRefreshInterval = 0.75f;
-        [SerializeField] private bool enableAutomaticTestWindows = true;
+        [SerializeField] private bool enableAutomaticTestWindows;
         [SerializeField] private bool createRuntimeDummyGolem = true;
         [SerializeField] private bool configureRuntimeSpellCaster = true;
         [SerializeField] private bool applyVoiceThunderToChargeWindow = true;
@@ -65,10 +71,26 @@ namespace ArcaneVR.Input
         public float NextBarrierResponseIn => enableAutomaticTestWindows ? Mathf.Max(0f, nextBarrierResponseTime - Time.time) : -1f;
         public float NextChargeWindowIn => enableAutomaticTestWindows ? Mathf.Max(0f, nextChargeTime - Time.time) : -1f;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void RegisterSceneLoadHook()
+        {
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void CreateForArcaneScenes()
         {
-            var sceneName = SceneManager.GetActiveScene().name;
+            CreateForScene(SceneManager.GetActiveScene().name);
+        }
+
+        private static void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode mode)
+        {
+            CreateForScene(scene.name);
+        }
+
+        private static void CreateForScene(string sceneName)
+        {
             if (!HandGestureDebugOverlay.IsGestureOverlayScene(sceneName))
                 return;
 
@@ -112,7 +134,7 @@ namespace ArcaneVR.Input
                 ResolveOrCreateReferences();
             }
 
-            if (!enableAutomaticTestWindows)
+            if (!enableAutomaticTestWindows || !IsCombatScene(SceneManager.GetActiveScene().name))
                 return;
 
             if (golemTarget != null && Time.time >= nextChargeTime)
@@ -330,14 +352,35 @@ namespace ArcaneVR.Input
             if (barrierController == null)
                 barrierController = FindAnyObjectByType<BarrierController>() ?? gameObject.AddComponent<BarrierController>();
 
+            if (barrierPlayerDamageBridge == null)
+                barrierPlayerDamageBridge = FindAnyObjectByType<BarrierPlayerDamageBridge>() ?? gameObject.AddComponent<BarrierPlayerDamageBridge>();
+
             if (bossPatternBridge == null)
                 bossPatternBridge = FindAnyObjectByType<BossPatternCombatBridge>() ?? gameObject.AddComponent<BossPatternCombatBridge>();
 
             if (dodgeDetector == null)
                 dodgeDetector = FindAnyObjectByType<CombatDodgeDetector>() ?? gameObject.AddComponent<CombatDodgeDetector>();
 
+            if (IsCombatScene(SceneManager.GetActiveScene().name))
+            {
+                if (dodgePlayerDamageBridge == null)
+                    dodgePlayerDamageBridge = FindAnyObjectByType<DodgePlayerDamageBridge>() ?? gameObject.AddComponent<DodgePlayerDamageBridge>();
+
+                if (bossAttackTelegraph == null)
+                    bossAttackTelegraph = FindAnyObjectByType<BossAttackTelegraphController>() ?? gameObject.AddComponent<BossAttackTelegraphController>();
+
+                if (bossAttackAnimatorBridge == null)
+                    bossAttackAnimatorBridge = FindAnyObjectByType<BossAttackAnimatorBridge>() ?? gameObject.AddComponent<BossAttackAnimatorBridge>();
+
+                if (barrierVisualController == null)
+                    barrierVisualController = FindAnyObjectByType<BarrierVisualController>() ?? gameObject.AddComponent<BarrierVisualController>();
+            }
+
             if (golemTarget == null)
                 golemTarget = ResolveOrCreateGolemTarget();
+
+            if (golemTarget != null && golemStatusVfx == null)
+                golemStatusVfx = golemTarget.GetComponent<BossElementStatusVfx>() ?? golemTarget.gameObject.AddComponent<BossElementStatusVfx>();
 
             if (gestureDiagnostics == null)
                 gestureDiagnostics = FindAnyObjectByType<GestureConflictDiagnostics>() ?? gameObject.AddComponent<GestureConflictDiagnostics>();
@@ -577,6 +620,13 @@ namespace ArcaneVR.Input
             nextBarrierResponseTime = Time.time + firstWindowDelay + 2f;
             nextGolemBarrierTime = Time.time + firstWindowDelay + 4f;
             spellCasterConfigured = false;
+        }
+
+        private static bool IsCombatScene(string sceneName)
+        {
+            return sceneName == "BattleSceen2" ||
+                   sceneName == "BattleScene2" ||
+                   sceneName.EndsWith("Coloseum");
         }
 
         private void HandleVoiceCommand(ElementType element)

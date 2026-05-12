@@ -1,9 +1,15 @@
+using System;
+using System.Collections;
 using UnityEngine;
 
 namespace ArcaneVR.Combat
 {
     public class BossPatternCombatBridge : MonoBehaviour
     {
+        public event Action<BossAttackType, float> OnAttackResponseWindowStarted;
+        public event Action<float> OnChargeCounterWindowStarted;
+        public event Action<float> OnGolemBarrierStarted;
+
         [SerializeField]
         private DodgeDetector dodgeDetector;
 
@@ -25,11 +31,28 @@ namespace ArcaneVR.Combat
         [SerializeField]
         private float defaultGolemBarrierDuration = 8f;
 
+        [SerializeField]
+        private float attackResponseConstraintLeadIn = 0.35f;
+
+        [SerializeField]
+        private float attackResponseConstraintExtraDuration = 0.2f;
+
+        private Coroutine pendingAttackResponseRoutine;
+
         public string LastBridgeStatus { get; private set; } = "Bridge: idle";
 
         private void Awake()
         {
             ResolveReferences();
+        }
+
+        private void OnDisable()
+        {
+            if (pendingAttackResponseRoutine != null)
+            {
+                StopCoroutine(pendingAttackResponseRoutine);
+                pendingAttackResponseRoutine = null;
+            }
         }
 
         public void BeginAttackResponseWindow(BossAttackType attackType)
@@ -41,15 +64,49 @@ namespace ArcaneVR.Combat
         {
             ResolveReferences();
 
+            if (pendingAttackResponseRoutine != null)
+            {
+                StopCoroutine(pendingAttackResponseRoutine);
+                pendingAttackResponseRoutine = null;
+            }
+
+            var responseDuration = Mathf.Max(0.1f, duration);
+            var leadIn = Mathf.Max(0f, attackResponseConstraintLeadIn);
+            var constraintDuration = leadIn + responseDuration + Mathf.Max(0f, attackResponseConstraintExtraDuration);
+            constraintController?.BeginResponseConstraint(constraintDuration);
+
+            if (leadIn > 0f)
+            {
+                LastBridgeStatus = $"Constraint before {attackType}";
+                pendingAttackResponseRoutine = StartCoroutine(BeginAttackResponseAfterLeadIn(attackType, responseDuration, leadIn));
+                return;
+            }
+
+            StartAttackResponseWindow(attackType, responseDuration);
+        }
+
+        private IEnumerator BeginAttackResponseAfterLeadIn(BossAttackType attackType, float duration, float leadIn)
+        {
+            yield return new WaitForSeconds(leadIn);
+            pendingAttackResponseRoutine = null;
+            StartAttackResponseWindow(attackType, duration);
+        }
+
+        private void StartAttackResponseWindow(BossAttackType attackType, float duration)
+        {
+            ResolveReferences();
+
             if (attackType == BossAttackType.Low)
             {
                 barrierController?.BeginResponseWindow(attackType, duration);
                 LastBridgeStatus = $"Barrier window: {attackType}";
+                OnAttackResponseWindowStarted?.Invoke(attackType, duration);
                 return;
             }
 
             dodgeDetector?.BeginDodgeWindow(attackType);
             LastBridgeStatus = $"Dodge window: {attackType}";
+            OnAttackResponseWindowStarted?.Invoke(attackType, duration);
         }
 
         public void BeginChargeCounterWindow()
@@ -63,6 +120,7 @@ namespace ArcaneVR.Combat
             golemTarget?.BeginChargeCounterWindow(duration);
             constraintController?.BeginConstraint(duration);
             LastBridgeStatus = "Charge counter window";
+            OnChargeCounterWindowStarted?.Invoke(duration);
         }
 
         public void BeginGolemBarrier()
@@ -75,6 +133,7 @@ namespace ArcaneVR.Combat
             ResolveReferences();
             golemTarget?.BeginBarrier(duration);
             LastBridgeStatus = "Golem barrier";
+            OnGolemBarrierStarted?.Invoke(duration);
         }
 
         private void ResolveReferences()
@@ -90,6 +149,9 @@ namespace ArcaneVR.Combat
 
             if (constraintController == null)
                 constraintController = FindAnyObjectByType<ConstraintController>();
+
+            if (constraintController == null)
+                constraintController = gameObject.AddComponent<ConstraintController>();
         }
     }
 }

@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using ArcaneVR.Combat;
 using ArcaneVR.Input;
 using ArcaneVR.UI;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ArcaneVR.Spell
 {
@@ -27,6 +29,9 @@ namespace ArcaneVR.Spell
         [SerializeField] private float voiceBoostDuration = 4f;
         [SerializeField] private float voiceBoostDamageMultiplier = 1.25f;
         [SerializeField] private float voiceBoostStatusMagnitudeMultiplier = 1.15f;
+
+        [Header("Mana Rules")]
+        [SerializeField] private bool consumeManaOnlyInCombatScenes = true;
 
         [Header("Gesture Spell Prototype")]
         [SerializeField] private bool enableGesturePrototype;
@@ -55,6 +60,9 @@ namespace ArcaneVR.Spell
         [SerializeField] private float prototypeVoiceFeedbackVolume = 0.9f;
         [SerializeField] private float prototypeArmFeedbackVolume = 0.45f;
         [SerializeField] private float prototypeCastFeedbackVolume = 0.85f;
+        [SerializeField] private bool requireRightHandVisibleForDeclarationFeedback = true;
+        [SerializeField] private float prototypeDeclarationViewportMargin = 0.03f;
+        [SerializeField] private float prototypeDeclarationRepeatDelay = 1.25f;
         [SerializeField] private GameObject spellPrefabOpenPalm;
         [SerializeField] private GameObject spellPrefabFist;
         [SerializeField] private GameObject spellPrefabThumbsUp;
@@ -95,6 +103,8 @@ namespace ArcaneVR.Spell
         private float lastCastTime = -999f;
         private float lastVoiceRefundTime = -999f;
         private SpellId lastCastSpellId = SpellId.None;
+        private readonly HashSet<string> castingSuppressionReasons = new HashSet<string>();
+        private const string DefaultCastingSuppressionReason = "Suppressed";
         private string lastCastStatus = "Cast: idle";
         private string lastManaCostStatus = "Cost: idle";
         private string lastVoiceBoostStatus = "VoiceLink: waiting";
@@ -114,6 +124,8 @@ namespace ArcaneVR.Spell
         public SpellId LastCastSpellId => lastCastSpellId;
         public ElementType LastCastElement => lastCastElement;
         public float LastManaCost => lastManaCost;
+        public bool IsCastingSuppressed => castingSuppressionReasons.Count > 0;
+        public string CastingSuppressionReason { get; private set; } = string.Empty;
         public ElementType PrototypeArmedElement => prototypeArmedElement;
         public bool IsPrototypeArmed => prototypeArmedElement != ElementType.None && prototypeArmedPose != PoseType.None;
         public bool IsPrototypeVoiceBoosted => IsPrototypeVoiceBoostActive(prototypeArmedElement);
@@ -128,6 +140,41 @@ namespace ArcaneVR.Spell
         private float EffectivePrototypeVoiceFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.9f, prototypeVoiceFeedbackVolume));
         private float EffectivePrototypeArmFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.35f, prototypeArmFeedbackVolume));
         private float EffectivePrototypeCastFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.75f, prototypeCastFeedbackVolume));
+        private float EffectivePrototypeDeclarationRepeatDelay => Mathf.Max(0.65f, prototypeDeclarationRepeatDelay);
+
+        public void SetCastingSuppressed(bool suppressed, string reason)
+        {
+            var normalizedReason = NormalizeCastingSuppressionReason(reason);
+
+            if (suppressed)
+                castingSuppressionReasons.Add(normalizedReason);
+            else
+                castingSuppressionReasons.Remove(normalizedReason);
+
+            CastingSuppressionReason = IsCastingSuppressed
+                ? string.Join(", ", castingSuppressionReasons)
+                : string.Empty;
+
+            if (!IsCastingSuppressed)
+            {
+                if (lastCastStatus.StartsWith("Locked:"))
+                    lastCastStatus = "Cast: ready";
+                return;
+            }
+
+            ClearPrototypeArm();
+            StopPrototypeAura();
+            prototypeReadyForThrust = false;
+            hasPreviousPrototypeWristPosition = false;
+            lastCastStatus = $"Locked: {CastingSuppressionReason}";
+            lastManaCostStatus = "Cost: locked";
+            prototypeDebugStatus = $"CAST locked: {CastingSuppressionReason}";
+        }
+
+        private static string NormalizeCastingSuppressionReason(string reason)
+        {
+            return string.IsNullOrWhiteSpace(reason) ? DefaultCastingSuppressionReason : reason.Trim();
+        }
 
         private void Awake()
         {
@@ -410,6 +457,16 @@ namespace ArcaneVR.Spell
             }
 
             prototypeCooldownTimer -= Time.deltaTime;
+            if (IsCastingSuppressed)
+            {
+                ClearPrototypeArm();
+                StopPrototypeAura();
+                hasPreviousPrototypeWristPosition = false;
+                prototypeReadyForThrust = false;
+                prototypeDebugStatus = $"CAST locked: {CastingSuppressionReason}";
+                return;
+            }
+
             ResolvePrototypeReferences();
             SyncPrototypePoseFromDetector();
             UpdatePrototypeArmingState(currentPrototypePose);
@@ -502,6 +559,13 @@ namespace ArcaneVR.Spell
             if (pose == PoseType.None || element == ElementType.None)
             {
                 ClearPrototypeArm();
+                return;
+            }
+
+            if (!IsRightHandVisibleForDeclarationFeedback(ResolvePrototypeSpawnPoint()))
+            {
+                ClearPrototypeArm();
+                lastCastStatus = $"Arm waiting: {element} hidden";
                 return;
             }
 
@@ -604,6 +668,12 @@ namespace ArcaneVR.Spell
         private void UpdatePrototypeAura(Transform spawnPoint)
         {
             if (!showPrototypeArmedAura || !IsPrototypeArmed || spawnPoint == null)
+            {
+                StopPrototypeAura();
+                return;
+            }
+
+            if (!IsRightHandVisibleForDeclarationFeedback(spawnPoint))
             {
                 StopPrototypeAura();
                 return;
@@ -930,13 +1000,21 @@ namespace ArcaneVR.Spell
             if (element == ElementType.None)
                 return;
 
-            if (lastPrototypeArmSfxElement == element && Time.time - lastPrototypeArmSfxTime < 0.28f)
+            var spawnPoint = ResolvePrototypeSpawnPoint();
+            if (!IsRightHandVisibleForDeclarationFeedback(spawnPoint))
+            {
+                StopPrototypeAura();
+                lastCastStatus = $"Armed: {element} hidden";
+                return;
+            }
+
+            if (lastPrototypeArmSfxElement == element &&
+                Time.time - lastPrototypeArmSfxTime < EffectivePrototypeDeclarationRepeatDelay)
                 return;
 
             lastPrototypeArmSfxElement = element;
             lastPrototypeArmSfxTime = Time.time;
 
-            var spawnPoint = ResolvePrototypeSpawnPoint();
             if (showPrototypeArmedAura && spawnPoint != null)
             {
                 EnsurePrototypeAura(spawnPoint);
@@ -958,10 +1036,17 @@ namespace ArcaneVR.Spell
 
         private void PlayPrototypeVoiceBoostFeedback(ElementType element)
         {
+            var spawnPoint = ResolvePrototypeSpawnPoint();
+            if (!IsRightHandVisibleForDeclarationFeedback(spawnPoint))
+            {
+                StopPrototypeAura();
+                lastVoiceBoostStatus = $"VoiceLink: boosted {element}, hidden hand";
+                return;
+            }
+
             prototypeAuraPulseStartTime = Time.time;
             prototypeAuraPulseEndTime = Time.time + EffectivePrototypeAuraPulseDuration;
 
-            var spawnPoint = ResolvePrototypeSpawnPoint();
             if (showPrototypeArmedAura && spawnPoint != null)
             {
                 EnsurePrototypeAura(spawnPoint);
@@ -980,6 +1065,38 @@ namespace ArcaneVR.Spell
                 element,
                 ArcaneSpellSfxCue.VoiceConfirm,
                 EffectivePrototypeVoiceFeedbackVolume);
+        }
+
+        private bool IsRightHandVisibleForDeclarationFeedback(Transform spawnPoint)
+        {
+            if (!requireRightHandVisibleForDeclarationFeedback)
+                return true;
+
+            if (spawnPoint == null)
+                return false;
+
+            var handPosition = spawnPoint.position;
+            var camera = Camera.main;
+            if (camera != null)
+            {
+                var viewportPoint = camera.WorldToViewportPoint(handPosition);
+                var margin = Mathf.Clamp(prototypeDeclarationViewportMargin, -0.1f, 0.45f);
+                return viewportPoint.z > 0.12f &&
+                       viewportPoint.x >= margin &&
+                       viewportPoint.x <= 1f - margin &&
+                       viewportPoint.y >= margin &&
+                       viewportPoint.y <= 1f - margin;
+            }
+
+            var head = ResolvePrototypeHeadTransform();
+            if (head == null)
+                return true;
+
+            var toHand = handPosition - head.position;
+            if (toHand.sqrMagnitude < 0.01f)
+                return false;
+
+            return Vector3.Dot(head.forward, toHand.normalized) > 0.45f;
         }
 
         private static Material CreateAuraMaterial(Color color)
@@ -1346,6 +1463,15 @@ namespace ArcaneVR.Spell
 
         private void FirePrototypeSpell(PoseType pose, Vector3 originPosition, Vector3 direction)
         {
+            if (IsCastingSuppressed)
+            {
+                prototypeReadyForThrust = false;
+                lastCastStatus = $"Locked: {CastingSuppressionReason}";
+                lastManaCostStatus = "Cost: locked";
+                prototypeDebugStatus = $"CAST locked: {CastingSuppressionReason}";
+                return;
+            }
+
             direction = direction.sqrMagnitude > 0.001f
                 ? direction.normalized
                 : (ResolvePrototypeHeadTransform() != null ? ResolvePrototypeHeadTransform().forward : transform.forward).normalized;
@@ -1366,27 +1492,15 @@ namespace ArcaneVR.Spell
                 statusMagnitude *= Mathf.Max(1f, voiceBoostStatusMagnitudeMultiplier);
             }
 
-            if (combatManager == null)
-                combatManager = FindAnyObjectByType<CombatManager>();
-
-            if (combatManager == null)
+            if (!TryPayMana(spellId, element, manaCost, out var paidMana))
             {
-                RecordCastBlocked(spellId, element, manaCost, "Cost: no CombatManager");
-                prototypeDebugStatus = $"CAST blocked:{pose} no CombatManager";
+                prototypeDebugStatus = combatManager != null
+                    ? $"CAST blocked:{pose} no mana {combatManager.CurrentMana:0.#}/{manaCost:0.#}"
+                    : $"CAST blocked:{pose} no CombatManager";
                 return;
             }
 
-            if (!combatManager.TryConsumeMana(manaCost))
-            {
-                RecordCastBlocked(spellId, element, manaCost, $"Cost: NoMana {combatManager.CurrentMana:0.#}/{manaCost:0.#}");
-                prototypeDebugStatus = $"CAST blocked:{pose} no mana {combatManager.CurrentMana:0.#}/{manaCost:0.#}";
-                return;
-            }
-
-            lastManaCost = manaCost;
-            var manaAfterConsume = combatManager.CurrentMana;
-            lastManaCostStatus = $"Cost: Paid {manaCost:0.#} -> {manaAfterConsume:0.#}";
-            if (voiceBoosted && Time.time - lastVoiceRefundTime >= voiceRefundCooldown)
+            if (paidMana && voiceBoosted && Time.time - lastVoiceRefundTime >= voiceRefundCooldown)
             {
                 combatManager.RefundVoiceMana();
                 lastVoiceRefundTime = Time.time;
@@ -1478,6 +1592,55 @@ namespace ArcaneVR.Spell
             return spellData != null ? Mathf.Max(0f, spellData.manaCost) : Mathf.Max(0f, prototypeFallbackManaCost);
         }
 
+        private bool TryPayMana(SpellId spellId, ElementType element, float manaCost, out bool paidMana)
+        {
+            paidMana = false;
+            lastManaCost = Mathf.Max(0f, manaCost);
+
+            if (!ShouldConsumeManaInCurrentScene())
+            {
+                lastManaCostStatus = $"Cost: Free in {SceneManager.GetActiveScene().name}";
+                return true;
+            }
+
+            if (combatManager == null)
+                combatManager = FindAnyObjectByType<CombatManager>();
+
+            if (combatManager == null)
+            {
+                RecordCastBlocked(spellId, element, manaCost, "Cost: no CombatManager");
+                return false;
+            }
+
+            if (!combatManager.TryConsumeMana(manaCost))
+            {
+                RecordCastBlocked(spellId, element, manaCost, $"Cost: NoMana {combatManager.CurrentMana:0.#}/{manaCost:0.#}");
+                return false;
+            }
+
+            paidMana = true;
+            lastManaCostStatus = $"Cost: Paid {manaCost:0.#} -> {combatManager.CurrentMana:0.#}";
+            return true;
+        }
+
+        private bool ShouldConsumeManaInCurrentScene()
+        {
+            if (!consumeManaOnlyInCombatScenes)
+                return true;
+
+            return IsCombatScene(SceneManager.GetActiveScene().name);
+        }
+
+        private static bool IsCombatScene(string sceneName)
+        {
+            return sceneName == "BattleSceen2" ||
+                   sceneName == "BattleScene2" ||
+                   sceneName == "FireColoseum" ||
+                   sceneName == "IceColoseum" ||
+                   sceneName == "ElectricColoseum" ||
+                   sceneName.EndsWith("Coloseum");
+        }
+
         private SpellDatabase.PoseSpellData ResolvePrototypeSpellData(PoseType pose)
         {
             if (spellDatabase == null)
@@ -1501,31 +1664,14 @@ namespace ArcaneVR.Spell
         {
             var projectileObject = new GameObject($"PrototypeSpell_{pose}");
             projectileObject.transform.SetPositionAndRotation(position, rotation);
-            var color = GetPrototypeSpellColor(pose, element);
 
             var collider = projectileObject.AddComponent<SphereCollider>();
             collider.isTrigger = true;
             collider.radius = prototypeProjectileScale * 0.5f;
 
-            var visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            visual.name = $"{pose}_Sphere";
-            visual.transform.SetParent(projectileObject.transform, false);
-            visual.transform.localPosition = Vector3.zero;
-            visual.transform.localScale = Vector3.one * prototypeProjectileScale;
-
-            var visualCollider = visual.GetComponent<Collider>();
-            if (visualCollider != null)
-                Destroy(visualCollider);
-
-            var renderer = visual.GetComponent<Renderer>();
-            if (renderer != null)
-                renderer.material = CreateDebugMaterial(color);
-
-            var light = projectileObject.AddComponent<Light>();
-            light.type = LightType.Point;
-            light.color = color;
-            light.range = 1.4f;
-            light.intensity = 2f;
+            var visualScale = Mathf.Max(0.45f, prototypeProjectileScale / 0.12f);
+            var vfx = projectileObject.AddComponent<ArcaneSpellProjectileVfx>();
+            vfx.Configure(ResolvePrototypeSpellId(pose), element, visualScale);
 
             return projectileObject;
         }
@@ -1548,22 +1694,6 @@ namespace ArcaneVR.Spell
 
             rigidbody.useGravity = false;
             rigidbody.isKinematic = true;
-        }
-
-        private static Color GetPrototypePoseColor(PoseType pose)
-        {
-            return pose switch
-            {
-                PoseType.OpenPalm => new Color(1f, 0.2f, 0.2f, 1f),
-                PoseType.Fist => new Color(0.2f, 0.4f, 1f, 1f),
-                PoseType.ThumbsUp => new Color(1f, 0.86f, 0f, 1f),
-                _ => Color.white
-            };
-        }
-
-        private static Color GetPrototypeSpellColor(PoseType pose, ElementType element)
-        {
-            return element == ElementType.None ? GetPrototypePoseColor(pose) : GetElementColor(element);
         }
 
         private static ElementType ResolveDefaultPrototypeElement(PoseType pose)
@@ -1628,6 +1758,13 @@ namespace ArcaneVR.Spell
 
         public bool Cast(SpellId spellId)
         {
+            if (IsCastingSuppressed)
+            {
+                lastCastStatus = $"Locked: {CastingSuppressionReason}";
+                lastManaCostStatus = "Cost: locked";
+                return false;
+            }
+
             if (spellDatabase == null)
             {
                 Debug.LogWarning("SpellCaster needs a SpellDatabase reference.");
@@ -1643,23 +1780,8 @@ namespace ArcaneVR.Spell
                 return false;
             }
 
-            if (combatManager == null)
-                combatManager = FindAnyObjectByType<CombatManager>();
-
-            if (combatManager == null)
-            {
-                RecordCastBlocked(spellId, data.element, data.manaCost, "Cost: no CombatManager");
+            if (!TryPayMana(spellId, data.element, data.manaCost, out _))
                 return false;
-            }
-
-            if (!combatManager.TryConsumeMana(data.manaCost))
-            {
-                RecordCastBlocked(spellId, data.element, data.manaCost, $"Cost: NoMana {combatManager.CurrentMana:0.#}/{data.manaCost:0.#}");
-                return false;
-            }
-
-            lastManaCost = data.manaCost;
-            lastManaCostStatus = $"Cost: Paid {data.manaCost:0.#} -> {combatManager.CurrentMana:0.#}";
 
             var spawnPoint = ResolveSpawnPoint(spellId);
             var spawnPosition = spawnPoint != null ? spawnPoint.position : transform.position;
@@ -1696,6 +1818,9 @@ namespace ArcaneVR.Spell
                 projectileObject.transform.SetParent(spellSpawnRoot, true);
 
             Destroy(projectileObject, fallbackProjectileLifetime);
+            if (feedbackManager == null)
+                feedbackManager = FindAnyObjectByType<FeedbackManager>();
+
             feedbackManager?.OnSpellCast(spellId);
             PlaySpellCastFeedback(spellId, element);
             return true;
@@ -1789,79 +1914,11 @@ namespace ArcaneVR.Spell
 
         private void CreateDebugProjectileVisual(SpellId spellId, ElementType element, Transform parent)
         {
-            var color = GetElementColor(element);
-            switch (spellId)
-            {
-                case SpellId.Single_Pointer:
-                    AddPrimitiveVisual("Pointer_Sphere", PrimitiveType.Sphere, parent, Vector3.zero, Vector3.one * 0.18f, color);
-                    break;
-                case SpellId.Single_Wave:
-                    AddPrimitiveVisual("Wave_Plate", PrimitiveType.Cube, parent, Vector3.zero, new Vector3(0.48f, 0.08f, 0.18f), color);
-                    AddPrimitiveVisual("Wave_Crest", PrimitiveType.Sphere, parent, new Vector3(0f, 0.08f, 0f), new Vector3(0.28f, 0.08f, 0.16f), Color.Lerp(color, Color.white, 0.35f));
-                    break;
-                case SpellId.Single_Strike:
-                    AddPrimitiveVisual("Strike_Capsule", PrimitiveType.Capsule, parent, Vector3.zero, new Vector3(0.18f, 0.38f, 0.18f), color);
-                    parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(90f, 0f, 0f);
-                    break;
-                case SpellId.Combo_FireIce:
-                    AddPrimitiveVisual("FireIce_LeftOrb", PrimitiveType.Sphere, parent, new Vector3(-0.13f, 0f, 0f), Vector3.one * 0.18f, GetElementColor(ElementType.Fire));
-                    AddPrimitiveVisual("FireIce_RightOrb", PrimitiveType.Sphere, parent, new Vector3(0.13f, 0f, 0f), Vector3.one * 0.18f, GetElementColor(ElementType.Ice));
-                    break;
-                case SpellId.Combo_IceThunder:
-                    AddPrimitiveVisual("IceThunder_Cylinder", PrimitiveType.Cylinder, parent, Vector3.zero, new Vector3(0.24f, 0.16f, 0.24f), Color.Lerp(GetElementColor(ElementType.Ice), GetElementColor(ElementType.Thunder), 0.5f));
-                    parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(90f, 0f, 0f);
-                    break;
-                case SpellId.Combo_ThunderFire:
-                    AddPrimitiveVisual("ThunderFire_Diamond", PrimitiveType.Cube, parent, Vector3.zero, Vector3.one * 0.28f, Color.Lerp(GetElementColor(ElementType.Thunder), GetElementColor(ElementType.Fire), 0.45f));
-                    parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(45f, 45f, 0f);
-                    break;
-                default:
-                    AddPrimitiveVisual("Fallback_Sphere", PrimitiveType.Sphere, parent, Vector3.zero, Vector3.one * 0.18f, color);
-                    break;
-            }
+            var vfx = parent.gameObject.GetComponent<ArcaneSpellProjectileVfx>();
+            if (vfx == null)
+                vfx = parent.gameObject.AddComponent<ArcaneSpellProjectileVfx>();
 
-            var light = parent.gameObject.AddComponent<Light>();
-            light.type = LightType.Point;
-            light.color = color;
-            light.range = IsSingleSpell(spellId) ? 1.4f : 2.2f;
-            light.intensity = IsSingleSpell(spellId) ? 1.6f : 2.6f;
-        }
-
-        private void AddPrimitiveVisual(string name, PrimitiveType primitiveType, Transform parent, Vector3 localPosition, Vector3 localScale, Color color)
-        {
-            var visual = GameObject.CreatePrimitive(primitiveType);
-            visual.name = name;
-            visual.transform.SetParent(parent, false);
-            visual.transform.localPosition = localPosition;
-            visual.transform.localScale = localScale * debugProjectileScale;
-
-            var collider = visual.GetComponent<Collider>();
-            if (collider != null)
-            {
-                collider.enabled = false;
-                Destroy(collider);
-            }
-
-            var renderer = visual.GetComponent<Renderer>();
-            if (renderer != null)
-                renderer.material = CreateDebugMaterial(color);
-        }
-
-        private static Material CreateDebugMaterial(Color color)
-        {
-            var shader = Shader.Find("Universal Render Pipeline/Unlit") ??
-                         Shader.Find("Universal Render Pipeline/Lit") ??
-                         Shader.Find("Sprites/Default") ??
-                         Shader.Find("Unlit/Color") ??
-                         Shader.Find("Hidden/Internal-Colored") ??
-                         Shader.Find("Standard");
-            var material = new Material(shader);
-            if (material.HasProperty("_BaseColor"))
-                material.SetColor("_BaseColor", color);
-            else if (material.HasProperty("_Color"))
-                material.SetColor("_Color", color);
-
-            return material;
+            vfx.Configure(spellId, element, debugProjectileScale);
         }
 
         private static Color GetElementColor(ElementType element)

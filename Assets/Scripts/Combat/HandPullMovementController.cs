@@ -44,8 +44,6 @@ namespace ArcaneVR.Input
         [SerializeField] private bool requirePullTowardBody = false;
         [SerializeField] private float towardBodyDotThreshold = 0.25f;
 
-<<<<<<< Updated upstream
-=======
         [Header("Collision Movement")]
         [SerializeField] private bool useCharacterController = true;
         [SerializeField] private bool autoCreateCharacterController = true;
@@ -66,7 +64,6 @@ namespace ArcaneVR.Input
         [SerializeField] private float groundedStickVelocity = -2.0f;
         [SerializeField] private float terminalFallSpeed = -20.0f;
 
->>>>>>> Stashed changes
         [Header("Player Height")]
         [SerializeField] private bool autoCorrectLowHeadHeight = true;
         [SerializeField] private float heightCorrectionDelay = 0.75f;
@@ -77,10 +74,6 @@ namespace ArcaneVR.Input
         [SerializeField] private bool showDebugLog;
 
         private readonly List<XRHandSubsystem> handSubsystems = new List<XRHandSubsystem>();
-<<<<<<< Updated upstream
-        private XRHandSubsystem handSubsystem;
-=======
->>>>>>> Stashed changes
 
         private XRHandSubsystem handSubsystem;
         private PullHand activeHand = PullHand.None;
@@ -132,13 +125,9 @@ namespace ArcaneVR.Input
             }
 
             IsMovementSuppressed = suppressed;
-<<<<<<< Updated upstream
-            MovementSuppressionReason = suppressed ? string.IsNullOrWhiteSpace(reason) ? "Suppressed" : reason : string.Empty;
-=======
             MovementSuppressionReason = suppressed
                 ? string.IsNullOrWhiteSpace(reason) ? "Suppressed" : reason
                 : string.Empty;
->>>>>>> Stashed changes
 
             if (!suppressed)
             {
@@ -147,10 +136,7 @@ namespace ArcaneVR.Input
             }
 
             if (activeHand != PullHand.None)
-<<<<<<< Updated upstream
-=======
             {
->>>>>>> Stashed changes
                 EndPull();
             }
 
@@ -559,12 +545,6 @@ namespace ArcaneVR.Input
         private void ApplyMoveDelta(Vector3 moveDelta)
         {
             if (xrOriginRoot == null)
-<<<<<<< Updated upstream
-                return;
-
-            Transform root = movementRoot != null ? movementRoot : xrOriginRoot;
-            root.position += moveDelta;
-=======
             {
                 return;
             }
@@ -668,7 +648,6 @@ namespace ArcaneVR.Input
 
             root.position += moveDelta;
             movementAppliedThisFrame = true;
->>>>>>> Stashed changes
         }
 
         private void EndPull()
