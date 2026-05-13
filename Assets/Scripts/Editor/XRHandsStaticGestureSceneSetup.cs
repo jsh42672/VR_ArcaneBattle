@@ -27,7 +27,8 @@ namespace ArcaneVR.Editor
         {
             OpenPalm,
             Fist,
-            ThumbsUp
+            ThumbsUp,
+            TwoFinger
         }
 
         [MenuItem("ArcaneVR/Prototype/Setup XR Hands Static Gestures")]
@@ -36,6 +37,7 @@ namespace ArcaneVR.Editor
             var openPalm = GetOrCreateHandShape("HandShape_OpenPalm", PrototypeHandShape.OpenPalm);
             var fist = GetOrCreateHandShape("HandShape_Fist", PrototypeHandShape.Fist);
             var thumbsUp = GetOrCreateHandShape("HandShape_ThumbsUp", PrototypeHandShape.ThumbsUp);
+            var twoFinger = GetOrCreateHandShape("HandShape_TwoFinger", PrototypeHandShape.TwoFinger);
             AssetDatabase.SaveAssets();
 
             var staticGestureType = FindType(StaticHandGestureTypeName);
@@ -88,6 +90,15 @@ namespace ArcaneVR.Editor
             ConfigureGesture(
                 inputManager.transform,
                 staticGestureType,
+                "Gesture_TwoFinger_R",
+                rightEvents,
+                twoFinger,
+                router.OnTwoFingerStart,
+                router.OnTwoFingerEnd);
+
+            ConfigureGesture(
+                inputManager.transform,
+                staticGestureType,
                 "Gesture_ThumbsUp_R",
                 rightEvents,
                 thumbsUp,
@@ -111,6 +122,15 @@ namespace ArcaneVR.Editor
                 fist,
                 router.OnLeftFistDetected,
                 router.OnLeftFistLost);
+
+            ConfigureGesture(
+                inputManager.transform,
+                staticGestureType,
+                "Gesture_TwoFinger_L",
+                leftEvents,
+                twoFinger,
+                router.OnTwoFingerLeftStart,
+                router.OnTwoFingerLeftEnd);
 
             ConfigureGesture(
                 inputManager.transform,
@@ -157,6 +177,7 @@ namespace ArcaneVR.Editor
                 PrototypeHandShape.OpenPalm => BuildOpenPalmConditions(),
                 PrototypeHandShape.Fist => BuildFistConditions(),
                 PrototypeHandShape.ThumbsUp => BuildThumbsUpConditions(),
+                PrototypeHandShape.TwoFinger => BuildTwoFingerConditions(),
                 _ => BuildOpenPalmConditions()
             };
 
@@ -200,6 +221,17 @@ namespace ArcaneVR.Editor
                 CreateFullCurlCondition(XRHandFingerID.Middle, 1f, 0.15f, 0.15f),
                 CreateFullCurlCondition(XRHandFingerID.Ring, 1f, 0.15f, 0.15f),
                 CreateFullCurlCondition(XRHandFingerID.Little, 1f, 0.15f, 0.15f)
+            };
+        }
+
+        private static List<XRFingerShapeCondition> BuildTwoFingerConditions()
+        {
+            return new List<XRFingerShapeCondition>
+            {
+                CreateFullCurlCondition(XRHandFingerID.Index, 0f, 0.45f, 0.25f),
+                CreateFullCurlCondition(XRHandFingerID.Middle, 0f, 0.45f, 0.25f),
+                CreateFullCurlCondition(XRHandFingerID.Ring, 1f, 0.18f, 0.65f),
+                CreateFullCurlCondition(XRHandFingerID.Little, 1f, 0.18f, 0.65f)
             };
         }
 

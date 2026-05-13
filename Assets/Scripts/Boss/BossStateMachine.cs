@@ -15,7 +15,8 @@ namespace ArcaneVR.Boss
         [SerializeField] private BossPatternCombatBridge patternBridge;
 
         [Header("Pattern Timing")]
-        [SerializeField] private bool runPatternsAutomatically = true;
+        [SerializeField] private bool runPatternsAutomatically;
+        [SerializeField] private bool createResponsePatternHelpers;
         [SerializeField] private float firstPatternDelay = 3f;
         [SerializeField] private float attackInterval = 6f;
         [SerializeField] private float defenseInterval = 25f;
@@ -35,6 +36,8 @@ namespace ArcaneVR.Boss
         private bool phaseTwoTriggered;
         private bool finalPhaseTriggered;
         private bool subscribed;
+        private BossChaseController chaseController;
+        private bool battleHelpersEnsured;
 
         public string LastPatternStatus { get; private set; } = "BossSM: idle";
         public float NextAttackIn => Mathf.Max(0f, nextAttackTime - Time.time);
@@ -78,9 +81,9 @@ namespace ArcaneVR.Boss
 
         private static bool IsBattleScene(string sceneName)
         {
-            return sceneName == "BattleSceen2" ||
-                   sceneName == "BattleScene2" ||
-                   sceneName.EndsWith("Coloseum");
+            return sceneName == "ElectricColoseum" ||
+                   sceneName == "FireColoseum" ||
+                   sceneName == "IceColoseum";
         }
 
         private void Awake()
@@ -134,6 +137,13 @@ namespace ArcaneVR.Boss
 
             if (Time.time >= nextAttackTime)
             {
+                if (chaseController != null && !chaseController.IsInAttackRange)
+                {
+                    LastPatternStatus = $"BossSM: chase closing {chaseController.DistanceToTarget:0.0}m";
+                    ScheduleNextAttack(1f);
+                    return;
+                }
+
                 TriggerAttackPattern();
             }
         }
@@ -150,6 +160,12 @@ namespace ArcaneVR.Boss
 
         public void TriggerAttackNow(BossAttackType attackType)
         {
+            if (!runPatternsAutomatically)
+            {
+                LastPatternStatus = "BossSM: attack patterns disabled";
+                return;
+            }
+
             ResolveReferences();
             bossAI?.ChangeState(BossState.Idle);
             patternBridge?.BeginAttackResponseWindow(attackType, responseWindowDuration);
@@ -273,8 +289,51 @@ namespace ArcaneVR.Boss
             if (golemTarget == null)
                 golemTarget = FindAnyObjectByType<GolemCombatTarget>();
 
-            if (patternBridge == null)
-                patternBridge = GetComponent<BossPatternCombatBridge>() ?? FindAnyObjectByType<BossPatternCombatBridge>();
+            if (golemTarget != null)
+                chaseController = BossChaseController.EnsureForTarget(golemTarget);
+
+            if (runPatternsAutomatically && patternBridge == null)
+                patternBridge = GetComponent<BossPatternCombatBridge>() ??
+                                FindAnyObjectByType<BossPatternCombatBridge>() ??
+                                gameObject.AddComponent<BossPatternCombatBridge>();
+
+            if (runPatternsAutomatically && createResponsePatternHelpers)
+                EnsureBattleHelpers();
+        }
+
+        private void EnsureBattleHelpers()
+        {
+            if (battleHelpersEnsured)
+                return;
+
+            if (FindAnyObjectByType<DodgeDetector>() == null)
+                gameObject.AddComponent<DodgeDetector>();
+
+            if (FindAnyObjectByType<BarrierController>() == null)
+                gameObject.AddComponent<BarrierController>();
+
+            if (FindAnyObjectByType<DodgePlayerDamageBridge>() == null)
+                gameObject.AddComponent<DodgePlayerDamageBridge>();
+
+            if (FindAnyObjectByType<BarrierPlayerDamageBridge>() == null)
+                gameObject.AddComponent<BarrierPlayerDamageBridge>();
+
+            if (FindAnyObjectByType<BossAttackTelegraphController>() == null)
+                gameObject.AddComponent<BossAttackTelegraphController>();
+
+            if (FindAnyObjectByType<BossAttackEffectController>() == null)
+                gameObject.AddComponent<BossAttackEffectController>();
+
+            if (FindAnyObjectByType<BossAttackAnimatorBridge>() == null)
+                gameObject.AddComponent<BossAttackAnimatorBridge>();
+
+            if (FindAnyObjectByType<BarrierVisualController>() == null)
+                gameObject.AddComponent<BarrierVisualController>();
+
+            if (FindAnyObjectByType<BossCombatFeedbackController>() == null)
+                gameObject.AddComponent<BossCombatFeedbackController>();
+
+            battleHelpersEnsured = true;
         }
 
         private void Subscribe()

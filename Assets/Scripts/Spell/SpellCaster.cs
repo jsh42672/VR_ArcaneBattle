@@ -42,6 +42,15 @@ namespace ArcaneVR.Spell
         [SerializeField] private Transform prototypeTrackingSpaceRoot;
         [SerializeField] private Transform prototypeSpellSpawnRoot;
         [SerializeField] private float prototypeThrustThreshold = 0.65f;
+        [SerializeField] private float prototypeThrustDistanceThreshold = 0.12f;
+        [SerializeField] private float prototypeThrustResetDistance = 0.05f;
+        [SerializeField] private float prototypeThrustMinForwardSpeed = 0.1f;
+        [SerializeField] private float prototypeOpenPalmThrustDistanceThreshold = 0.08f;
+        [SerializeField] private float prototypeOpenPalmThrustMinForwardSpeed = 0.045f;
+        [SerializeField] private float prototypeCompactPoseThrustDistanceThreshold = 0.08f;
+        [SerializeField] private float prototypeCompactPoseThrustMinForwardSpeed = 0.05f;
+        [SerializeField] private float prototypeThrustAnchorBackwardRefreshDistance = 0.012f;
+        [SerializeField] private float prototypeOpenPalmAnchorBackwardRefreshDistance = 0.008f;
         [SerializeField] private float prototypeSpellSpeed = 12f;
         [SerializeField] private float prototypeCooldown = 0.5f;
         [SerializeField] private float prototypeProjectileScale = 0.12f;
@@ -49,7 +58,10 @@ namespace ArcaneVR.Spell
         [SerializeField] private float prototypeMinimumProjectileSpeed = 8f;
         [SerializeField] private float prototypeFallbackManaCost = 1f;
         [SerializeField] private float prototypeArmReadyDelay = 0.2f;
-        [SerializeField] private bool allowPrototypeCastWithoutVoice;
+        [SerializeField] private float prototypePoseSwitchHoldDuration = 0.3f;
+        [SerializeField] private float prototypePoseLossGraceDuration = 0.25f;
+        [SerializeField] private float prototypeOpenPalmPoseLossGraceDuration = 0.45f;
+        [SerializeField] private bool allowPrototypeCastWithoutVoice = true;
         [SerializeField] private bool prototypeAimAtViewCenter = true;
         [SerializeField] private float prototypeAimDistance = 18f;
         [SerializeField] private bool showPrototypeArmedAura = true;
@@ -71,17 +83,25 @@ namespace ArcaneVR.Spell
         private PoseType prototypeArmedPose = PoseType.None;
         private ElementType prototypeArmedElement = ElementType.None;
         private Vector3 previousPrototypeWristPosition;
+        private Vector3 prototypeThrustAnchorPosition;
+        private PoseType prototypePoseSwitchCandidate = PoseType.None;
         private float prototypeArmedTime = -999f;
+        private float prototypePoseSwitchCandidateStartTime = -999f;
+        private float prototypeLastPoseSeenTime = -999f;
         private float prototypeCooldownTimer;
         private bool hasPreviousPrototypeWristPosition;
+        private bool hasPrototypeThrustAnchor;
+        private bool prototypePoseSwitchPending;
         private bool prototypeEventsSubscribed;
         private bool prototypeRouterEventsSubscribed;
         private bool voiceEventsSubscribed;
+        private CombinationChecker subscribedCombinationChecker;
         private bool prototypeReadyForThrust = true;
         private float prototypeLastForwardSpeed;
         private float prototypeLastHandForwardSpeed;
         private float prototypeLastHeadForwardSpeed;
         private float prototypeLastAwayFromHeadSpeed;
+        private float prototypeLastForwardDistance;
         private string prototypeDebugStatus = "CAST: waiting";
         private bool prototypeVoiceBoosted;
         private ElementType prototypeVoiceBoostElement = ElementType.None;
@@ -97,6 +117,9 @@ namespace ArcaneVR.Spell
         private float prototypeAuraPulseEndTime = -999f;
         private float lastPrototypeArmSfxTime = -999f;
         private ElementType lastPrototypeArmSfxElement = ElementType.None;
+        private float lastComboDeclarationSfxTime = -999f;
+        private ElementType lastComboDeclarationSfxElement = ElementType.None;
+        private bool lastComboDeclarationSfxIsLeft;
         private SpellId lastComboReadySfxSpell = SpellId.None;
         private float lastComboReadySfxTime = -999f;
         private ElementType lastCastElement = ElementType.None;
@@ -131,16 +154,16 @@ namespace ArcaneVR.Spell
         public bool IsPrototypeVoiceBoosted => IsPrototypeVoiceBoostActive(prototypeArmedElement);
         public float PrototypeLastForwardSpeed => prototypeLastForwardSpeed;
         public string PrototypeArmStatus => IsPrototypeArmed
-            ? $"Arm {prototypeArmedElement} Voice {(IsPrototypeVoiceBoosted ? "O" : "X")} Link {(voiceEventsSubscribed ? "O" : "X")} Push {prototypeLastForwardSpeed:0.00}"
+            ? $"Arm {prototypeArmedElement} Voice {(IsPrototypeVoiceBoosted ? "O" : "X")} Link {(voiceEventsSubscribed ? "O" : "X")} Push {prototypeLastForwardDistance:0.00}/{ResolvePrototypeThrustDistanceThreshold(prototypeArmedPose):0.00} Speed {prototypeLastForwardSpeed:0.00}"
             : lastCastStatus;
         private float EffectivePrototypeAuraBaseSize => Mathf.Max(0.06f, prototypeAuraBaseSize);
         private float EffectivePrototypeAuraBoostSize => Mathf.Max(0.12f, prototypeAuraBoostSize);
         private float EffectivePrototypeAuraPulseDuration => Mathf.Max(0.85f, prototypeAuraPulseDuration);
         private float EffectivePrototypeAuraVoicePulseMultiplier => Mathf.Max(4.5f, prototypeAuraVoicePulseMultiplier);
         private float EffectivePrototypeVoiceFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.9f, prototypeVoiceFeedbackVolume));
-        private float EffectivePrototypeArmFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.35f, prototypeArmFeedbackVolume));
-        private float EffectivePrototypeCastFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.75f, prototypeCastFeedbackVolume));
-        private float EffectivePrototypeDeclarationRepeatDelay => Mathf.Max(0.65f, prototypeDeclarationRepeatDelay);
+        private float EffectivePrototypeArmFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.75f, prototypeArmFeedbackVolume));
+        private float EffectivePrototypeCastFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.9f, prototypeCastFeedbackVolume));
+        private float EffectivePrototypeDeclarationRepeatDelay => Mathf.Max(1.75f, prototypeDeclarationRepeatDelay);
 
         public void SetCastingSuppressed(bool suppressed, string reason)
         {
@@ -207,11 +230,7 @@ namespace ArcaneVR.Spell
 
         private void OnEnable()
         {
-            if (combinationChecker != null)
-            {
-                combinationChecker.OnCombinationSuccess += HandleCombinationSuccess;
-                combinationChecker.OnComboReadyChanged += HandleComboReadyChanged;
-            }
+            EnsureCombinationSubscription();
 
             EnsureVoiceSubscription();
 
@@ -221,11 +240,7 @@ namespace ArcaneVR.Spell
 
         private void OnDisable()
         {
-            if (combinationChecker != null)
-            {
-                combinationChecker.OnCombinationSuccess -= HandleCombinationSuccess;
-                combinationChecker.OnComboReadyChanged -= HandleComboReadyChanged;
-            }
+            UnsubscribeCombinationEvents();
 
             UnsubscribeVoiceEvents();
 
@@ -235,18 +250,79 @@ namespace ArcaneVR.Spell
 
         private void Update()
         {
+            EnsureCombinationSubscription();
             EnsureVoiceSubscription();
             ProcessLatestVoiceRecognitionIfNeeded();
             UpdateGesturePrototypeCasting();
         }
 
+        private void EnsureCombinationSubscription()
+        {
+            if (combinationChecker == null)
+                combinationChecker = FindAnyObjectByType<CombinationChecker>();
+
+            if (subscribedCombinationChecker == combinationChecker)
+                return;
+
+            UnsubscribeCombinationEvents();
+            if (combinationChecker == null)
+                return;
+
+            combinationChecker.OnCombinationSuccess += HandleCombinationSuccess;
+            combinationChecker.OnComboReadyChanged += HandleComboReadyChanged;
+            combinationChecker.OnElementDeclared += HandleElementDeclared;
+            combinationChecker.OnComboChargeStarted += HandleComboChargeStarted;
+            subscribedCombinationChecker = combinationChecker;
+        }
+
+        private void UnsubscribeCombinationEvents()
+        {
+            if (subscribedCombinationChecker == null)
+                return;
+
+            subscribedCombinationChecker.OnCombinationSuccess -= HandleCombinationSuccess;
+            subscribedCombinationChecker.OnComboReadyChanged -= HandleComboReadyChanged;
+            subscribedCombinationChecker.OnElementDeclared -= HandleElementDeclared;
+            subscribedCombinationChecker.OnComboChargeStarted -= HandleComboChargeStarted;
+            subscribedCombinationChecker = null;
+        }
+
         private void HandleCombinationSuccess(SpellId spellId)
         {
+            if (!SpellHitData.IsComboSpellId(spellId))
+            {
+                lastCastStatus = $"Ignored legacy single cast: {spellId}";
+                return;
+            }
+
+            if (combinationChecker != null &&
+                combinationChecker.TryConsumePendingComboCastPose(spellId, out var origin, out var direction))
+            {
+                CastFromPose(spellId, origin, direction);
+                return;
+            }
+
             Cast(spellId);
+        }
+
+        private void HandleComboChargeStarted(SpellId spellId, Vector3 origin)
+        {
+            if (IsCastingSuppressed || !SpellHitData.IsComboSpellId(spellId))
+                return;
+
+            SpawnComboClashAura(spellId, origin);
+            ArcaneSpellSfx.PlayCombo(
+                EnsureDetachedFeedbackAudioSource(),
+                spellId,
+                ArcaneSpellSfxCue.ComboReady,
+                1f);
         }
 
         private void HandleComboReadyChanged(SpellId spellId, bool ready)
         {
+            if (IsCastingSuppressed)
+                return;
+
             if (!ready || !SpellHitData.IsComboSpellId(spellId))
                 return;
 
@@ -256,11 +332,24 @@ namespace ArcaneVR.Spell
             lastComboReadySfxSpell = spellId;
             lastComboReadySfxTime = Time.time;
             lastCastStatus = $"Combo ready: {SpellHitData.GetDisplayName(spellId)}";
-            ArcaneSpellSfx.PlayCombo(
-                EnsurePrototypeFeedbackAudioSource(),
-                spellId,
-                ArcaneSpellSfxCue.ComboReady,
-                0.75f);
+        }
+
+        private void HandleElementDeclared(bool isLeft, ElementType element)
+        {
+            if (IsCastingSuppressed)
+                return;
+
+            if (element == ElementType.None)
+                return;
+
+            if (!isLeft &&
+                lastPrototypeArmSfxElement == element &&
+                Time.time - lastPrototypeArmSfxTime < EffectivePrototypeDeclarationRepeatDelay)
+            {
+                return;
+            }
+
+            PlayComboDeclarationFeedback(isLeft, element);
         }
 
         private void EnsureVoiceSubscription()
@@ -371,7 +460,10 @@ namespace ArcaneVR.Spell
             prototypeSpawnPoint = spawnPoint;
             prototypeSpellSpawnRoot = spawnRoot;
             enableGesturePrototype = true;
+            allowPrototypeCastWithoutVoice = true;
             prototypeThrustThreshold = Mathf.Min(prototypeThrustThreshold, 0.65f);
+            prototypeArmFeedbackVolume = Mathf.Max(prototypeArmFeedbackVolume, 0.75f);
+            prototypeCastFeedbackVolume = Mathf.Max(prototypeCastFeedbackVolume, 0.9f);
             ResolvePrototypeReferences();
             SubscribePrototypeEvents();
             SubscribePrototypeRouterEvents();
@@ -433,18 +525,15 @@ namespace ArcaneVR.Spell
 
         private void HandleRightPrototypePoseConfirmed(PoseType pose)
         {
-            if (currentPrototypePose != pose)
-                prototypeReadyForThrust = false;
-
-            currentPrototypePose = pose;
             hasPreviousPrototypeWristPosition = false;
         }
 
         private void HandleRightPrototypePoseCleared()
         {
-            currentPrototypePose = PoseType.None;
+            SetCurrentPrototypePose(PoseType.None);
             ClearPrototypeArm();
             hasPreviousPrototypeWristPosition = false;
+            ClearPrototypeThrustAnchor();
             prototypeReadyForThrust = true;
         }
 
@@ -462,6 +551,7 @@ namespace ArcaneVR.Spell
                 ClearPrototypeArm();
                 StopPrototypeAura();
                 hasPreviousPrototypeWristPosition = false;
+                ClearPrototypeThrustAnchor();
                 prototypeReadyForThrust = false;
                 prototypeDebugStatus = $"CAST locked: {CastingSuppressionReason}";
                 return;
@@ -485,7 +575,7 @@ namespace ArcaneVR.Spell
             {
                 previousPrototypeWristPosition = thrustPosition;
                 hasPreviousPrototypeWristPosition = true;
-                prototypeDebugStatus = $"CAST {PrototypeArmStatus} speed:0.00/{prototypeThrustThreshold:0.00} init";
+                prototypeDebugStatus = $"CAST {PrototypeArmStatus} push:0.00/{ResolvePrototypeThrustDistanceThreshold(prototypeArmedPose):0.00} init";
                 return;
             }
 
@@ -494,18 +584,23 @@ namespace ArcaneVR.Spell
 
             var fireDirection = ResolvePrototypeFireDirection(spawnPoint, castOrigin);
             var forwardSpeed = ResolvePrototypeForwardSpeed(spawnPoint, thrustPosition, wristVelocity);
+            var forwardDistance = ResolvePrototypeForwardDistance(thrustPosition, fireDirection, prototypeArmedPose);
+            var distanceThreshold = ResolvePrototypeThrustDistanceThreshold(prototypeArmedPose);
+            var speedThreshold = ResolvePrototypeThrustSpeedThreshold(prototypeArmedPose);
             prototypeLastForwardSpeed = forwardSpeed;
+            prototypeLastForwardDistance = forwardDistance;
             prototypeDebugStatus =
-                $"CAST {PrototypeArmStatus} speed:{forwardSpeed:0.00}/{prototypeThrustThreshold:0.00} cd:{Mathf.Max(0f, prototypeCooldownTimer):0.00}";
+                $"CAST {PrototypeArmStatus} push:{forwardDistance:0.00}/{distanceThreshold:0.00} speed:{forwardSpeed:0.00}/{speedThreshold:0.00} cd:{Mathf.Max(0f, prototypeCooldownTimer):0.00}";
 
-            if (forwardSpeed < prototypeThrustThreshold * 0.25f)
+            if (forwardDistance <= prototypeThrustResetDistance)
                 prototypeReadyForThrust = true;
 
             var armReady = IsPrototypeArmed &&
                            currentPrototypePose == prototypeArmedPose &&
                            Time.time - prototypeArmedTime >= prototypeArmReadyDelay;
 
-            if (forwardSpeed <= prototypeThrustThreshold ||
+            if (forwardDistance < distanceThreshold ||
+                forwardSpeed < speedThreshold ||
                 !armReady ||
                 prototypeCooldownTimer > 0f ||
                 !prototypeReadyForThrust)
@@ -529,27 +624,103 @@ namespace ArcaneVR.Spell
 
         private void SyncPrototypePoseFromDetector()
         {
-            if (gestureRouter != null && gestureRouter.HasReceivedGestureEvent)
+            var detectorPose = PoseType.None;
+            var detectorPoseAlreadyStable = false;
+            if (gestureDetector == null)
             {
-                if (currentPrototypePose != gestureRouter.CurrentRightPose)
+                if (gestureRouter != null && gestureRouter.HasReceivedGestureEvent)
+                    detectorPose = gestureRouter.CurrentRightPose;
+            }
+            else
+            {
+                detectorPose = gestureDetector.CurrentRightPrototypePose;
+                detectorPoseAlreadyStable = detectorPose != PoseType.None;
+                if (detectorPose == PoseType.None)
                 {
-                    currentPrototypePose = gestureRouter.CurrentRightPose;
-                    prototypeReadyForThrust = false;
+                    detectorPose = ConvertPoseIdToPrototypePose(gestureDetector.CurrentRightPose);
+                    detectorPoseAlreadyStable = detectorPose != PoseType.None;
                 }
+
+                if (detectorPose == PoseType.None && gestureRouter != null && gestureRouter.HasReceivedGestureEvent)
+                {
+                    detectorPose = gestureRouter.CurrentRightPose;
+                    detectorPoseAlreadyStable = false;
+                }
+            }
+
+            UpdatePrototypePoseSwitch(detectorPose, detectorPoseAlreadyStable);
+        }
+
+        private void UpdatePrototypePoseSwitch(PoseType detectedPose, bool detectedPoseAlreadyStable)
+        {
+            if (detectedPoseAlreadyStable)
+            {
+                prototypePoseSwitchCandidate = PoseType.None;
+                prototypePoseSwitchCandidateStartTime = -999f;
+                prototypePoseSwitchPending = false;
+                SetCurrentPrototypePose(detectedPose);
                 return;
             }
 
-            if (gestureDetector == null)
+            if (detectedPose == currentPrototypePose)
+            {
+                if (detectedPose != PoseType.None)
+                    prototypeLastPoseSeenTime = Time.time;
+
+                prototypePoseSwitchCandidate = PoseType.None;
+                prototypePoseSwitchCandidateStartTime = -999f;
+                prototypePoseSwitchPending = false;
+                return;
+            }
+
+            if (detectedPose == PoseType.None)
+            {
+                if (currentPrototypePose != PoseType.None &&
+                    Time.time - prototypeLastPoseSeenTime <= ResolvePrototypePoseLossGraceDuration(currentPrototypePose))
+                {
+                    prototypePoseSwitchCandidate = PoseType.None;
+                    prototypePoseSwitchCandidateStartTime = -999f;
+                    prototypePoseSwitchPending = false;
+                    return;
+                }
+
+                prototypePoseSwitchCandidate = PoseType.None;
+                prototypePoseSwitchCandidateStartTime = -999f;
+                prototypePoseSwitchPending = false;
+                SetCurrentPrototypePose(PoseType.None);
+                return;
+            }
+
+            prototypeLastPoseSeenTime = Time.time;
+
+            if (prototypePoseSwitchCandidate != detectedPose)
+            {
+                prototypePoseSwitchCandidate = detectedPose;
+                prototypePoseSwitchCandidateStartTime = Time.time;
+                prototypePoseSwitchPending = true;
+                return;
+            }
+
+            prototypePoseSwitchPending = true;
+            if (Time.time - prototypePoseSwitchCandidateStartTime < Mathf.Max(0.05f, prototypePoseSwitchHoldDuration))
                 return;
 
-            var detectorPose = gestureDetector.CurrentRightPrototypePose;
-            if (detectorPose == PoseType.None)
-                detectorPose = ConvertPoseIdToPrototypePose(gestureDetector.CurrentRightPose);
+            SetCurrentPrototypePose(detectedPose);
+            prototypePoseSwitchCandidate = PoseType.None;
+            prototypePoseSwitchCandidateStartTime = -999f;
+            prototypePoseSwitchPending = false;
+        }
 
-            if (currentPrototypePose != detectorPose)
+        private void SetCurrentPrototypePose(PoseType pose)
+        {
+            if (currentPrototypePose != pose)
             {
-                currentPrototypePose = detectorPose;
+                currentPrototypePose = pose;
+                if (pose != PoseType.None)
+                    prototypeLastPoseSeenTime = Time.time;
+
                 prototypeReadyForThrust = false;
+                ClearPrototypeThrustAnchor();
             }
         }
 
@@ -562,7 +733,7 @@ namespace ArcaneVR.Spell
                 return;
             }
 
-            if (!IsRightHandVisibleForDeclarationFeedback(ResolvePrototypeSpawnPoint()))
+            if (!IsHandVisibleForDeclarationFeedback(ResolvePrototypeSpawnPoint()))
             {
                 ClearPrototypeArm();
                 lastCastStatus = $"Arm waiting: {element} hidden";
@@ -579,6 +750,7 @@ namespace ArcaneVR.Spell
             prototypeVoiceBoostElement = ElementType.None;
             prototypeVoiceBoostTime = -999f;
             prototypeReadyForThrust = false;
+            ClearPrototypeThrustAnchor();
             lastCastStatus = $"Armed: {element}";
             PlayPrototypeElementArmFeedback(element);
         }
@@ -591,7 +763,49 @@ namespace ArcaneVR.Spell
             prototypeVoiceBoosted = false;
             prototypeVoiceBoostElement = ElementType.None;
             prototypeVoiceBoostTime = -999f;
+            ClearPrototypeThrustAnchor();
             StopPrototypeAura();
+        }
+
+        private void ClearPrototypeThrustAnchor()
+        {
+            hasPrototypeThrustAnchor = false;
+            prototypeThrustAnchorPosition = Vector3.zero;
+            prototypeLastForwardDistance = 0f;
+        }
+
+        private float ResolvePrototypeThrustDistanceThreshold(PoseType pose)
+        {
+            if (pose == PoseType.OpenPalm)
+                return Mathf.Max(0.04f, prototypeOpenPalmThrustDistanceThreshold);
+
+            return pose == PoseType.TwoFinger || pose == PoseType.ThumbsUp
+                ? Mathf.Max(0.04f, prototypeCompactPoseThrustDistanceThreshold)
+                : Mathf.Max(0.06f, prototypeThrustDistanceThreshold);
+        }
+
+        private float ResolvePrototypeThrustSpeedThreshold(PoseType pose)
+        {
+            if (pose == PoseType.OpenPalm)
+                return Mathf.Max(0.02f, prototypeOpenPalmThrustMinForwardSpeed);
+
+            return pose == PoseType.TwoFinger || pose == PoseType.ThumbsUp
+                ? Mathf.Max(0.03f, prototypeCompactPoseThrustMinForwardSpeed)
+                : Mathf.Max(0.04f, prototypeThrustMinForwardSpeed);
+        }
+
+        private float ResolvePrototypePoseLossGraceDuration(PoseType pose)
+        {
+            return Mathf.Max(0.05f, pose == PoseType.OpenPalm
+                ? prototypeOpenPalmPoseLossGraceDuration
+                : prototypePoseLossGraceDuration);
+        }
+
+        private float ResolvePrototypeAnchorBackwardRefreshDistance(PoseType pose)
+        {
+            return Mathf.Max(0.002f, pose == PoseType.OpenPalm
+                ? prototypeOpenPalmAnchorBackwardRefreshDistance
+                : prototypeThrustAnchorBackwardRefreshDistance);
         }
 
         private bool TryApplyPrototypeVoiceBoost(ElementType spokenElement)
@@ -622,8 +836,7 @@ namespace ArcaneVR.Spell
             return pose switch
             {
                 PoseId.OpenPalm => PoseType.OpenPalm,
-                PoseId.Fist => PoseType.Fist,
-                PoseId.FistPush => PoseType.Fist,
+                PoseId.Ok => PoseType.TwoFinger,
                 _ => PoseType.None
             };
         }
@@ -665,6 +878,37 @@ namespace ArcaneVR.Spell
             return rightHandSpawnPoint != null ? rightHandSpawnPoint : leftHandSpawnPoint;
         }
 
+        private Transform ResolveHandSpawnPoint(bool isLeft)
+        {
+            if (isLeft)
+            {
+                if (leftHandSpawnPoint != null)
+                    return leftHandSpawnPoint;
+
+                leftHandSpawnPoint = FindOvrHandTransform(OVRPlugin.Hand.HandLeft);
+                return leftHandSpawnPoint != null ? leftHandSpawnPoint : ResolvePrototypeSpawnPoint();
+            }
+
+            if (rightHandSpawnPoint != null)
+                return rightHandSpawnPoint;
+
+            rightHandSpawnPoint = prototypeSpawnPoint != null
+                ? prototypeSpawnPoint
+                : FindOvrHandTransform(OVRPlugin.Hand.HandRight);
+            return rightHandSpawnPoint != null ? rightHandSpawnPoint : ResolvePrototypeSpawnPoint();
+        }
+
+        private static Transform FindOvrHandTransform(OVRPlugin.Hand expectedHand)
+        {
+            foreach (var hand in FindObjectsByType<OVRHand>(FindObjectsInactive.Include))
+            {
+                if (hand != null && hand.GetHand() == expectedHand)
+                    return hand.transform;
+            }
+
+            return null;
+        }
+
         private void UpdatePrototypeAura(Transform spawnPoint)
         {
             if (!showPrototypeArmedAura || !IsPrototypeArmed || spawnPoint == null)
@@ -673,7 +917,7 @@ namespace ArcaneVR.Spell
                 return;
             }
 
-            if (!IsRightHandVisibleForDeclarationFeedback(spawnPoint))
+            if (!IsHandVisibleForDeclarationFeedback(spawnPoint))
             {
                 StopPrototypeAura();
                 return;
@@ -767,6 +1011,16 @@ namespace ArcaneVR.Spell
 
             ConfigurePrototypeFeedbackAudioSource(prototypeAuraAudioSource);
             return prototypeAuraAudioSource;
+        }
+
+        private AudioSource EnsureDetachedFeedbackAudioSource()
+        {
+            var audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+                audioSource = gameObject.AddComponent<AudioSource>();
+
+            ConfigurePrototypeFeedbackAudioSource(audioSource);
+            return audioSource;
         }
 
         private static void ConfigurePrototypeFeedbackAudioSource(AudioSource audioSource)
@@ -1001,7 +1255,7 @@ namespace ArcaneVR.Spell
                 return;
 
             var spawnPoint = ResolvePrototypeSpawnPoint();
-            if (!IsRightHandVisibleForDeclarationFeedback(spawnPoint))
+            if (!IsHandVisibleForDeclarationFeedback(spawnPoint))
             {
                 StopPrototypeAura();
                 lastCastStatus = $"Armed: {element} hidden";
@@ -1034,10 +1288,195 @@ namespace ArcaneVR.Spell
                 EffectivePrototypeArmFeedbackVolume);
         }
 
+        private void PlayComboDeclarationFeedback(bool isLeft, ElementType element)
+        {
+            var spawnPoint = ResolveHandSpawnPoint(isLeft);
+            if (!IsHandVisibleForDeclarationFeedback(spawnPoint))
+            {
+                lastCastStatus = $"Combo {(isLeft ? "L" : "R")}: {element} hidden";
+                return;
+            }
+
+            if (lastComboDeclarationSfxIsLeft == isLeft &&
+                lastComboDeclarationSfxElement == element &&
+                Time.time - lastComboDeclarationSfxTime < EffectivePrototypeDeclarationRepeatDelay)
+            {
+                return;
+            }
+
+            lastComboDeclarationSfxIsLeft = isLeft;
+            lastComboDeclarationSfxElement = element;
+            lastComboDeclarationSfxTime = Time.time;
+            lastCastStatus = $"Combo {(isLeft ? "L" : "R")}: {element}";
+
+            var root = new GameObject(isLeft ? "ArcaneComboDeclareAura_Left" : "ArcaneComboDeclareAura_Right")
+            {
+                hideFlags = HideFlags.DontSave
+            };
+            root.transform.SetParent(spawnPoint, false);
+            root.transform.localPosition = Vector3.zero;
+            root.transform.localRotation = Quaternion.identity;
+            root.transform.localScale = Vector3.one;
+
+            var material = CreateAuraMaterial(GetElementColor(element));
+            var particles = root.AddComponent<ParticleSystem>();
+            ConfigurePrototypeAuraParticles(particles);
+
+            var main = particles.main;
+            main.loop = false;
+            main.duration = 0.55f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.22f, 0.58f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.12f, 0.38f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.18f);
+            main.maxParticles = 120;
+
+            var emission = particles.emission;
+            emission.enabled = false;
+
+            var shape = particles.shape;
+            shape.radius = 0.13f;
+
+            var renderer = root.GetComponent<ParticleSystemRenderer>();
+            if (renderer != null && material != null)
+            {
+                renderer.material = material;
+                renderer.renderMode = ParticleSystemRenderMode.Billboard;
+                renderer.sortingFudge = 4f;
+                renderer.maxParticleSize = 0.28f;
+            }
+            else if (renderer != null)
+            {
+                renderer.enabled = false;
+            }
+
+            var light = root.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = GetElementColor(element);
+            light.range = 0.75f;
+            light.intensity = 1.4f;
+
+            var audioSource = root.AddComponent<AudioSource>();
+            ConfigurePrototypeFeedbackAudioSource(audioSource);
+            var clipLength = ArcaneSpellSfx.Play(
+                audioSource,
+                element,
+                ArcaneSpellSfxCue.ElementArm,
+                EffectivePrototypeArmFeedbackVolume);
+
+            particles.Emit(56);
+            var lifetime = Mathf.Max(1.2f, clipLength + 0.15f);
+            Destroy(root, lifetime);
+            if (material != null)
+                Destroy(material, lifetime + 0.1f);
+        }
+
+        private void SpawnComboClashAura(SpellId spellId, Vector3 origin)
+        {
+            var arcaneColor = new Color(0.95f, 0.18f, 1f, 0.9f);
+            var hotColor = new Color(1f, 0.86f, 0.28f, 0.82f);
+            if (SpellHitData.TryGetComboElements(spellId, out var first, out var second))
+                hotColor = Color.Lerp(GetElementColor(first), GetElementColor(second), 0.5f);
+
+            var root = new GameObject($"ArcaneComboClashAura_{spellId}")
+            {
+                hideFlags = HideFlags.DontSave
+            };
+            root.transform.position = origin;
+            root.transform.rotation = Quaternion.identity;
+            root.transform.localScale = Vector3.one;
+
+            var material = CreateAuraMaterial(Color.Lerp(arcaneColor, Color.white, 0.15f));
+            var particles = root.AddComponent<ParticleSystem>();
+            ConfigurePrototypeAuraParticles(particles);
+
+            var main = particles.main;
+            main.loop = false;
+            main.duration = 0.82f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.34f, 0.92f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.22f, 0.92f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.12f, 0.34f);
+            main.startColor = new ParticleSystem.MinMaxGradient(arcaneColor, Color.Lerp(hotColor, Color.white, 0.35f));
+            main.maxParticles = 280;
+
+            var emission = particles.emission;
+            emission.enabled = false;
+
+            var shape = particles.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.22f;
+            shape.radiusThickness = 0.18f;
+
+            var renderer = root.GetComponent<ParticleSystemRenderer>();
+            if (renderer != null && material != null)
+            {
+                renderer.material = material;
+                renderer.renderMode = ParticleSystemRenderMode.Billboard;
+                renderer.sortingFudge = 6f;
+                renderer.maxParticleSize = 0.52f;
+            }
+            else if (renderer != null)
+            {
+                renderer.enabled = false;
+            }
+
+            var ring = new GameObject("ArcaneComboClashRing")
+            {
+                hideFlags = HideFlags.DontSave
+            };
+            ring.transform.SetParent(root.transform, false);
+            var ringParticles = ring.AddComponent<ParticleSystem>();
+            ConfigurePrototypeAuraParticles(ringParticles);
+
+            var ringMain = ringParticles.main;
+            ringMain.loop = false;
+            ringMain.duration = 0.74f;
+            ringMain.startLifetime = new ParticleSystem.MinMaxCurve(0.28f, 0.58f);
+            ringMain.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 1.2f);
+            ringMain.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.2f);
+            ringMain.startColor = new ParticleSystem.MinMaxGradient(Color.Lerp(arcaneColor, Color.white, 0.2f), hotColor);
+            ringMain.maxParticles = 220;
+
+            var ringEmission = ringParticles.emission;
+            ringEmission.enabled = false;
+
+            var ringShape = ringParticles.shape;
+            ringShape.enabled = true;
+            ringShape.shapeType = ParticleSystemShapeType.Circle;
+            ringShape.radius = 0.2f;
+            ringShape.radiusThickness = 0.12f;
+
+            var ringRenderer = ring.GetComponent<ParticleSystemRenderer>();
+            if (ringRenderer != null && material != null)
+            {
+                ringRenderer.material = material;
+                ringRenderer.renderMode = ParticleSystemRenderMode.Billboard;
+                ringRenderer.sortingFudge = 7f;
+                ringRenderer.maxParticleSize = 0.38f;
+            }
+            else if (ringRenderer != null)
+            {
+                ringRenderer.enabled = false;
+            }
+
+            var light = root.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = Color.Lerp(arcaneColor, hotColor, 0.35f);
+            light.range = 1.4f;
+            light.intensity = 2.6f;
+            light.shadows = LightShadows.None;
+
+            particles.Emit(118);
+            ringParticles.Emit(82);
+            Destroy(root, 1.35f);
+            if (material != null)
+                Destroy(material, 1.45f);
+        }
+
         private void PlayPrototypeVoiceBoostFeedback(ElementType element)
         {
             var spawnPoint = ResolvePrototypeSpawnPoint();
-            if (!IsRightHandVisibleForDeclarationFeedback(spawnPoint))
+            if (!IsHandVisibleForDeclarationFeedback(spawnPoint))
             {
                 StopPrototypeAura();
                 lastVoiceBoostStatus = $"VoiceLink: boosted {element}, hidden hand";
@@ -1067,7 +1506,7 @@ namespace ArcaneVR.Spell
                 EffectivePrototypeVoiceFeedbackVolume);
         }
 
-        private bool IsRightHandVisibleForDeclarationFeedback(Transform spawnPoint)
+        private bool IsHandVisibleForDeclarationFeedback(Transform spawnPoint)
         {
             if (!requireRightHandVisibleForDeclarationFeedback)
                 return true;
@@ -1190,14 +1629,14 @@ namespace ArcaneVR.Spell
                 return indexTipPosition;
             }
 
-            if (fallback != null)
-                return fallback.position;
-
             if (TryGetPrototypePointerPose(out var pointerPosition) &&
                 IsUsablePrototypeHandPosition(pointerPosition))
             {
                 return pointerPosition;
             }
+
+            if (fallback != null)
+                return fallback.position;
 
             return transform.position;
         }
@@ -1214,14 +1653,14 @@ namespace ArcaneVR.Spell
                 return palmPosition;
             }
 
-            if (fallback != null)
-                return fallback.position;
-
             if (TryGetPrototypePointerPose(out var pointerPosition) &&
                 IsUsablePrototypeHandPosition(pointerPosition))
             {
                 return pointerPosition;
             }
+
+            if (fallback != null)
+                return fallback.position;
 
             return castOrigin;
         }
@@ -1338,33 +1777,45 @@ namespace ArcaneVR.Spell
 
         private Vector3 ResolvePrototypeViewCenterAimPoint(Transform head)
         {
+            if (ArcaneAimReticle.TryGetAimPoint(prototypeAimDistance, out var reticleAimPoint))
+                return reticleAimPoint;
+
             var headForward = head.forward.sqrMagnitude > 0.001f ? head.forward.normalized : transform.forward.normalized;
             return head.position + headForward * Mathf.Max(1f, prototypeAimDistance);
         }
 
         private float ResolvePrototypeForwardSpeed(Transform spawnPoint, Vector3 wristTrackingPosition, Vector3 wristTrackingVelocity)
         {
-            var head = ResolvePrototypeHeadTransform();
             var wristWorldPosition = ToPrototypeWorldPoint(wristTrackingPosition);
             var aimForward = ToPrototypeTrackingVector(ResolvePrototypeFireDirection(spawnPoint, wristWorldPosition));
-            var headForward = head != null && head.forward.sqrMagnitude > 0.001f
-                ? ToPrototypeTrackingVector(head.forward)
-                : ToPrototypeTrackingVector(transform.forward);
-            var awayFromHead = Vector3.zero;
+            prototypeLastHandForwardSpeed = aimForward == Vector3.zero ? 0f : Vector3.Dot(wristTrackingVelocity, aimForward);
+            prototypeLastHeadForwardSpeed = 0f;
+            prototypeLastAwayFromHeadSpeed = 0f;
 
-            if (head != null)
+            return prototypeLastHandForwardSpeed;
+        }
+
+        private float ResolvePrototypeForwardDistance(Vector3 wristTrackingPosition, Vector3 fireDirection, PoseType pose)
+        {
+            var forward = ToPrototypeTrackingVector(fireDirection);
+            if (forward == Vector3.zero)
+                return 0f;
+
+            if (!hasPrototypeThrustAnchor)
             {
-                var headTrackingPosition = ToPrototypeTrackingPoint(head.position);
-                awayFromHead = wristTrackingPosition - headTrackingPosition;
-                if (awayFromHead.sqrMagnitude > 0.001f)
-                    awayFromHead.Normalize();
+                prototypeThrustAnchorPosition = wristTrackingPosition;
+                hasPrototypeThrustAnchor = true;
+                return 0f;
             }
 
-            prototypeLastHandForwardSpeed = aimForward == Vector3.zero ? 0f : Vector3.Dot(wristTrackingVelocity, aimForward);
-            prototypeLastHeadForwardSpeed = headForward == Vector3.zero ? 0f : Vector3.Dot(wristTrackingVelocity, headForward);
-            prototypeLastAwayFromHeadSpeed = awayFromHead == Vector3.zero ? 0f : Vector3.Dot(wristTrackingVelocity, awayFromHead);
+            var signedDistance = Vector3.Dot(wristTrackingPosition - prototypeThrustAnchorPosition, forward);
+            if (signedDistance < -ResolvePrototypeAnchorBackwardRefreshDistance(pose))
+            {
+                prototypeThrustAnchorPosition = wristTrackingPosition;
+                return 0f;
+            }
 
-            return Mathf.Max(prototypeLastHandForwardSpeed, prototypeLastHeadForwardSpeed, prototypeLastAwayFromHeadSpeed);
+            return Mathf.Max(0f, signedDistance);
         }
 
         private Vector3 ToPrototypeTrackingPoint(Vector3 worldPosition)
@@ -1542,8 +1993,8 @@ namespace ArcaneVR.Spell
                 ? $"Cast: {element} {spellId} voice+"
                 : $"Cast: {element} {spellId}";
             prototypeDebugStatus = voiceBoosted
-                ? $"CAST fired:{pose} {element}/{statusEffect} voice+ speed:{prototypeLastForwardSpeed:0.00}"
-                : $"CAST fired:{pose} {element}/{statusEffect} speed:{prototypeLastForwardSpeed:0.00}";
+                ? $"CAST fired:{pose} {element}/{statusEffect} voice+ push:{prototypeLastForwardDistance:0.00} speed:{prototypeLastForwardSpeed:0.00}"
+                : $"CAST fired:{pose} {element}/{statusEffect} push:{prototypeLastForwardDistance:0.00} speed:{prototypeLastForwardSpeed:0.00}";
             PlayPrototypeSpellCastFeedback(element);
             prototypeVoiceBoosted = false;
             prototypeVoiceBoostElement = ElementType.None;
@@ -1577,7 +2028,7 @@ namespace ArcaneVR.Spell
             return pose switch
             {
                 PoseType.OpenPalm => SpellId.Single_Pointer,
-                PoseType.Fist => SpellId.Single_Wave,
+                PoseType.TwoFinger => SpellId.Single_Wave,
                 PoseType.ThumbsUp => SpellId.Single_Strike,
                 _ => SpellId.None
             };
@@ -1633,12 +2084,10 @@ namespace ArcaneVR.Spell
 
         private static bool IsCombatScene(string sceneName)
         {
-            return sceneName == "BattleSceen2" ||
-                   sceneName == "BattleScene2" ||
+            return sceneName == "Main" ||
                    sceneName == "FireColoseum" ||
                    sceneName == "IceColoseum" ||
-                   sceneName == "ElectricColoseum" ||
-                   sceneName.EndsWith("Coloseum");
+                   sceneName == "ElectricColoseum";
         }
 
         private SpellDatabase.PoseSpellData ResolvePrototypeSpellData(PoseType pose)
@@ -1654,7 +2103,7 @@ namespace ArcaneVR.Spell
             return pose switch
             {
                 PoseType.OpenPalm => spellPrefabOpenPalm,
-                PoseType.Fist => spellPrefabFist,
+                PoseType.TwoFinger => spellPrefabFist,
                 PoseType.ThumbsUp => spellPrefabThumbsUp,
                 _ => null
             };
@@ -1701,7 +2150,7 @@ namespace ArcaneVR.Spell
             return pose switch
             {
                 PoseType.OpenPalm => ElementType.Fire,
-                PoseType.Fist => ElementType.Ice,
+                PoseType.TwoFinger => ElementType.Ice,
                 PoseType.ThumbsUp => ElementType.Thunder,
                 _ => ElementType.None
             };
@@ -1712,7 +2161,7 @@ namespace ArcaneVR.Spell
             return pose switch
             {
                 PoseType.OpenPalm => StatusEffect.Burn,
-                PoseType.Fist => StatusEffect.Slow,
+                PoseType.TwoFinger => StatusEffect.Slow,
                 PoseType.ThumbsUp => StatusEffect.Stagger,
                 _ => StatusEffect.None
             };
@@ -1723,7 +2172,7 @@ namespace ArcaneVR.Spell
             return pose switch
             {
                 PoseType.OpenPalm => 10f,
-                PoseType.Fist => 8f,
+                PoseType.TwoFinger => 8f,
                 PoseType.ThumbsUp => 12f,
                 _ => 0f
             };
@@ -1734,7 +2183,7 @@ namespace ArcaneVR.Spell
             return pose switch
             {
                 PoseType.OpenPalm => 3f,
-                PoseType.Fist => 3f,
+                PoseType.TwoFinger => 3f,
                 PoseType.ThumbsUp => 1f,
                 _ => 0f
             };
@@ -1757,6 +2206,16 @@ namespace ArcaneVR.Spell
         }
 
         public bool Cast(SpellId spellId)
+        {
+            return CastInternal(spellId, false, Vector3.zero, Vector3.forward);
+        }
+
+        private bool CastFromPose(SpellId spellId, Vector3 origin, Vector3 direction)
+        {
+            return CastInternal(spellId, true, origin, direction);
+        }
+
+        private bool CastInternal(SpellId spellId, bool useCustomCastPose, Vector3 customOrigin, Vector3 customDirection)
         {
             if (IsCastingSuppressed)
             {
@@ -1783,10 +2242,14 @@ namespace ArcaneVR.Spell
             if (!TryPayMana(spellId, data.element, data.manaCost, out _))
                 return false;
 
-            var spawnPoint = ResolveSpawnPoint(spellId);
-            var spawnPosition = spawnPoint != null ? spawnPoint.position : transform.position;
-            var direction = ResolveAimDirection(spawnPosition);
-            spawnPosition += direction * 0.25f;
+            var spawnPoint = useCustomCastPose ? null : ResolveSpawnPoint(spellId);
+            var spawnPosition = useCustomCastPose
+                ? customOrigin
+                : spawnPoint != null ? spawnPoint.position : transform.position;
+            var direction = useCustomCastPose && customDirection.sqrMagnitude > 0.001f
+                ? customDirection.normalized
+                : ResolveAimDirection(spawnPosition);
+            spawnPosition += direction * (useCustomCastPose ? 0.06f : 0.25f);
             var element = data.element;
             if (combinationChecker != null && IsSingleSpell(spellId) && combinationChecker.CurrentElement != ElementType.None)
                 element = combinationChecker.CurrentElement;
@@ -1828,11 +2291,10 @@ namespace ArcaneVR.Spell
 
         private void PlaySpellCastFeedback(SpellId spellId, ElementType element)
         {
-            var audioSource = EnsurePrototypeFeedbackAudioSource();
             if (SpellHitData.IsComboSpellId(spellId))
             {
                 ArcaneSpellSfx.PlayCombo(
-                    audioSource,
+                    EnsureDetachedFeedbackAudioSource(),
                     spellId,
                     ArcaneSpellSfxCue.ComboCast,
                     EffectivePrototypeCastFeedbackVolume);
@@ -1844,7 +2306,7 @@ namespace ArcaneVR.Spell
             }
 
             ArcaneSpellSfx.Play(
-                audioSource,
+                EnsurePrototypeFeedbackAudioSource(),
                 element,
                 ArcaneSpellSfxCue.SpellCast,
                 EffectivePrototypeCastFeedbackVolume);
@@ -1884,6 +2346,13 @@ namespace ArcaneVR.Spell
             if (headTransform == null)
                 return transform.forward;
 
+            if (ArcaneAimReticle.TryGetAimPoint(prototypeAimDistance, out var reticleAimPoint))
+            {
+                var reticleDirection = reticleAimPoint - spawnPosition;
+                if (reticleDirection.sqrMagnitude > 0.001f)
+                    return reticleDirection.normalized;
+            }
+
             var direction = headTransform.forward;
             if (direction.sqrMagnitude < 0.001f)
                 direction = headTransform.position + headTransform.forward * 10f - spawnPosition;
@@ -1918,7 +2387,10 @@ namespace ArcaneVR.Spell
             if (vfx == null)
                 vfx = parent.gameObject.AddComponent<ArcaneSpellProjectileVfx>();
 
-            vfx.Configure(spellId, element, debugProjectileScale);
+            var scale = SpellHitData.IsComboSpellId(spellId)
+                ? debugProjectileScale * 1.75f
+                : debugProjectileScale;
+            vfx.Configure(spellId, element, scale);
         }
 
         private static Color GetElementColor(ElementType element)

@@ -13,12 +13,23 @@ namespace ArcaneVR.Input
         [Header("References")]
         [SerializeField] private HandPullMovementController handPullMovement;
         [SerializeField] private CombinationChecker combinationChecker;
+        [SerializeField] private VoiceRecognizer voiceRecognizer;
         [SerializeField] private Transform trackingSpaceRoot;
 
-        [Header("Triangle Gesture")]
-        [SerializeField] private bool enableTriangleGesture = true;
-        [SerializeField] private float gestureHoldTime = 0.45f;
-        [SerializeField] private float toggleCooldown = 0.8f;
+        [Header("Mode Toggle")]
+        [SerializeField] private bool enableVoiceModeToggle = true;
+        [SerializeField] private bool disableHandGestureModeToggle = true;
+        [SerializeField] private bool enableTriangleGesture;
+        [SerializeField] private float gestureHoldTime = 0.25f;
+        [SerializeField] private float toggleCooldown = 0.65f;
+        [SerializeField] private bool useSimpleTwoHandGesture = true;
+        [SerializeField] private float simpleHandDistanceMax = 0.42f;
+        [SerializeField] private float simpleGestureForwardMin = 0.18f;
+        [SerializeField] private float simpleGestureForwardMax = 1.45f;
+        [SerializeField] private float simpleGestureVerticalMax = 0.8f;
+        [SerializeField] private float simpleGestureLateralMax = 0.9f;
+        [SerializeField] private float simpleExitHandDistanceMin = 0.72f;
+        [SerializeField] private float simpleExitHoldTime = 0.25f;
         [SerializeField] private float indexTipTouchDistance = 0.095f;
         [SerializeField] private float thumbTipTouchDistance = 0.095f;
         [SerializeField] private float sameHandIndexThumbMinDistance = 0.105f;
@@ -45,6 +56,7 @@ namespace ArcaneVR.Input
         private readonly List<XRHandSubsystem> handSubsystems = new List<XRHandSubsystem>();
         private XRHandSubsystem handSubsystem;
         private float triangleHoldTimer;
+        private float simpleExitHoldTimer;
         private float lastToggleTime = -999f;
         private float castModeStartTime = -999f;
         private bool comboSubscribed;
@@ -62,6 +74,7 @@ namespace ArcaneVR.Input
         private AudioClip triangleAcquireClip;
         private AudioClip triangleCastOnClip;
         private AudioClip triangleCastOffClip;
+        private bool voiceSubscribed;
 
         public event Action<bool> OnCastModeChanged;
 
@@ -95,16 +108,19 @@ namespace ArcaneVR.Input
         {
             ResolveReferences();
             RefreshHandSubsystem();
+            ApplySimpleGestureDefaults();
         }
 
         private void OnEnable()
         {
             ResolveReferences();
+            SubscribeVoice();
             SubscribeCombo();
         }
 
         private void OnDisable()
         {
+            UnsubscribeVoice();
             UnsubscribeCombo();
             SetCastMode(false, "Mode: disabled");
         }
@@ -137,7 +153,51 @@ namespace ArcaneVR.Input
 
         public void ToggleCastMode()
         {
-            SetCastMode(!IsCastModeActive, IsCastModeActive ? "Mode: Move by triangle" : "Mode: Cast by triangle");
+            SetCastMode(!IsCastModeActive, IsCastModeActive ? "Mode: Move by gesture" : "Mode: Siege by gesture");
+        }
+
+        public void ToggleCastMode(string source)
+        {
+            var label = string.IsNullOrWhiteSpace(source) ? "command" : source;
+            SetCastMode(!IsCastModeActive, IsCastModeActive ? $"Mode: Move by {label}" : $"Mode: Siege by {label}");
+        }
+
+        private void HandleVoiceModeToggle()
+        {
+            if (!enableVoiceModeToggle)
+                return;
+
+            lastToggleTime = Time.time;
+            triangleHoldTimer = 0f;
+            simpleExitHoldTimer = 0f;
+            triangleReadyForToggle = true;
+            SetModeFeedbackAnchorFromHead();
+            ToggleCastMode("Arcane Focus");
+        }
+
+        private void UpdateSimpleExitGesture()
+        {
+            if (!useSimpleTwoHandGesture || !IsCastModeActive)
+            {
+                simpleExitHoldTimer = 0f;
+                return;
+            }
+
+            if (!IsSimpleTwoHandExitGestureDetected())
+            {
+                simpleExitHoldTimer = 0f;
+                return;
+            }
+
+            simpleExitHoldTimer += Time.deltaTime;
+            StatusText = $"Mode: Siege release {Mathf.Clamp01(simpleExitHoldTimer / Mathf.Max(0.01f, simpleExitHoldTime)):0.0}";
+            if (simpleExitHoldTimer < simpleExitHoldTime)
+                return;
+
+            simpleExitHoldTimer = 0f;
+            triangleHoldTimer = 0f;
+            lastToggleTime = Time.time;
+            SetCastMode(false, "Mode: Move by hand spread");
         }
 
         private void ResolveReferences()
@@ -157,6 +217,30 @@ namespace ArcaneVR.Input
                 combinationChecker = FindAnyObjectByType<CombinationChecker>();
                 SubscribeCombo();
             }
+
+            if (voiceRecognizer == null)
+            {
+                voiceRecognizer = FindAnyObjectByType<VoiceRecognizer>();
+                SubscribeVoice();
+            }
+        }
+
+        private void SubscribeVoice()
+        {
+            if (voiceSubscribed || voiceRecognizer == null)
+                return;
+
+            voiceRecognizer.OnModeToggleCommand += HandleVoiceModeToggle;
+            voiceSubscribed = true;
+        }
+
+        private void UnsubscribeVoice()
+        {
+            if (!voiceSubscribed || voiceRecognizer == null)
+                return;
+
+            voiceRecognizer.OnModeToggleCommand -= HandleVoiceModeToggle;
+            voiceSubscribed = false;
         }
 
         private void SubscribeCombo()
@@ -189,6 +273,20 @@ namespace ArcaneVR.Input
 
         private void UpdateTriangleGesture()
         {
+            if (!IsHandGestureModeToggleEnabled())
+            {
+                if (wasTriangleGestureActive)
+                    StopTriangleFeedback();
+
+                IsTriangleGestureActive = false;
+                wasTriangleGestureActive = false;
+                triangleHoldTimer = 0f;
+                simpleExitHoldTimer = 0f;
+                triangleReadyForToggle = true;
+                TriangleDebugText = enableVoiceModeToggle ? "Mode: voice toggle" : "Mode: hand toggle disabled";
+                return;
+            }
+
             var active = enableTriangleGesture && IsTriangleGestureDetected();
             IsTriangleGestureActive = active;
 
@@ -200,9 +298,11 @@ namespace ArcaneVR.Input
                 wasTriangleGestureActive = false;
                 triangleHoldTimer = 0f;
                 triangleReadyForToggle = true;
+                UpdateSimpleExitGesture();
                 return;
             }
 
+            simpleExitHoldTimer = 0f;
             if (!wasTriangleGestureActive)
                 PlayTriangleAcquireFeedback();
 
@@ -210,8 +310,8 @@ namespace ArcaneVR.Input
             triangleHoldTimer += Time.deltaTime;
             UpdateTriangleFeedback();
             StatusText = IsCastModeActive
-                ? $"Mode: Cast triangle {TriangleHoldProgress:0.0}"
-                : $"Mode: Move triangle {TriangleHoldProgress:0.0}";
+                ? $"Mode: Siege gesture {TriangleHoldProgress:0.0}"
+                : $"Mode: Move gesture {TriangleHoldProgress:0.0}";
 
             if (!triangleReadyForToggle ||
                 triangleHoldTimer < gestureHoldTime ||
@@ -243,6 +343,45 @@ namespace ArcaneVR.Input
                 return;
 
             handPullMovement.SetMovementSuppressed(IsCastModeActive, "Cast Mode");
+        }
+
+        private bool IsHandGestureModeToggleEnabled()
+        {
+            return enableTriangleGesture && (!enableVoiceModeToggle || !disableHandGestureModeToggle);
+        }
+
+        private void SetModeFeedbackAnchorFromHead()
+        {
+            var head = Camera.main != null ? Camera.main.transform : null;
+            if (head == null)
+                return;
+
+            var worldPosition = head.position + head.forward * 0.55f - head.up * 0.08f;
+            currentTriangleCenter = trackingSpaceRoot != null
+                ? trackingSpaceRoot.InverseTransformPoint(worldPosition)
+                : worldPosition;
+            hasCurrentTriangleCenter = true;
+
+            if (!showTriangleFeedback)
+                return;
+
+            EnsureTriangleFeedback();
+            if (triangleFeedbackRoot == null)
+                return;
+
+            if (trackingSpaceRoot != null)
+            {
+                if (triangleFeedbackRoot.transform.parent != trackingSpaceRoot)
+                    triangleFeedbackRoot.transform.SetParent(trackingSpaceRoot, false);
+                triangleFeedbackRoot.transform.localPosition = currentTriangleCenter;
+            }
+            else
+            {
+                triangleFeedbackRoot.transform.SetParent(null, true);
+                triangleFeedbackRoot.transform.position = currentTriangleCenter;
+            }
+
+            triangleFeedbackRoot.transform.rotation = Quaternion.identity;
         }
 
         private void UpdateTriangleFeedback()
@@ -550,7 +689,10 @@ namespace ArcaneVR.Input
             var left = handSubsystem.leftHand;
             var right = handSubsystem.rightHand;
             if (!left.isTracked || !right.isTracked)
-                return RejectTriangle("Triangle: hands not tracked");
+                return RejectTriangle("Siege: hands not tracked");
+
+            if (useSimpleTwoHandGesture)
+                return IsSimpleTwoHandGestureDetected(left, right);
 
             if (!TryGetTriangleJoints(left, out var leftPalm, out var leftThumb, out var leftIndex, out var leftMiddle, out var leftRing, out var leftLittle) ||
                 !TryGetTriangleJoints(right, out var rightPalm, out var rightThumb, out var rightIndex, out var rightMiddle, out var rightRing, out var rightLittle))
@@ -594,6 +736,94 @@ namespace ArcaneVR.Input
             currentTriangleCenter = (leftIndex + rightIndex + leftThumb + rightThumb) * 0.25f;
             hasCurrentTriangleCenter = true;
             TriangleDebugText = $"Triangle: active h{triangleHeight:0.00} i{indexDistance:0.00} t{thumbDistance:0.00}";
+            return true;
+        }
+
+        private void ApplySimpleGestureDefaults()
+        {
+            if (!useSimpleTwoHandGesture)
+                return;
+
+            gestureHoldTime = Mathf.Min(gestureHoldTime, 0.25f);
+            toggleCooldown = Mathf.Min(toggleCooldown, 0.65f);
+        }
+
+        private bool IsSimpleTwoHandGestureDetected(XRHand left, XRHand right)
+        {
+            if (!TryGetJointPosition(left, XRHandJointID.Palm, out var leftPalm) ||
+                !TryGetJointPosition(right, XRHandJointID.Palm, out var rightPalm))
+            {
+                return RejectTriangle("Siege: missing palms");
+            }
+
+            var leftWorld = ToWorldPoint(leftPalm);
+            var rightWorld = ToWorldPoint(rightPalm);
+            var handDistance = Vector3.Distance(leftWorld, rightWorld);
+            if (handDistance > simpleHandDistanceMax)
+                return RejectTriangle($"Siege: hand gap {handDistance:0.00}/{simpleHandDistanceMax:0.00}");
+
+            var centerLocal = (leftPalm + rightPalm) * 0.5f;
+            var centerWorld = ToWorldPoint(centerLocal);
+            var head = Camera.main != null ? Camera.main.transform : null;
+            if (head != null)
+            {
+                var toCenter = centerWorld - head.position;
+                var forward = Vector3.Dot(toCenter, head.forward);
+                if (forward < simpleGestureForwardMin || forward > simpleGestureForwardMax)
+                    return RejectTriangle($"Siege: forward {forward:0.00}");
+
+                var vertical = Mathf.Abs(Vector3.Dot(toCenter, head.up));
+                if (vertical > simpleGestureVerticalMax)
+                    return RejectTriangle($"Siege: vertical {vertical:0.00}/{simpleGestureVerticalMax:0.00}");
+
+                var lateral = Mathf.Abs(Vector3.Dot(toCenter, head.right));
+                if (lateral > simpleGestureLateralMax)
+                    return RejectTriangle($"Siege: side {lateral:0.00}/{simpleGestureLateralMax:0.00}");
+            }
+
+            currentTriangleCenter = centerLocal;
+            hasCurrentTriangleCenter = true;
+            TriangleDebugText = $"Siege: active gap {handDistance:0.00}";
+            return true;
+        }
+
+        private bool IsSimpleTwoHandExitGestureDetected()
+        {
+            if (handSubsystem == null || !handSubsystem.running)
+                return false;
+
+            var left = handSubsystem.leftHand;
+            var right = handSubsystem.rightHand;
+            if (!left.isTracked || !right.isTracked)
+                return false;
+
+            if (!TryGetJointPosition(left, XRHandJointID.Palm, out var leftPalm) ||
+                !TryGetJointPosition(right, XRHandJointID.Palm, out var rightPalm))
+            {
+                return false;
+            }
+
+            var leftWorld = ToWorldPoint(leftPalm);
+            var rightWorld = ToWorldPoint(rightPalm);
+            var handDistance = Vector3.Distance(leftWorld, rightWorld);
+            if (handDistance < simpleExitHandDistanceMin)
+                return false;
+
+            var centerWorld = (leftWorld + rightWorld) * 0.5f;
+            var head = Camera.main != null ? Camera.main.transform : null;
+            if (head != null)
+            {
+                var toCenter = centerWorld - head.position;
+                var forward = Vector3.Dot(toCenter, head.forward);
+                if (forward < simpleGestureForwardMin || forward > simpleGestureForwardMax)
+                    return false;
+
+                var vertical = Mathf.Abs(Vector3.Dot(toCenter, head.up));
+                if (vertical > simpleGestureVerticalMax)
+                    return false;
+            }
+
+            TriangleDebugText = $"Siege: release gap {handDistance:0.00}";
             return true;
         }
 

@@ -18,7 +18,6 @@ namespace ArcaneVR.Editor
             "Assets/Scenes/World.unity",
             "Assets/Scenes/World_main.unity",
             "Assets/Scenes/Tutorial.unity",
-            "Assets/Scenes/BattleSceen2.unity",
             "Assets/Scenes/FireColoseum.unity",
             "Assets/Scenes/IceColoseum.unity",
             "Assets/Scenes/ElectricColoseum.unity"

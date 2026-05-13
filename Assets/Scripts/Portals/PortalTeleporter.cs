@@ -6,24 +6,34 @@ public class PortalTeleporter : MonoBehaviour
 {
     public PortalData portalData;
     public bool isExitPortal = false;
-    [SerializeField] private float triggerRadius = 0.9f;
+    [SerializeField] private float triggerRadius = 1.15f;
     [SerializeField] private bool enableProximityActivation = true;
-    [SerializeField] private float proximityActivationRadius = 0.9f;
-    [SerializeField] private float proximityVerticalTolerance = 1.8f;
+    [SerializeField] private float proximityActivationRadius = 1.15f;
+    [SerializeField] private float proximityVerticalTolerance = 2.8f;
     [SerializeField] private float proximityCheckInterval = 0.05f;
-    [SerializeField] private float activationStartDelay = 1.25f;
-    [SerializeField] private float maxActivationWorldRadius = 0.9f;
+    [SerializeField] private float activationStartDelay = 0.55f;
+    [SerializeField] private float activationDwellDuration = 0.28f;
+    [SerializeField] private float maxActivationWorldRadius = 1.35f;
+    [SerializeField] private float minimumActivationWorldRadius = 0.35f;
+    [SerializeField] private float maximumVerticalTolerance = 3.0f;
+    [SerializeField] private float minimumVerticalTolerance = 0.55f;
+    [SerializeField] private float visualActivationRadiusMultiplier = 0.12f;
+    [SerializeField] private float visualActivationRadiusMax = 0.95f;
+    [SerializeField] private bool useTransformPositionForActivation = true;
 
     private Light portalLight;
     private SphereCollider triggerCollider;
     private bool transitionRequested;
     private float nextProximityCheckTime;
     private float activationReadyTime;
+    private float activationDwellStartTime = -1f;
 
     public string LastPortalStatus { get; private set; } = "Portal: idle";
     
     void Start()
     {
+        NormalizeRuntimeActivationSettings();
+
         // Setup visuals
         portalLight = GetComponentInChildren<Light>();
         if (portalLight != null && portalData != null)
@@ -38,7 +48,14 @@ public class PortalTeleporter : MonoBehaviour
             triggerCollider = gameObject.AddComponent<SphereCollider>();
         }
         triggerCollider.isTrigger = true;
-        triggerCollider.radius = ResolveLocalTriggerRadius(ResolveClampedWorldRadius(triggerRadius));
+        if (useTransformPositionForActivation)
+            triggerCollider.center = Vector3.zero;
+        else if (TryGetVisualBounds(out var visualBounds))
+            triggerCollider.center = transform.InverseTransformPoint(visualBounds.center);
+
+        triggerCollider.radius = ResolveLocalTriggerRadius(Mathf.Max(
+            ResolveClampedWorldRadius(triggerRadius),
+            ResolveEffectiveHorizontalActivationRadius()));
 
         var body = GetComponent<Rigidbody>();
         if (body == null)
@@ -48,6 +65,20 @@ public class PortalTeleporter : MonoBehaviour
         body.useGravity = false;
         activationReadyTime = Time.time + Mathf.Max(0f, activationStartDelay);
         LastPortalStatus = "Portal: ready";
+    }
+
+    private void NormalizeRuntimeActivationSettings()
+    {
+        triggerRadius = Mathf.Clamp(Mathf.Max(triggerRadius, 1.65f), 0.35f, 2.2f);
+        proximityActivationRadius = Mathf.Clamp(Mathf.Max(proximityActivationRadius, 1.65f), 0.35f, 2.2f);
+        proximityVerticalTolerance = Mathf.Clamp(Mathf.Max(proximityVerticalTolerance, 3.6f), 0.55f, 4.5f);
+        activationStartDelay = Mathf.Min(Mathf.Max(0f, activationStartDelay), 0.35f);
+        activationDwellDuration = Mathf.Clamp(activationDwellDuration, 0.12f, 0.35f);
+        maxActivationWorldRadius = Mathf.Max(maxActivationWorldRadius, 2.2f);
+        maximumVerticalTolerance = Mathf.Max(maximumVerticalTolerance, 4.5f);
+        visualActivationRadiusMultiplier = 0f;
+        visualActivationRadiusMax = 0f;
+        useTransformPositionForActivation = true;
     }
 
     void Update()
@@ -69,7 +100,7 @@ public class PortalTeleporter : MonoBehaviour
         if (transitionRequested || !IsActivationReady() || !IsPlayer(other))
             return;
 
-        if (!IsHeadWithinActivationRange())
+        if (!IsPlayerReadyForActivation())
             return;
 
         ActivatePortal("trigger");
@@ -80,7 +111,7 @@ public class PortalTeleporter : MonoBehaviour
         if (transitionRequested || !IsActivationReady() || !IsPlayer(other))
             return;
 
-        if (!IsHeadWithinActivationRange())
+        if (!IsPlayerReadyForActivation())
             return;
 
         ActivatePortal("trigger-stay");
@@ -102,51 +133,122 @@ public class PortalTeleporter : MonoBehaviour
 
     private void TryActivateByProximity()
     {
-        if (!IsHeadWithinActivationRange())
+        if (!IsPlayerReadyForActivation())
             return;
 
         ActivatePortal("proximity");
     }
 
-    private bool IsHeadWithinActivationRange()
+    private bool IsPlayerReadyForActivation()
     {
-        var head = ArcanePlayerRigResolver.FindHeadTransform();
-        if (head == null)
+        if (!IsHeadWithinActivationRange())
         {
-            LastPortalStatus = "Portal: waiting head";
+            activationDwellStartTime = -1f;
             return false;
         }
 
-        var headPosition = head.position;
-        var activationCenter = ResolveActivationCenter();
-        var horizontalDelta = Vector3.ProjectOnPlane(headPosition - activationCenter, Vector3.up);
-        var verticalDelta = Mathf.Abs(headPosition.y - activationCenter.y);
-        var horizontalRadius = ResolveEffectiveHorizontalActivationRadius();
-        var verticalTolerance = ResolveEffectiveVerticalTolerance();
+        if (activationDwellStartTime < 0f)
+            activationDwellStartTime = Time.time;
 
-        if (horizontalDelta.magnitude > horizontalRadius ||
-            verticalDelta > verticalTolerance)
+        var remaining = activationDwellDuration - (Time.time - activationDwellStartTime);
+        if (remaining > 0f)
         {
-            LastPortalStatus = $"Portal: near {horizontalDelta.magnitude:0.0}/{horizontalRadius:0.0}m";
+            LastPortalStatus = $"Portal: enter {remaining:0.0}s";
             return false;
         }
 
         return true;
     }
 
+    private bool IsHeadWithinActivationRange()
+    {
+        var head = ArcanePlayerRigResolver.FindHeadTransform();
+        var playerRig = ArcanePlayerRigResolver.FindPlayerRigTransform();
+        if (head == null && playerRig == null)
+        {
+            LastPortalStatus = "Portal: waiting player";
+            return false;
+        }
+
+        var activationCenter = ResolveActivationCenter();
+        var horizontalRadius = ResolveEffectiveHorizontalActivationRadius();
+        var verticalTolerance = ResolveEffectiveVerticalTolerance();
+        var closestHorizontal = float.PositiveInfinity;
+        var closestVertical = float.PositiveInfinity;
+
+        if (IsPositionWithinActivationRange(
+                head != null ? head.position : playerRig.position,
+                activationCenter,
+                horizontalRadius,
+                verticalTolerance,
+                out closestHorizontal,
+                out closestVertical))
+        {
+            return true;
+        }
+
+        if (playerRig != null &&
+            head != null &&
+            IsPositionWithinActivationRange(
+                playerRig.position,
+                activationCenter,
+                horizontalRadius,
+                verticalTolerance,
+                out var rigHorizontal,
+                out var rigVertical))
+        {
+            return true;
+        }
+
+        if (playerRig != null && head != null)
+        {
+            var rigDelta = playerRig.position - activationCenter;
+            closestHorizontal = Mathf.Min(closestHorizontal, Vector3.ProjectOnPlane(rigDelta, Vector3.up).magnitude);
+            closestVertical = Mathf.Min(closestVertical, Mathf.Abs(rigDelta.y));
+        }
+
+        LastPortalStatus = $"Portal: near {closestHorizontal:0.0}/{horizontalRadius:0.0}m y{closestVertical:0.0}/{verticalTolerance:0.0}";
+        return false;
+    }
+
+    private static bool IsPositionWithinActivationRange(
+        Vector3 position,
+        Vector3 activationCenter,
+        float horizontalRadius,
+        float verticalTolerance,
+        out float horizontalDistance,
+        out float verticalDistance)
+    {
+        var delta = position - activationCenter;
+        horizontalDistance = Vector3.ProjectOnPlane(delta, Vector3.up).magnitude;
+        verticalDistance = Mathf.Abs(delta.y);
+        return horizontalDistance <= horizontalRadius && verticalDistance <= verticalTolerance;
+    }
+
     private Vector3 ResolveActivationCenter()
     {
+        if (useTransformPositionForActivation)
+            return transform.position;
+
+        if (TryGetVisualBounds(out var visualBounds))
+            return visualBounds.center;
+
         return triggerCollider != null ? triggerCollider.bounds.center : transform.position;
     }
 
     private float ResolveEffectiveHorizontalActivationRadius()
     {
-        return ResolveClampedWorldRadius(proximityActivationRadius);
+        var configuredRadius = ResolveClampedWorldRadius(proximityActivationRadius);
+        var visualRadius = ResolveVisualActivationRadius();
+        return Mathf.Max(configuredRadius, visualRadius);
     }
 
     private float ResolveEffectiveVerticalTolerance()
     {
-        return Mathf.Max(0.25f, proximityVerticalTolerance);
+        var minTolerance = Mathf.Clamp(minimumVerticalTolerance, 0.25f, 1.2f);
+        var configuredMax = maximumVerticalTolerance <= 0f ? 1.65f : maximumVerticalTolerance;
+        var maxTolerance = Mathf.Clamp(configuredMax, minTolerance, 4.5f);
+        return Mathf.Clamp(proximityVerticalTolerance, minTolerance, maxTolerance);
     }
 
     private float ResolveLocalTriggerRadius(float desiredWorldRadius)
@@ -158,8 +260,48 @@ public class PortalTeleporter : MonoBehaviour
 
     private float ResolveClampedWorldRadius(float radius)
     {
-        var maxRadius = maxActivationWorldRadius > 0f ? maxActivationWorldRadius : 0.9f;
-        return Mathf.Clamp(radius, 0.25f, Mathf.Max(0.25f, maxRadius));
+        var maxRadius = Mathf.Max(0.35f, maxActivationWorldRadius);
+        var minRadius = Mathf.Clamp(minimumActivationWorldRadius, 0.15f, maxRadius);
+        return Mathf.Clamp(radius, minRadius, maxRadius);
+    }
+
+    private float ResolveVisualActivationRadius()
+    {
+        if (!TryGetVisualBounds(out var bounds))
+            return 0f;
+
+        var horizontalExtent = Mathf.Max(bounds.extents.x, bounds.extents.z);
+        return Mathf.Clamp(
+            horizontalExtent * Mathf.Max(0f, visualActivationRadiusMultiplier),
+            0f,
+            Mathf.Max(0f, visualActivationRadiusMax));
+    }
+
+    private bool TryGetVisualBounds(out Bounds bounds)
+    {
+        var renderers = GetComponentsInChildren<Renderer>(true);
+        var boundsInitialized = false;
+        bounds = new Bounds(transform.position, Vector3.zero);
+        if (renderers == null || renderers.Length == 0)
+            return false;
+
+        foreach (var renderer in renderers)
+        {
+            if (renderer == null)
+                continue;
+
+            if (!boundsInitialized)
+            {
+                bounds = renderer.bounds;
+                boundsInitialized = true;
+            }
+            else
+            {
+                bounds.Encapsulate(renderer.bounds);
+            }
+        }
+
+        return boundsInitialized;
     }
 
     private void ActivatePortal(string source)
@@ -211,7 +353,7 @@ public class PortalTeleporter : MonoBehaviour
         // Load the world scene the player originally entered from.
         var returnWorldScene = PortalManager.Instance.GetReturnWorldScene();
         if (!Application.CanStreamedLevelBeLoaded(returnWorldScene))
-            returnWorldScene = "World";
+            returnWorldScene = "World_main";
 
         transitionRequested = true;
         LastPortalStatus = $"Portal: return {returnWorldScene}";

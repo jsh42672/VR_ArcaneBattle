@@ -127,6 +127,7 @@ namespace ArcaneVR.Combat
                 return;
             }
 
+            bossAnimator.speed = 1f;
             var triggerName = ResolveTriggerName(attackType);
             if (HasTriggerParameter(triggerName))
             {
@@ -160,6 +161,7 @@ namespace ArcaneVR.Combat
             if (bossAnimator == null || fallbackAttackController == null)
                 return false;
 
+            bossAnimator.speed = 1f;
             if (bossAnimator.runtimeAnimatorController != fallbackAttackController)
             {
                 controllerBeforeFallback = bossAnimator.runtimeAnimatorController;

@@ -16,19 +16,23 @@ namespace ArcaneVR.Spell
     public static class ArcaneSpellSfx
     {
         private const int SampleRate = 44100;
+        private const string ResourceSfxPath = "ArcaneVR/Sfx";
         private static readonly Dictionary<string, AudioClip> ClipCache = new Dictionary<string, AudioClip>();
+        private static readonly HashSet<string> ResourceLoadLogs = new HashSet<string>();
+        private static readonly HashSet<string> ResourceMissingLogs = new HashSet<string>();
 
-        public static void Play(AudioSource audioSource, ElementType element, ArcaneSpellSfxCue cue, float volume = 1f)
+        public static float Play(AudioSource audioSource, ElementType element, ArcaneSpellSfxCue cue, float volume = 1f)
         {
             if (audioSource == null || element == ElementType.None)
-                return;
+                return 0f;
 
             var clip = GetClip(element, cue);
             if (clip == null)
-                return;
+                return 0f;
 
             audioSource.pitch = 1f;
             audioSource.PlayOneShot(clip, Mathf.Clamp01(volume));
+            return clip.length;
         }
 
         public static void PlayCombo(AudioSource audioSource, SpellId spellId, ArcaneSpellSfxCue cue, float volume = 1f)
@@ -47,11 +51,86 @@ namespace ArcaneVR.Spell
         {
             var key = $"{element}_{cue}";
             if (ClipCache.TryGetValue(key, out var cachedClip) && cachedClip != null)
-                return cachedClip;
+            {
+                if (!IsGeneratedFallbackClip(cachedClip))
+                    return cachedClip;
 
-            var clip = CreateClip(element, cue);
+                var resourceClip = LoadResourceClip(element, cue);
+                if (resourceClip != null)
+                {
+                    ClipCache[key] = resourceClip;
+                    return resourceClip;
+                }
+
+                return cachedClip;
+            }
+
+            var clip = LoadResourceClip(element, cue) ?? CreateClip(element, cue);
             ClipCache[key] = clip;
             return clip;
+        }
+
+        private static AudioClip LoadResourceClip(ElementType element, ArcaneSpellSfxCue cue)
+        {
+            foreach (var resourceName in ResolveResourceClipNames(element, cue))
+            {
+                if (string.IsNullOrEmpty(resourceName))
+                    continue;
+
+                var clip = Resources.Load<AudioClip>($"{ResourceSfxPath}/{resourceName}");
+                if (clip != null)
+                {
+                    LogResourceLoaded(element, cue, resourceName);
+                    return clip;
+                }
+            }
+
+            LogResourceMissing(element, cue);
+            return null;
+        }
+
+        private static IEnumerable<string> ResolveResourceClipNames(ElementType element, ArcaneSpellSfxCue cue)
+        {
+            var elementName = element switch
+            {
+                ElementType.Fire => "Fire",
+                ElementType.Ice => "Ice",
+                ElementType.Thunder => "Thunder",
+                _ => string.Empty
+            };
+
+            if (string.IsNullOrEmpty(elementName))
+                yield break;
+
+            var cueName = IsCastCue(cue) ? "Cast" : "Declare";
+            yield return $"{elementName}_{cueName}";
+            yield return $"{elementName}{cueName}";
+            yield return $"{elementName}_{cue}";
+            yield return $"{elementName}{cue}";
+        }
+
+        private static bool IsGeneratedFallbackClip(AudioClip clip)
+        {
+            return clip != null &&
+                   clip.name.StartsWith("Arcane_", StringComparison.Ordinal);
+        }
+
+        private static void LogResourceLoaded(ElementType element, ArcaneSpellSfxCue cue, string resourceName)
+        {
+            var key = $"{element}_{cue}";
+            if (!ResourceLoadLogs.Add(key))
+                return;
+
+            Debug.Log($"[ArcaneSpellSfx] Loaded Resources/{ResourceSfxPath}/{resourceName}");
+        }
+
+        private static void LogResourceMissing(ElementType element, ArcaneSpellSfxCue cue)
+        {
+            var key = $"{element}_{cue}";
+            if (!ResourceMissingLogs.Add(key))
+                return;
+
+            Debug.LogWarning($"[ArcaneSpellSfx] Missing mp3 for {element}/{cue} under Resources/{ResourceSfxPath}. Using generated fallback.");
         }
 
         private static AudioClip CreateClip(ElementType element, ArcaneSpellSfxCue cue)

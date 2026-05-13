@@ -156,7 +156,7 @@ namespace ArcaneVR.Input
             return pose switch
             {
                 PoseType.OpenPalm => new Color(1f, 0.2f, 0.2f, 1f),
-                PoseType.Fist => new Color(0.2f, 0.4f, 1f, 1f),
+                PoseType.TwoFinger => new Color(0.2f, 0.4f, 1f, 1f),
                 PoseType.ThumbsUp => new Color(1f, 0.86f, 0f, 1f),
                 _ => Color.black
             };

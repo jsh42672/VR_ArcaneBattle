@@ -49,6 +49,12 @@ namespace ArcaneVR.Input
             SetRightPose(PoseType.ThumbsUp);
         }
 
+        public void OnTwoFingerStart()
+        {
+            MarkEvent();
+            SetRightPose(PoseType.TwoFinger);
+        }
+
         public void OnLeftFistDetected()
         {
             MarkEvent();
@@ -92,16 +98,34 @@ namespace ArcaneVR.Input
             ClearRightPoseIf(PoseType.ThumbsUp);
         }
 
+        public void OnTwoFingerEnd()
+        {
+            MarkEvent();
+            ClearRightPoseIf(PoseType.TwoFinger);
+        }
+
         public void OnThumbsUpLeftStart()
         {
             MarkEvent();
             SetLeftPose(PoseType.ThumbsUp);
         }
 
+        public void OnTwoFingerLeftStart()
+        {
+            MarkEvent();
+            SetLeftPose(PoseType.TwoFinger);
+        }
+
         public void OnThumbsUpLeftEnd()
         {
             MarkEvent();
             ClearLeftPoseIf(PoseType.ThumbsUp);
+        }
+
+        public void OnTwoFingerLeftEnd()
+        {
+            MarkEvent();
+            ClearLeftPoseIf(PoseType.TwoFinger);
         }
 
         public void OnLeftFistLost()
@@ -127,6 +151,13 @@ namespace ArcaneVR.Input
             if (currentRightPose == pose)
                 return;
 
+            if (currentRightPose != PoseType.None && GetPosePriority(pose) < GetPosePriority(currentRightPose))
+            {
+                DebugStatus = $"XR Gesture Router: Right ignored {pose}, keeping {currentRightPose}";
+                LogDebug($"[GESTURE] Right ignored lower-priority pose: {pose}, current: {currentRightPose}");
+                return;
+            }
+
             currentRightPose = pose;
             DebugStatus = $"XR Gesture Router: Right {pose}";
             OnRightPoseConfirmed?.Invoke(pose);
@@ -137,6 +168,13 @@ namespace ArcaneVR.Input
         {
             if (currentLeftPose == pose)
                 return;
+
+            if (currentLeftPose != PoseType.None && GetPosePriority(pose) < GetPosePriority(currentLeftPose))
+            {
+                DebugStatus = $"XR Gesture Router: Left ignored {pose}, keeping {currentLeftPose}";
+                LogDebug($"[GESTURE] Left ignored lower-priority pose: {pose}, current: {currentLeftPose}");
+                return;
+            }
 
             currentLeftPose = pose;
             DebugStatus = $"XR Gesture Router: Left {pose}";
@@ -170,6 +208,18 @@ namespace ArcaneVR.Input
         {
             if (showDebugLog)
                 Debug.Log(message);
+        }
+
+        private static int GetPosePriority(PoseType pose)
+        {
+            return pose switch
+            {
+                PoseType.ThumbsUp => 3,
+                PoseType.TwoFinger => 2,
+                PoseType.Fist => 2,
+                PoseType.OpenPalm => 1,
+                _ => 0
+            };
         }
     }
 }

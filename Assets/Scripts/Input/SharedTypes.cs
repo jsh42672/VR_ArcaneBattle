@@ -5,6 +5,7 @@ namespace ArcaneVR.Input
         None,
         OpenPalm,
         Fist,
-        ThumbsUp
+        ThumbsUp,
+        TwoFinger
     }
 }

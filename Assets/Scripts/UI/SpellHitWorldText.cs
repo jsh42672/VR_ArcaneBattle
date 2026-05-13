@@ -10,9 +10,9 @@ namespace ArcaneVR.UI
     [DisallowMultipleComponent]
     public class SpellHitWorldText : MonoBehaviour
     {
-        [SerializeField] private Vector3 localOffset = new Vector3(0f, 1.05f, 0f);
-        [SerializeField] private int fontSize = 48;
-        [SerializeField] private float characterSize = 0.035f;
+        [SerializeField] private Vector3 localOffset = new Vector3(0f, 1.25f, 0f);
+        [SerializeField] private int fontSize = 84;
+        [SerializeField] private float characterSize = 0.055f;
         [SerializeField] private Color textColor = Color.white;
         [SerializeField] private Color fireColor = new Color(1f, 0.35f, 0.15f, 1f);
         [SerializeField] private Color iceColor = new Color(0.35f, 0.7f, 1f, 1f);

@@ -70,13 +70,11 @@ namespace ArcaneVR.UI
 
         private static bool IsArcaneRuntimeScene(string sceneName)
         {
-            return sceneName == "Main" ||
-                   sceneName == "World" ||
-                   sceneName == "World_main" ||
-                   sceneName == "BattleSceen2" ||
-                   sceneName == "BattleScene2" ||
+            return sceneName == "World" ||
                    sceneName == "Tutorial" ||
-                   sceneName.EndsWith("Coloseum");
+                   sceneName == "ElectricColoseum" ||
+                   sceneName == "FireColoseum" ||
+                   sceneName == "IceColoseum";
         }
 
         private void Awake()

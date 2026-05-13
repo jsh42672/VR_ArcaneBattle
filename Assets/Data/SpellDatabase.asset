@@ -83,7 +83,7 @@ MonoBehaviour:
     statusTickInterval: 1
     projectileSpeed: 10
     prefab: {fileID: 0}
-  - pose: 2
+  - pose: 4
     element: 2
     statusEffect: 2
     damage: 8

@@ -16,7 +16,7 @@ namespace ArcaneVR.Combat
         [Header("Mana")]
         [SerializeField] private float currentMana = 4f;
         [SerializeField] private float maxMana = 4f;
-        [SerializeField] private float manaRegenPerSecond = 0.35f;
+        [SerializeField] private float manaRegenPerSecond = 0.3333333f;
         [SerializeField] private float voiceRefundAmount = 0.5f;
         [SerializeField] private float thunderManaDamage = 1f;
         [SerializeField] private float disruptionDuration = 3f;

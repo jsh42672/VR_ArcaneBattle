@@ -18,6 +18,8 @@ namespace ArcaneVR.Combat
         [SerializeField] private float burnDuration = 4f;
         [SerializeField] private float defaultChargeCounterDuration = 3f;
         [SerializeField] private float defaultBarrierDuration = 8f;
+        [SerializeField] private float steamBurstKnockbackDistance = 2.4f;
+        [SerializeField] private float steamBurstKnockbackDuration = 0.35f;
 
         public event Action<float, float> OnHealthChanged;
         public event Action<string> OnCombatCueChanged;
@@ -45,6 +47,7 @@ namespace ArcaneVR.Combat
         private Coroutine burnRoutine;
         private Coroutine barrierRoutine;
         private Coroutine chargeRoutine;
+        private Coroutine steamBurstKnockbackRoutine;
         private float cueHoldUntilTime;
         private float barrierUntilTime;
         private float weakUntilTime;
@@ -101,9 +104,14 @@ namespace ArcaneVR.Combat
             if (brokeBarrier)
                 BreakBarrier("BARRIER BREAK");
 
+            if (hitData.spellId == SpellId.Combo_FireIce)
+                StartSteamBurstKnockback();
+
             ApplyStatus(hitData);
             if (triggeredOverload)
                 SetCue("OVERLOAD", 1.1f, true);
+            else if (hitData.spellId == SpellId.Combo_FireIce)
+                SetCue("STEAM BURST", 1.1f, true);
 
             var rawDamage = Mathf.Max(0f, hitData.damage);
             var finalDamage = CalculateDamage(hitData);
@@ -317,6 +325,58 @@ namespace ArcaneVR.Combat
 
             OnStatusApplied?.Invoke(StatusEffect.Burn);
             burnRoutine = StartCoroutine(TimedBurn(hitData.Clone()));
+        }
+
+        private void StartSteamBurstKnockback()
+        {
+            var targetRoot = ResolveMovableRoot();
+            if (targetRoot == null)
+                return;
+
+            var player = Camera.main != null ? Camera.main.transform : null;
+            var direction = player != null
+                ? targetRoot.position - player.position
+                : targetRoot.forward;
+            direction = Vector3.ProjectOnPlane(direction, Vector3.up);
+            if (direction.sqrMagnitude < 0.0001f)
+                direction = -targetRoot.forward;
+
+            direction.Normalize();
+            if (steamBurstKnockbackRoutine != null)
+                StopCoroutine(steamBurstKnockbackRoutine);
+
+            steamBurstKnockbackRoutine = StartCoroutine(SteamBurstKnockbackRoutine(targetRoot, direction));
+        }
+
+        private Transform ResolveMovableRoot()
+        {
+            var chase = GetComponentInParent<ArcaneVR.Boss.BossChaseController>();
+            if (chase != null)
+                return chase.transform;
+
+            return transform;
+        }
+
+        private IEnumerator SteamBurstKnockbackRoutine(Transform targetRoot, Vector3 direction)
+        {
+            var start = targetRoot.position;
+            var target = start + direction * Mathf.Max(0f, steamBurstKnockbackDistance);
+            target.y = start.y;
+            var duration = Mathf.Max(0.05f, steamBurstKnockbackDuration);
+            var elapsed = 0f;
+
+            while (elapsed < duration && targetRoot != null)
+            {
+                elapsed += Time.deltaTime;
+                var t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+                targetRoot.position = Vector3.LerpUnclamped(start, target, t);
+                yield return null;
+            }
+
+            if (targetRoot != null)
+                targetRoot.position = target;
+
+            steamBurstKnockbackRoutine = null;
         }
 
         private IEnumerator TimedBarrier(float duration)

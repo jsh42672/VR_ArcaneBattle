@@ -32,11 +32,11 @@ namespace ArcaneVR.Scene
 
         [SerializeField] private bool dontDestroyOnLoad = true;
         [SerializeField] private SceneType defaultWorldScene = SceneType.WorldMain;
-        [SerializeField] private SceneType defaultCombatScene = SceneType.Battle;
+        [SerializeField] private SceneType defaultCombatScene = SceneType.FireColoseum;
 
         public SceneType CurrentSceneType { get; private set; } = SceneType.Unknown;
         public SceneType LastWorldScene { get; private set; } = SceneType.WorldMain;
-        public SceneType LastCombatScene { get; private set; } = SceneType.Battle;
+        public SceneType LastCombatScene { get; private set; } = SceneType.FireColoseum;
         public string LastTransitionStatus { get; private set; } = "Scene: idle";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -169,8 +169,6 @@ namespace ArcaneVR.Scene
                 "Tutorial" => SceneType.Tutorial,
                 "World" => SceneType.World,
                 "World_main" => SceneType.WorldMain,
-                "BattleSceen2" => SceneType.Battle,
-                "BattleScene2" => SceneType.Battle,
                 "FireColoseum" => SceneType.FireColoseum,
                 "IceColoseum" => SceneType.IceColoseum,
                 "ElectricColoseum" => SceneType.ElectricColoseum,
@@ -187,7 +185,7 @@ namespace ArcaneVR.Scene
                 SceneType.Tutorial => "Tutorial",
                 SceneType.World => "World",
                 SceneType.WorldMain => "World_main",
-                SceneType.Battle => "BattleSceen2",
+                SceneType.Battle => "FireColoseum",
                 SceneType.FireColoseum => "FireColoseum",
                 SceneType.IceColoseum => "IceColoseum",
                 SceneType.ElectricColoseum => "ElectricColoseum",
@@ -207,8 +205,7 @@ namespace ArcaneVR.Scene
 
             if (sceneType == SceneType.World || sceneType == SceneType.WorldMain)
                 LastWorldScene = sceneType;
-            else if (sceneType == SceneType.Battle ||
-                     sceneType == SceneType.FireColoseum ||
+            else if (sceneType == SceneType.FireColoseum ||
                      sceneType == SceneType.IceColoseum ||
                      sceneType == SceneType.ElectricColoseum)
                 LastCombatScene = sceneType;

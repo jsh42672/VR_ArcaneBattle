@@ -25,6 +25,9 @@ namespace ArcaneVR.UI
 
         private void Start()
         {
+            if (contentFadeGroup == null)
+                contentFadeGroup = GetComponent<CanvasGroup>();
+
             if (grimoireData != null && grimoireData.pages.Count > 0)
             {
                 UpdateUI(_currentPageIndex);
@@ -78,6 +81,9 @@ namespace ArcaneVR.UI
 
         private IEnumerator Fade(CanvasGroup group, float start, float end, float duration)
         {
+            if (group == null)
+                yield break;
+
             float elapsed = 0f;
             while (elapsed < duration)
             {

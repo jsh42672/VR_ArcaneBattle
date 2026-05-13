@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ArcaneVR.Input
 {
     /// <summary>
-    /// Listens for English voice commands (Fire, Ice, Thunder) via STT and fires OnVoiceCommand event with the detected ElementType.
+    /// Listens for English voice commands via STT and fires gameplay events for elements and mode toggles.
     /// </summary>
     public class VoiceRecognizer : MonoBehaviour
     {
@@ -17,6 +17,7 @@ namespace ArcaneVR.Input
         [SerializeField] private bool allowExternalSttProvider = true;
 
         public event Action<ElementType> OnVoiceCommand;
+        public event Action OnModeToggleCommand;
         public event Action<string> OnVoiceStatusChanged;
 
         public bool IsListening { get; private set; }
@@ -118,7 +119,7 @@ namespace ArcaneVR.Input
 
             speechRecognizer.Call("startListening", recognizerIntent);
             IsListening = true;
-            SetStatus("Voice: listening - say FIRE / ICE / THUNDER", "Listening", "Android STT listening");
+            SetStatus("Voice: listening - say FIRE / ICE / THUNDER / FOCUS", "Listening", "Android STT listening");
 #else
             SetStatus("Voice: NoSTT - available only on Android/Quest builds", "NoSTT", "Editor/PC build: Android STT disabled");
 #endif
@@ -218,11 +219,20 @@ namespace ArcaneVR.Input
         {
             LastRecognizedPhrase = phrase ?? string.Empty;
             LastRecognizedTime = Time.time;
+
+            if (IsModeTogglePhrase(LastRecognizedPhrase))
+            {
+                LastRecognizedElement = ElementType.None;
+                SetStatus($"Voice: Arcane Focus from '{LastRecognizedPhrase}'", "Focus", successDiagnosticText);
+                OnModeToggleCommand?.Invoke();
+                return;
+            }
+
             LastRecognizedElement = ParseElement(LastRecognizedPhrase);
 
             if (LastRecognizedElement == ElementType.None)
             {
-                SetStatus($"Voice: ignored '{LastRecognizedPhrase}'", "Ignored", "Phrase did not contain FIRE / ICE / THUNDER");
+                SetStatus($"Voice: ignored '{LastRecognizedPhrase}'", "Ignored", "Phrase did not contain FIRE / ICE / THUNDER / FOCUS");
                 return;
             }
 
@@ -244,12 +254,29 @@ namespace ArcaneVR.Input
                 .Replace("!", string.Empty)
                 .Replace("?", string.Empty);
 
-            if (normalized.Contains("THUNDER"))
+            if (normalized.Contains("THUNDER") ||
+                normalized.Contains("LIGHTNING") ||
+                normalized.Contains("FULGUR") ||
+                normalized.Contains("FULGOR") ||
+                normalized.Contains("FULGER") ||
+                normalized.Contains("FULGURE"))
+            {
                 return ElementType.Thunder;
-            if (normalized.Contains("FIRE"))
+            }
+
+            if (normalized.Contains("FIRE") ||
+                normalized.Contains("IGNIS") ||
+                normalized.Contains("IGNEOUS") ||
+                normalized.Contains("IGNITE"))
+            {
                 return ElementType.Fire;
+            }
+
             if (normalized.Contains("FREEZE") ||
                 normalized.Contains("FROST") ||
+                normalized.Contains("GLACIES") ||
+                normalized.Contains("GLACIER") ||
+                normalized.Contains("GLACIAL") ||
                 normalized.Contains("ICE") ||
                 compact == "ITS" ||
                 compact == "EYES" ||
@@ -259,6 +286,112 @@ namespace ArcaneVR.Input
             }
 
             return ElementType.None;
+        }
+
+        public bool IsModeTogglePhrase(string phrase)
+        {
+            if (string.IsNullOrWhiteSpace(phrase))
+                return false;
+
+            var compact = CompactSpeechPhrase(phrase);
+            if (string.IsNullOrWhiteSpace(compact))
+                return false;
+
+            if (compact.Contains("FOCUS") ||
+                compact.Contains("FOCUSED") ||
+                compact.Contains("FOCUSS") ||
+                compact.Contains("FOKUS") ||
+                compact.Contains("ARCANE") ||
+                compact.Contains("ARKANE") ||
+                compact.Contains("ARCAIN") ||
+                compact.Contains("ARCAN") ||
+                compact.Contains("MAGICFOCUS") ||
+                compact.Contains("CASTMODE") ||
+                compact.Contains("SIEGEMODE") ||
+                compact.Contains("COMBOMODE") ||
+                compact.Contains("COMBINE") ||
+                compact.Contains("COMBINATION"))
+            {
+                return true;
+            }
+
+            var tokens = compact.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var token in tokens)
+            {
+                if (IsSimilarSpeechToken(token, "FOCUS", 2) ||
+                    IsSimilarSpeechToken(token, "ARCANE", 2) ||
+                    IsSimilarSpeechToken(token, "COMBO", 1) ||
+                    IsSimilarSpeechToken(token, "CAST", 1) ||
+                    IsSimilarSpeechToken(token, "SIEGE", 1))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static string CompactSpeechPhrase(string phrase)
+        {
+            var normalized = phrase.Trim().ToUpperInvariant();
+            var chars = new char[normalized.Length];
+            var writeIndex = 0;
+
+            foreach (var character in normalized)
+            {
+                if (char.IsLetterOrDigit(character))
+                {
+                    chars[writeIndex++] = character;
+                    continue;
+                }
+
+                if (char.IsWhiteSpace(character) && (writeIndex == 0 || chars[writeIndex - 1] != ' '))
+                    chars[writeIndex++] = ' ';
+            }
+
+            return new string(chars, 0, writeIndex).Trim();
+        }
+
+        private static bool IsSimilarSpeechToken(string token, string expected, int maxDistance)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return false;
+
+            if (token.Contains(expected) || expected.Contains(token))
+                return token.Length >= 3;
+
+            return ComputeEditDistance(token, expected) <= maxDistance;
+        }
+
+        private static int ComputeEditDistance(string left, string right)
+        {
+            if (string.IsNullOrEmpty(left))
+                return right?.Length ?? 0;
+            if (string.IsNullOrEmpty(right))
+                return left.Length;
+
+            var previous = new int[right.Length + 1];
+            var current = new int[right.Length + 1];
+            for (var j = 0; j <= right.Length; j++)
+                previous[j] = j;
+
+            for (var i = 1; i <= left.Length; i++)
+            {
+                current[0] = i;
+                for (var j = 1; j <= right.Length; j++)
+                {
+                    var cost = left[i - 1] == right[j - 1] ? 0 : 1;
+                    current[j] = Mathf.Min(
+                        Mathf.Min(current[j - 1] + 1, previous[j] + 1),
+                        previous[j - 1] + cost);
+                }
+
+                var temp = previous;
+                previous = current;
+                current = temp;
+            }
+
+            return previous[right.Length];
         }
 
         [ContextMenu("Voice Mock/FIRE")]
@@ -277,6 +410,12 @@ namespace ArcaneVR.Input
         private void MockThunderCommand()
         {
             SubmitVoiceCommand("THUNDER");
+        }
+
+        [ContextMenu("Voice Mock/ARCANE FOCUS")]
+        private void MockArcaneFocusCommand()
+        {
+            SubmitVoiceCommand("ARCANE FOCUS");
         }
 
         private void RefreshAvailability()
@@ -421,7 +560,7 @@ namespace ArcaneVR.Input
         private void HandleAndroidReady()
         {
             IsListening = true;
-            SetStatus("Voice: listening - say FIRE / ICE / THUNDER", "Listening");
+            SetStatus("Voice: listening - say FIRE / ICE / THUNDER / FOCUS", "Listening");
         }
 
         private void HandleAndroidResults(AndroidJavaObject results)

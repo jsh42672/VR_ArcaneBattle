@@ -23,6 +23,12 @@ namespace ArcaneVR.Combat
         private ConstraintController constraintController;
 
         [SerializeField]
+        private bool enablePlayerConstraints;
+
+        [SerializeField]
+        private bool enableAttackResponseWindows;
+
+        [SerializeField]
         private float defaultResponseWindowDuration = 1.2f;
 
         [SerializeField]
@@ -62,6 +68,12 @@ namespace ArcaneVR.Combat
 
         public void BeginAttackResponseWindow(BossAttackType attackType, float duration)
         {
+            if (!enableAttackResponseWindows)
+            {
+                LastBridgeStatus = $"Attack response disabled: {attackType}";
+                return;
+            }
+
             ResolveReferences();
 
             if (pendingAttackResponseRoutine != null)
@@ -73,7 +85,8 @@ namespace ArcaneVR.Combat
             var responseDuration = Mathf.Max(0.1f, duration);
             var leadIn = Mathf.Max(0f, attackResponseConstraintLeadIn);
             var constraintDuration = leadIn + responseDuration + Mathf.Max(0f, attackResponseConstraintExtraDuration);
-            constraintController?.BeginResponseConstraint(constraintDuration);
+            if (enablePlayerConstraints)
+                constraintController?.BeginResponseConstraint(constraintDuration);
 
             if (leadIn > 0f)
             {
@@ -104,7 +117,7 @@ namespace ArcaneVR.Combat
                 return;
             }
 
-            dodgeDetector?.BeginDodgeWindow(attackType);
+            dodgeDetector?.BeginDodgeWindow(attackType, duration);
             LastBridgeStatus = $"Dodge window: {attackType}";
             OnAttackResponseWindowStarted?.Invoke(attackType, duration);
         }
@@ -118,7 +131,8 @@ namespace ArcaneVR.Combat
         {
             ResolveReferences();
             golemTarget?.BeginChargeCounterWindow(duration);
-            constraintController?.BeginConstraint(duration);
+            if (enablePlayerConstraints)
+                constraintController?.BeginConstraint(duration);
             LastBridgeStatus = "Charge counter window";
             OnChargeCounterWindowStarted?.Invoke(duration);
         }
@@ -139,19 +153,22 @@ namespace ArcaneVR.Combat
         private void ResolveReferences()
         {
             if (dodgeDetector == null)
-                dodgeDetector = FindAnyObjectByType<DodgeDetector>();
+                dodgeDetector = FindAnyObjectByType<DodgeDetector>() ?? gameObject.AddComponent<DodgeDetector>();
 
             if (barrierController == null)
-                barrierController = FindAnyObjectByType<BarrierController>();
+                barrierController = FindAnyObjectByType<BarrierController>() ?? gameObject.AddComponent<BarrierController>();
 
             if (golemTarget == null)
                 golemTarget = FindAnyObjectByType<GolemCombatTarget>();
 
-            if (constraintController == null)
+            if (constraintController == null && enablePlayerConstraints)
                 constraintController = FindAnyObjectByType<ConstraintController>();
 
-            if (constraintController == null)
+            if (constraintController == null && enablePlayerConstraints)
                 constraintController = gameObject.AddComponent<ConstraintController>();
+
+            if (!enablePlayerConstraints && constraintController != null && constraintController.IsConstrained)
+                constraintController.EndConstraint();
         }
     }
 }

@@ -66,6 +66,7 @@ namespace ArcaneVR.Input
 
         [Header("XR Hands Static Gesture Router")]
         [SerializeField] private bool useXrHandsStaticGestureRouter = true;
+        [SerializeField] private bool allowOvrPrototypeOverrideRouter = true;
         [SerializeField] private GestureEventRouter gestureEventRouter;
 
         [Header("Quest Tuning")]
@@ -121,6 +122,8 @@ namespace ArcaneVR.Input
         [SerializeField] private float prototypeThumbOpenMaxAngle = 20f;
         [SerializeField] private float prototypeThumbClosedMinAngle = 20f;
         [SerializeField] private float prototypeFingerClosedMinAngle = 50f;
+        [SerializeField] private float prototypeTwoFingerOpenMaxAngle = 40f;
+        [SerializeField] private float prototypeTwoFingerClosedMinAngle = 32f;
         [SerializeField] private float prototypeLeftFistHoldTime = 0.2f;
         [SerializeField] private float prototypeLeftFistReleaseBuffer = 0.15f;
         [SerializeField] private float prototypeLowConfidenceGraceDuration = 0.2f;
@@ -129,6 +132,8 @@ namespace ArcaneVR.Input
         [SerializeField, Range(0f, 1f)] private float prototypeThumbOpenCurlMax = 0.55f;
         [SerializeField, Range(0f, 1f)] private float prototypeThumbClosedCurlMin = 0.45f;
         [SerializeField, Range(0f, 1f)] private float prototypeFingerClosedCurlMin = 0.55f;
+        [SerializeField, Range(0f, 1f)] private float prototypeTwoFingerOpenCurlMax = 0.58f;
+        [SerializeField, Range(0f, 1f)] private float prototypeTwoFingerClosedCurlMin = 0.32f;
 
         public event Action<PoseId, PoseId> OnPoseDetected;
         public event Action OnGrimTrigger;
@@ -200,8 +205,6 @@ namespace ArcaneVR.Input
         private float GrimoireHoldDuration => tuningData != null ? tuningData.grimoireHoldDuration : grimoireHoldDuration;
         private float PinchThreshold => tuningData != null ? tuningData.pinchThreshold : 0.65f;
         private float OpenThreshold => tuningData != null ? tuningData.openThreshold : 0.25f;
-        private float OkThumbIndexThreshold => tuningData != null ? tuningData.okThumbIndexThreshold : 0.55f;
-        private float OkTipDistance => tuningData != null ? tuningData.okTipDistance : 0.04f;
         private float ExtendedDistance => tuningData != null ? tuningData.extendedDistance : 0.105f;
         private float IndexExtendedDistance => tuningData != null ? tuningData.indexExtendedDistance : 0.11f;
         private float CurledDistance => tuningData != null ? tuningData.curledDistance : 0.025f;
@@ -304,12 +307,18 @@ namespace ArcaneVR.Input
                 SubscribeRouterEvents();
                 if (gestureEventRouter != null && gestureEventRouter.HasReceivedGestureEvent)
                 {
-                    SyncRouterStateForDebug();
-                    LogHandBindingState();
-                    return;
+                    if (!allowOvrPrototypeOverrideRouter || !HasTrackedOvrHand())
+                    {
+                        SyncRouterStateForDebug();
+                        LogHandBindingState();
+                        return;
+                    }
+
+                    rightPrototypeDebug = $"XR Gesture Router: {gestureEventRouter.CurrentRightPose}, OVR override active";
+                    leftPrototypeDebug = $"XR Gesture Router: {gestureEventRouter.CurrentLeftPose}, OVR override active";
                 }
 
-                if (gestureEventRouter != null)
+                if (gestureEventRouter != null && !gestureEventRouter.HasReceivedGestureEvent)
                 {
                     rightPrototypeDebug = "XR Gesture Router: waiting for StaticHandGesture event; OVR fallback active";
                     leftPrototypeDebug = "XR Gesture Router: waiting for StaticHandGesture event; OVR fallback active";
@@ -336,6 +345,12 @@ namespace ArcaneVR.Input
                 OnPoseDetected?.Invoke(stableLeftPose, stableRightPose);
         }
 
+        private bool HasTrackedOvrHand()
+        {
+            return leftOvrHand != null && leftOvrHand.IsTracked ||
+                   rightOvrHand != null && rightOvrHand.IsTracked;
+        }
+
         private void ResolveGestureEventRouter()
         {
             if (!useXrHandsStaticGestureRouter || gestureEventRouter != null)
@@ -351,6 +366,8 @@ namespace ArcaneVR.Input
 
             gestureEventRouter.OnRightPoseConfirmed += HandleRouterRightPoseConfirmed;
             gestureEventRouter.OnRightPoseCleared += HandleRouterRightPoseCleared;
+            gestureEventRouter.OnLeftPoseConfirmed += HandleRouterLeftPoseConfirmed;
+            gestureEventRouter.OnLeftPoseCleared += HandleRouterLeftPoseCleared;
             gestureEventRouter.OnLeftFistStart += HandleRouterLeftFistStart;
             gestureEventRouter.OnLeftFistEnd += HandleRouterLeftFistEnd;
             routerEventsSubscribed = true;
@@ -363,6 +380,8 @@ namespace ArcaneVR.Input
 
             gestureEventRouter.OnRightPoseConfirmed -= HandleRouterRightPoseConfirmed;
             gestureEventRouter.OnRightPoseCleared -= HandleRouterRightPoseCleared;
+            gestureEventRouter.OnLeftPoseConfirmed -= HandleRouterLeftPoseConfirmed;
+            gestureEventRouter.OnLeftPoseCleared -= HandleRouterLeftPoseCleared;
             gestureEventRouter.OnLeftFistStart -= HandleRouterLeftFistStart;
             gestureEventRouter.OnLeftFistEnd -= HandleRouterLeftFistEnd;
             routerEventsSubscribed = false;
@@ -378,13 +397,21 @@ namespace ArcaneVR.Input
             stableRightPose = ToPoseId(gestureEventRouter.CurrentRightPose);
             stableLeftPose = ToPoseId(gestureEventRouter.CurrentLeftPose);
             rightPrototypeDebug = gestureEventRouter.DebugStatus;
-            leftPrototypeDebug = gestureEventRouter.LeftFistActive
-                ? "XR Gesture Router: Left Fist active"
-                : "XR Gesture Router: Left Fist none";
+            leftPrototypeDebug = gestureEventRouter.CurrentLeftPose != PoseType.None
+                ? $"XR Gesture Router: Left {gestureEventRouter.CurrentLeftPose}"
+                : gestureEventRouter.LeftFistActive
+                    ? "XR Gesture Router: Left Fist active"
+                    : "XR Gesture Router: Left none";
         }
 
         private void HandleRouterRightPoseConfirmed(PoseType pose)
         {
+            if (allowOvrPrototypeOverrideRouter && HasTrackedOvrHand())
+            {
+                rightPrototypeDebug = $"XR Gesture Router ignored for OVR right hand: {pose}";
+                return;
+            }
+
             rightPrototypeCandidatePose = pose;
             rightPrototypeConfirmedPose = pose;
             rightPrototypePoseHoldTimer = 0f;
@@ -417,38 +444,54 @@ namespace ArcaneVR.Input
             OnPoseDetected?.Invoke(stableLeftPose, stableRightPose);
         }
 
-        private void HandleRouterLeftFistStart()
+        private void HandleRouterLeftPoseConfirmed(PoseType pose)
         {
-            leftFistMovementConfirmed = true;
-            leftPrototypeCandidatePose = PoseType.Fist;
-            leftPrototypeConfirmedPose = PoseType.Fist;
+            leftPrototypeCandidatePose = pose;
+            leftPrototypeConfirmedPose = pose;
             leftPrototypePoseHoldTimer = 0f;
-            stableLeftPose = PoseId.Fist;
-            candidateLeftPose = PoseId.Fist;
-            leftPrototypeDebug = "XR Gesture Router: Left Fist active";
+            stableLeftPose = ToPoseId(pose);
+            candidateLeftPose = stableLeftPose;
+            leftPrototypeDebug = $"XR Gesture Router: Left {pose}";
 
-            OnLeftFistStart?.Invoke();
-            OnHandPoseConfirmed?.Invoke(true, PoseType.Fist);
+            OnHandPoseConfirmed?.Invoke(true, pose);
             OnPoseDetected?.Invoke(stableLeftPose, stableRightPose);
         }
 
-        private void HandleRouterLeftFistEnd()
+        private void HandleRouterLeftPoseCleared()
         {
-            var hadFist = leftFistMovementConfirmed || stableLeftPose == PoseId.Fist;
-            leftFistMovementConfirmed = false;
+            var hadPose = leftPrototypeConfirmedPose != PoseType.None || stableLeftPose != PoseId.None;
             leftPrototypeCandidatePose = PoseType.None;
             leftPrototypeConfirmedPose = PoseType.None;
             leftPrototypePoseHoldTimer = 0f;
             stableLeftPose = PoseId.None;
             candidateLeftPose = PoseId.None;
-            leftPrototypeDebug = "XR Gesture Router: Left Fist none";
+            leftPrototypeDebug = gestureEventRouter != null && gestureEventRouter.LeftFistActive
+                ? "XR Gesture Router: Left Fist active"
+                : "XR Gesture Router: Left none";
+
+            if (!hadPose)
+                return;
+
+            OnHandPoseCleared?.Invoke(true);
+            OnPoseDetected?.Invoke(stableLeftPose, stableRightPose);
+        }
+
+        private void HandleRouterLeftFistStart()
+        {
+            leftFistMovementConfirmed = true;
+
+            OnLeftFistStart?.Invoke();
+        }
+
+        private void HandleRouterLeftFistEnd()
+        {
+            var hadFist = leftFistMovementConfirmed;
+            leftFistMovementConfirmed = false;
 
             if (!hadFist)
                 return;
 
             OnLeftFistEnd?.Invoke();
-            OnHandPoseCleared?.Invoke(true);
-            OnPoseDetected?.Invoke(stableLeftPose, stableRightPose);
         }
 
         private static PoseId ToPoseId(PoseType pose)
@@ -458,6 +501,7 @@ namespace ArcaneVR.Input
                 PoseType.OpenPalm => PoseId.OpenPalm,
                 PoseType.Fist => PoseId.Fist,
                 PoseType.ThumbsUp => PoseId.Horn,
+                PoseType.TwoFinger => PoseId.Ok,
                 _ => PoseId.None
             };
         }
@@ -618,6 +662,9 @@ namespace ArcaneVR.Input
                 ringAngle,
                 pinkyAngle,
                 indexDebugMaxCurl));
+
+            if (IsTwoFingerCurlPose(indexPositionCurl, middlePositionCurl, ringPositionCurl, pinkyPositionCurl))
+                return PoseId.Ok;
 
             if (TryResolveGunPoseFromAngles(
                     isLeft,
@@ -962,16 +1009,19 @@ namespace ArcaneVR.Input
             var angleOpen = IsOpenPalmByAngle(skeleton);
             var angleFist = IsFistByAngle(skeleton);
             var angleThumbsUp = IsThumbsUpByAngle(skeleton);
+            var angleTwoFinger = IsTwoFingerByAngle(skeleton);
             var curlDebug = "curl unavailable";
             var curlOpen = false;
             var curlFist = false;
             var curlThumbsUp = false;
+            var curlTwoFinger = false;
 
             if (usePrototypeDistanceFallback && TryGetPrototypeFingerCurls(skeleton, out var curls))
             {
                 curlOpen = IsOpenPalmByCurl(curls);
                 curlFist = IsFistByCurl(curls);
                 curlThumbsUp = IsThumbsUpByCurl(curls);
+                curlTwoFinger = IsTwoFingerByCurl(curls);
                 curlDebug = $"curl T:{curls.thumb:0.00} I:{curls.index:0.00} M:{curls.middle:0.00} R:{curls.ring:0.00} P:{curls.pinky:0.00}";
             }
 
@@ -980,13 +1030,16 @@ namespace ArcaneVR.Input
             var middle = GetBoneCurlMagnitude(skeleton, OVRSkeleton.BoneId.Hand_Middle1, OVRSkeleton.BoneId.XRHand_MiddleProximal);
             var ring = GetBoneCurlMagnitude(skeleton, OVRSkeleton.BoneId.Hand_Ring1, OVRSkeleton.BoneId.XRHand_RingProximal);
             var pinky = GetBoneCurlMagnitude(skeleton, OVRSkeleton.BoneId.Hand_Pinky1, OVRSkeleton.BoneId.XRHand_LittleProximal);
-            debug = $"angle |T:{thumb:0} I:{index:0} M:{middle:0} R:{ring:0} P:{pinky:0}| {curlDebug} | open:{angleOpen || curlOpen} thumbs:{angleThumbsUp || curlThumbsUp} fist:{angleFist || curlFist}";
-
-            if (angleOpen || curlOpen)
-                return PoseType.OpenPalm;
+            debug = $"angle |T:{thumb:0} I:{index:0} M:{middle:0} R:{ring:0} P:{pinky:0}| {curlDebug} | open:{angleOpen || curlOpen} two:{angleTwoFinger || curlTwoFinger} thumbs:{angleThumbsUp || curlThumbsUp} fist:{angleFist || curlFist}";
 
             if (angleThumbsUp || curlThumbsUp)
                 return PoseType.ThumbsUp;
+
+            if (angleTwoFinger || curlTwoFinger)
+                return PoseType.TwoFinger;
+
+            if (angleOpen || curlOpen)
+                return PoseType.OpenPalm;
 
             if (angleFist || curlFist)
                 return PoseType.Fist;
@@ -1064,6 +1117,14 @@ namespace ArcaneVR.Input
                    GetBoneCurlMagnitude(skeleton, OVRSkeleton.BoneId.Hand_Pinky1, OVRSkeleton.BoneId.XRHand_LittleProximal) >= prototypeFingerClosedMinAngle;
         }
 
+        private bool IsTwoFingerByAngle(OVRSkeleton skeleton)
+        {
+            return GetBoneCurlMagnitude(skeleton, OVRSkeleton.BoneId.Hand_Index1, OVRSkeleton.BoneId.XRHand_IndexProximal) <= prototypeTwoFingerOpenMaxAngle &&
+                   GetBoneCurlMagnitude(skeleton, OVRSkeleton.BoneId.Hand_Middle1, OVRSkeleton.BoneId.XRHand_MiddleProximal) <= prototypeTwoFingerOpenMaxAngle &&
+                   GetBoneCurlMagnitude(skeleton, OVRSkeleton.BoneId.Hand_Ring1, OVRSkeleton.BoneId.XRHand_RingProximal) >= prototypeTwoFingerClosedMinAngle &&
+                   GetBoneCurlMagnitude(skeleton, OVRSkeleton.BoneId.Hand_Pinky1, OVRSkeleton.BoneId.XRHand_LittleProximal) >= prototypeTwoFingerClosedMinAngle;
+        }
+
         private bool IsOpenPalmByCurl(PrototypeFingerCurls curls)
         {
             return curls.thumb <= prototypeOpenCurlMax &&
@@ -1089,6 +1150,19 @@ namespace ArcaneVR.Input
                    curls.middle >= prototypeFingerClosedCurlMin &&
                    curls.ring >= prototypeFingerClosedCurlMin &&
                    curls.pinky >= prototypeFingerClosedCurlMin;
+        }
+
+        private bool IsTwoFingerByCurl(PrototypeFingerCurls curls)
+        {
+            return IsTwoFingerCurlPose(curls.index, curls.middle, curls.ring, curls.pinky);
+        }
+
+        private bool IsTwoFingerCurlPose(float indexCurl, float middleCurl, float ringCurl, float pinkyCurl)
+        {
+            return indexCurl <= prototypeTwoFingerOpenCurlMax &&
+                   middleCurl <= prototypeTwoFingerOpenCurlMax &&
+                   ringCurl >= prototypeTwoFingerClosedCurlMin &&
+                   pinkyCurl >= prototypeTwoFingerClosedCurlMin;
         }
 
         private float GetBoneCurlMagnitude(OVRSkeleton skeleton, params OVRSkeleton.BoneId[] boneIds)
@@ -1449,7 +1523,8 @@ namespace ArcaneVR.Input
                 littleCurl,
                 indexDebugMaxCurl));
 
-            var okPinch = Vector3.Distance(thumbTip, indexTip) <= OkTipDistance;
+            if (IsTwoFingerCurlPose(indexCurl, middleCurl, ringCurl, littleCurl))
+                return PoseId.Ok;
 
             if (TryResolveGunPose(
                     isLeft,
@@ -1474,9 +1549,6 @@ namespace ArcaneVR.Input
             if (!indexExtended && !middleExtended && !ringExtended && !littleExtended)
                 return ResolveFistOrPush(isLeft, palmPosition);
 
-            if (okPinch && middleExtended && ringExtended && littleExtended)
-                return PoseId.Ok;
-
             if (indexExtended && littleExtended && !middleExtended && !ringExtended)
                 return PoseId.Horn;
 
@@ -1500,7 +1572,6 @@ namespace ArcaneVR.Input
 
         private PoseId ResolvePoseFromPinches(bool isLeft, Vector3 palmPosition, float[] pinchStrengths)
         {
-            var thumb = pinchStrengths[0] > OkThumbIndexThreshold;
             var index = pinchStrengths[1] > PinchThreshold;
             var middle = pinchStrengths[2] > PinchThreshold;
             var ring = pinchStrengths[3] > PinchThreshold;
@@ -1510,7 +1581,7 @@ namespace ArcaneVR.Input
             if (index && middle && ring && pinky)
                 return ResolveFistOrPush(isLeft, palmPosition);
 
-            if ((thumb || index) && !middle && !ring && !pinky)
+            if (!index && !middle && ring && pinky)
                 return PoseId.Ok;
 
             if (!index && middle && ring && !pinky)

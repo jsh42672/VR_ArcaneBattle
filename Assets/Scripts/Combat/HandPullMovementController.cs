@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using ArcaneVR.Combat;
 using ArcaneVR.Core;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.XR.Hands;
 
 namespace ArcaneVR.Input
@@ -37,6 +39,7 @@ namespace ArcaneVR.Input
         [Header("Pull Movement")]
         [SerializeField] private PullHandMode pullHandMode = PullHandMode.LeftOnly;
         [SerializeField] private float pullMultiplier = 9.6f;
+        [SerializeField] private float battleScenePullMultiplier = 1.3f;
         [SerializeField] private float maxMoveSpeed = 24.0f;
         [SerializeField] private float handMoveDeadZone = 0.003f;
         [SerializeField] private bool horizontalOnly = true;
@@ -64,6 +67,20 @@ namespace ArcaneVR.Input
         [SerializeField] private float groundedStickVelocity = -2.0f;
         [SerializeField] private float terminalFallSpeed = -20.0f;
 
+        [Header("Ground Follow Fallback")]
+        [SerializeField] private bool followGroundHeight = true;
+        [SerializeField] private LayerMask groundLayerMask = ~0;
+        [SerializeField] private float groundProbeUpDistance = 4.0f;
+        [SerializeField] private float groundProbeDownDistance = 80.0f;
+        [SerializeField, Range(0f, 1f)] private float minimumGroundNormalY = 0.45f;
+        [SerializeField] private float maxGroundSnapUpPerFrame = 0.75f;
+        [SerializeField] private float maxGroundSnapDownPerFrame = 2.5f;
+
+        [Header("Battle Height Lock")]
+        [SerializeField] private bool lockHeadHeightInBattleScenes = true;
+        [SerializeField] private float battleHeightTolerance = 0.04f;
+        [SerializeField] private float maxBattleHeightCorrectionPerFrame = 1.25f;
+
         [Header("Player Height")]
         [SerializeField] private bool autoCorrectLowHeadHeight = true;
         [SerializeField] private float heightCorrectionDelay = 0.75f;
@@ -73,7 +90,10 @@ namespace ArcaneVR.Input
         [Header("Debug")]
         [SerializeField] private bool showDebugLog;
 
+        private const string DefaultSuppressionReason = "Suppressed";
+
         private readonly List<XRHandSubsystem> handSubsystems = new List<XRHandSubsystem>();
+        private readonly HashSet<string> movementSuppressionReasons = new HashSet<string>();
 
         private XRHandSubsystem handSubsystem;
         private PullHand activeHand = PullHand.None;
@@ -85,6 +105,11 @@ namespace ArcaneVR.Input
         private string lastDebugMessage = "Idle";
         private float nextSubsystemRefreshTime;
         private bool heightCorrectionApplied;
+        private bool hasLastGroundHeight;
+        private float lastGroundHeight;
+        private bool hasBattleLockedHeadY;
+        private float battleLockedHeadY;
+        private string battleHeightSceneName;
 
         private float verticalVelocity;
         private bool movementAppliedThisFrame;
@@ -118,24 +143,34 @@ namespace ArcaneVR.Input
 
         public void SetMovementSuppressed(bool suppressed, string reason)
         {
-            if (IsMovementSuppressed == suppressed &&
-                MovementSuppressionReason == (reason ?? string.Empty))
+            var normalizedReason = NormalizeSuppressionReason(reason);
+            var wasSuppressed = IsMovementSuppressed;
+
+            if (suppressed)
             {
-                return;
+                movementSuppressionReasons.Add(normalizedReason);
+            }
+            else
+            {
+                movementSuppressionReasons.Remove(normalizedReason);
             }
 
-            IsMovementSuppressed = suppressed;
-            MovementSuppressionReason = suppressed
-                ? string.IsNullOrWhiteSpace(reason) ? "Suppressed" : reason
+            IsMovementSuppressed = movementSuppressionReasons.Count > 0;
+            MovementSuppressionReason = IsMovementSuppressed
+                ? string.Join(", ", movementSuppressionReasons)
                 : string.Empty;
 
-            if (!suppressed)
+            if (!IsMovementSuppressed)
             {
-                lastDebugMessage = "Pull enabled";
+                if (wasSuppressed)
+                {
+                    lastDebugMessage = "Pull enabled";
+                }
+
                 return;
             }
 
-            if (activeHand != PullHand.None)
+            if (!wasSuppressed && activeHand != PullHand.None)
             {
                 EndPull();
             }
@@ -144,6 +179,11 @@ namespace ArcaneVR.Input
             lastMoveDelta = Vector3.zero;
             verticalVelocity = 0f;
             lastDebugMessage = $"Pull locked: {MovementSuppressionReason}";
+        }
+
+        private static string NormalizeSuppressionReason(string reason)
+        {
+            return string.IsNullOrWhiteSpace(reason) ? DefaultSuppressionReason : reason.Trim();
         }
 
         private void Awake()
@@ -513,14 +553,14 @@ namespace ArcaneVR.Input
                 return;
             }
 
-            Vector3 moveDelta = -handWorldDelta * pullMultiplier;
+            Vector3 moveDelta = -handWorldDelta * GetPullMultiplierForCurrentScene();
 
             if (horizontalOnly)
             {
                 moveDelta = Vector3.ProjectOnPlane(moveDelta, Vector3.up);
             }
 
-            float maxDistanceThisFrame = maxMoveSpeed * Time.deltaTime;
+            float maxDistanceThisFrame = maxMoveSpeed * GetBattleScenePullFactor() * Time.deltaTime;
             if (moveDelta.magnitude > maxDistanceThisFrame)
             {
                 moveDelta = moveDelta.normalized * maxDistanceThisFrame;
@@ -549,13 +589,31 @@ namespace ArcaneVR.Input
                 return;
             }
 
+            var useBattleHeightLock = ShouldLockHeadHeightInCurrentScene();
+            if (useBattleHeightLock)
+            {
+                EnsureBattleLockedHeadHeight();
+            }
+
             if (ShouldUseCharacterController())
             {
                 ApplyCharacterControllerMove(moveDelta);
+                Transform controllerRoot = characterController != null
+                    ? characterController.transform
+                    : movementRoot != null
+                        ? movementRoot
+                        : xrOriginRoot;
+                ClampRootInsideBattleArena(controllerRoot);
+
+                if (useBattleHeightLock)
+                {
+                    ApplyBattleHeadHeightLock(controllerRoot);
+                }
+
                 return;
             }
 
-            ApplyTransformFallback(moveDelta);
+            ApplyTransformFallback(moveDelta, useBattleHeightLock);
         }
 
         private bool ShouldUseCharacterController()
@@ -580,7 +638,11 @@ namespace ArcaneVR.Input
                 horizontalMoveDelta = Vector3.ProjectOnPlane(horizontalMoveDelta, Vector3.up);
             }
 
-            if (characterController.isGrounded && verticalVelocity < 0f)
+            if (ShouldLockHeadHeightInCurrentScene())
+            {
+                verticalVelocity = 0f;
+            }
+            else if (characterController.isGrounded && verticalVelocity < 0f)
             {
                 verticalVelocity = groundedStickVelocity;
             }
@@ -619,10 +681,10 @@ namespace ArcaneVR.Input
                 return;
             }
 
-            ApplyCharacterControllerMove(Vector3.zero);
+            ApplyMoveDelta(Vector3.zero);
         }
 
-        private void ApplyTransformFallback(Vector3 moveDelta)
+        private void ApplyTransformFallback(Vector3 moveDelta, bool useBattleHeightLock)
         {
             if (!allowTransformFallback)
             {
@@ -646,8 +708,245 @@ namespace ArcaneVR.Input
                 return;
             }
 
+            float previousGroundY = 0f;
+            var shouldFollowGround = !useBattleHeightLock &&
+                                     followGroundHeight &&
+                                     horizontalOnly &&
+                                     moveDelta.sqrMagnitude > 0.0000001f &&
+                                     TryGetGroundHeightUnderHead(out previousGroundY);
+
+            if (!shouldFollowGround && followGroundHeight && horizontalOnly && hasLastGroundHeight)
+            {
+                previousGroundY = lastGroundHeight;
+                shouldFollowGround = true;
+            }
+
             root.position += moveDelta;
             movementAppliedThisFrame = true;
+            ClampRootInsideBattleArena(root);
+
+            if (useBattleHeightLock)
+            {
+                ApplyBattleHeadHeightLock(root);
+                return;
+            }
+
+            if (!shouldFollowGround || !TryGetGroundHeightUnderHead(out var nextGroundY))
+            {
+                return;
+            }
+
+            lastGroundHeight = nextGroundY;
+            hasLastGroundHeight = true;
+
+            var groundDelta = nextGroundY - previousGroundY;
+            if (groundDelta > 0f)
+            {
+                groundDelta = Mathf.Min(groundDelta, Mathf.Max(0f, maxGroundSnapUpPerFrame));
+            }
+            else
+            {
+                groundDelta = Mathf.Max(groundDelta, -Mathf.Max(0f, maxGroundSnapDownPerFrame));
+            }
+
+            if (Mathf.Abs(groundDelta) <= 0.0001f)
+            {
+                return;
+            }
+
+            root.position += Vector3.up * groundDelta;
+        }
+
+        private void ClampRootInsideBattleArena(Transform root)
+        {
+            if (root == null || headTransform == null)
+            {
+                return;
+            }
+
+            if (!ArenaBoundaryRuntimeWall.TryClampInside(headTransform.position, out var clampedHeadPosition))
+            {
+                return;
+            }
+
+            var correction = Vector3.ProjectOnPlane(clampedHeadPosition - headTransform.position, Vector3.up);
+            if (correction.sqrMagnitude <= 0.0000001f)
+            {
+                return;
+            }
+
+            root.position += correction;
+        }
+
+        private bool ShouldLockHeadHeightInCurrentScene()
+        {
+            return lockHeadHeightInBattleScenes && IsElementBattleScene();
+        }
+
+        private float GetPullMultiplierForCurrentScene()
+        {
+            return pullMultiplier * GetBattleScenePullFactor();
+        }
+
+        private float GetBattleScenePullFactor()
+        {
+            return IsElementBattleScene() ? Mathf.Max(0.01f, battleScenePullMultiplier) : 1f;
+        }
+
+        private static bool IsElementBattleScene()
+        {
+            var sceneName = SceneManager.GetActiveScene().name;
+            return sceneName == "ElectricColoseum" ||
+                   sceneName == "FireColoseum" ||
+                   sceneName == "IceColoseum";
+        }
+
+        private void EnsureBattleLockedHeadHeight()
+        {
+            var sceneName = SceneManager.GetActiveScene().name;
+            if (battleHeightSceneName != sceneName)
+            {
+                battleHeightSceneName = sceneName;
+                hasBattleLockedHeadY = false;
+            }
+
+            if (hasBattleLockedHeadY || headTransform == null)
+            {
+                return;
+            }
+
+            battleLockedHeadY = headTransform.position.y;
+            hasBattleLockedHeadY = true;
+        }
+
+        private void ApplyBattleHeadHeightLock(Transform root)
+        {
+            if (root == null || headTransform == null)
+            {
+                return;
+            }
+
+            EnsureBattleLockedHeadHeight();
+            if (!hasBattleLockedHeadY)
+            {
+                return;
+            }
+
+            var correction = battleLockedHeadY - headTransform.position.y;
+            if (Mathf.Abs(correction) < Mathf.Max(0.001f, battleHeightTolerance))
+            {
+                return;
+            }
+
+            correction = Mathf.Clamp(
+                correction,
+                -Mathf.Max(0f, maxBattleHeightCorrectionPerFrame),
+                Mathf.Max(0f, maxBattleHeightCorrectionPerFrame));
+            root.position += Vector3.up * correction;
+            verticalVelocity = 0f;
+        }
+
+        private bool TryGetGroundHeightUnderHead(out float groundY)
+        {
+            groundY = 0f;
+
+            if (!followGroundHeight || headTransform == null)
+            {
+                return false;
+            }
+
+            var upDistance = Mathf.Max(0.1f, groundProbeUpDistance);
+            var downDistance = Mathf.Max(0.1f, groundProbeDownDistance);
+            var probeOrigin = headTransform.position + Vector3.up * upDistance;
+            var maxDistance = upDistance + downDistance;
+            var hits = Physics.RaycastAll(
+                probeOrigin,
+                Vector3.down,
+                maxDistance,
+                groundLayerMask,
+                QueryTriggerInteraction.Ignore);
+
+            if (hits == null || hits.Length == 0)
+            {
+                return TryGetTerrainHeightUnderHead(out groundY);
+            }
+
+            var bestDistance = float.PositiveInfinity;
+            var foundGround = false;
+
+            foreach (var hit in hits)
+            {
+                if (hit.collider == null ||
+                    hit.normal.y < minimumGroundNormalY ||
+                    IsOwnRigCollider(hit.collider) ||
+                    hit.distance >= bestDistance)
+                {
+                    continue;
+                }
+
+                bestDistance = hit.distance;
+                groundY = hit.point.y;
+                foundGround = true;
+            }
+
+            if (foundGround)
+            {
+                return true;
+            }
+
+            return TryGetTerrainHeightUnderHead(out groundY);
+        }
+
+        private bool TryGetTerrainHeightUnderHead(out float groundY)
+        {
+            groundY = 0f;
+
+            if (headTransform == null)
+            {
+                return false;
+            }
+
+            var headPosition = headTransform.position;
+            foreach (var terrain in Terrain.activeTerrains)
+            {
+                if (terrain == null || terrain.terrainData == null)
+                {
+                    continue;
+                }
+
+                var terrainPosition = terrain.transform.position;
+                var terrainSize = terrain.terrainData.size;
+                var localX = headPosition.x - terrainPosition.x;
+                var localZ = headPosition.z - terrainPosition.z;
+                if (localX < 0f || localZ < 0f || localX > terrainSize.x || localZ > terrainSize.z)
+                {
+                    continue;
+                }
+
+                groundY = terrain.SampleHeight(headPosition) + terrainPosition.y;
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool IsOwnRigCollider(Collider candidate)
+        {
+            if (candidate == null)
+            {
+                return false;
+            }
+
+            var candidateTransform = candidate.transform;
+            return IsSameOrChild(candidateTransform, xrOriginRoot) ||
+                   IsSameOrChild(candidateTransform, movementRoot);
+        }
+
+        private static bool IsSameOrChild(Transform candidate, Transform root)
+        {
+            return candidate != null &&
+                   root != null &&
+                   (candidate == root || candidate.IsChildOf(root));
         }
 
         private void EndPull()

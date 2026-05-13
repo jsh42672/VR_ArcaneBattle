@@ -21,7 +21,7 @@ namespace ArcaneVR.Spell
         {
             spellId = newSpellId;
             element = newElement == ElementType.None ? ResolveElementFromSpell(newSpellId) : newElement;
-            visualScale = Mathf.Clamp(newVisualScale, 0.45f, 2.2f);
+            visualScale = Mathf.Clamp(newVisualScale, 0.45f, 3.4f);
 
             ClearChildren();
             BuildVisuals();
@@ -101,34 +101,46 @@ namespace ArcaneVR.Spell
 
         private void BuildComboVisual(ElementType first, ElementType second)
         {
+            var arcaneCore = new Color(0.92f, 0.18f, 1f, 0.92f);
+            var whiteHot = new Color(1f, 0.92f, 0.7f, 0.8f);
+
             if (spellId == SpellId.Combo_FireIce)
             {
+                CreateTrail("ArcaneFusionRibbon", arcaneCore, whiteHot, 0.58f, 0.32f);
+                CreateParticleCloud("ArcaneFusionCore", arcaneCore, 120f, 0.2f, 0.5f, 0.09f, 0.26f);
                 CreateTrail("SteamTrail", new Color(1f, 0.45f, 0.12f, 0.9f), new Color(0.5f, 0.92f, 1f, 0.78f), 0.36f, 0.22f);
                 CreateParticleCloud("SteamVapor", Color.Lerp(GetElementColor(first), Color.white, 0.55f), 75f, 0.28f, 0.7f, 0.13f, 0.34f);
                 CreateParticleCloud("ColdMist", Color.Lerp(GetElementColor(second), Color.white, 0.45f), 55f, 0.22f, 0.58f, 0.08f, 0.24f);
-                CreateGlowLight(Color.Lerp(GetElementColor(first), GetElementColor(second), 0.45f), 2.4f, 2.6f);
+                CreateGlowLight(Color.Lerp(arcaneCore, Color.Lerp(GetElementColor(first), GetElementColor(second), 0.45f), 0.55f), 3.2f, 3.4f);
                 return;
             }
 
             if (spellId == SpellId.Combo_IceThunder)
             {
+                CreateTrail("ArcaneFusionRibbon", arcaneCore, whiteHot, 0.56f, 0.3f);
+                CreateParticleCloud("ArcaneFusionCore", arcaneCore, 115f, 0.18f, 0.48f, 0.085f, 0.24f);
                 BuildIceVisual();
                 lightningLine = CreateLightningLine("BarrierBreakArc", 0.62f, 0.11f, GetElementColor(ElementType.Thunder));
                 CreateParticleCloud("BreakSparks", GetElementColor(ElementType.Thunder), 90f, 0.14f, 0.34f, 0.035f, 0.09f);
+                CreateGlowLight(Color.Lerp(arcaneCore, GetElementColor(ElementType.Thunder), 0.35f), 3f, 3.1f);
                 return;
             }
 
             if (spellId == SpellId.Combo_ThunderFire)
             {
+                CreateTrail("ArcaneFusionRibbon", arcaneCore, whiteHot, 0.56f, 0.31f);
+                CreateParticleCloud("ArcaneFusionCore", arcaneCore, 125f, 0.18f, 0.48f, 0.09f, 0.26f);
                 BuildFireVisual();
                 lightningLine = CreateLightningLine("OverloadArc", 0.58f, 0.12f, GetElementColor(ElementType.Thunder));
                 CreateParticleCloud("OverloadSparks", GetElementColor(ElementType.Thunder), 110f, 0.12f, 0.3f, 0.04f, 0.11f);
+                CreateGlowLight(Color.Lerp(arcaneCore, GetElementColor(ElementType.Fire), 0.35f), 3.1f, 3.2f);
                 return;
             }
 
-            CreateTrail("ComboTrail", GetElementColor(first), GetElementColor(second), 0.32f, 0.18f);
+            CreateTrail("ComboTrail", arcaneCore, Color.Lerp(GetElementColor(first), GetElementColor(second), 0.5f), 0.5f, 0.28f);
             CreateParticleCloud("ComboCore", Color.Lerp(GetElementColor(first), GetElementColor(second), 0.5f), 70f, 0.22f, 0.5f, 0.08f, 0.22f);
-            CreateGlowLight(Color.Lerp(GetElementColor(first), GetElementColor(second), 0.5f), 2f, 2.4f);
+            CreateParticleCloud("ArcaneFusionCore", arcaneCore, 105f, 0.18f, 0.46f, 0.08f, 0.24f);
+            CreateGlowLight(Color.Lerp(arcaneCore, Color.Lerp(GetElementColor(first), GetElementColor(second), 0.5f), 0.5f), 3f, 3f);
         }
 
         private void BuildFireVisual()

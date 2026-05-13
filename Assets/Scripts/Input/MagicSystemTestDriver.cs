@@ -91,6 +91,9 @@ namespace ArcaneVR.Input
 
         private static void CreateForScene(string sceneName)
         {
+            if (sceneName == "World_main")
+                return;
+
             if (!HandGestureDebugOverlay.IsGestureOverlayScene(sceneName))
                 return;
 
@@ -624,9 +627,9 @@ namespace ArcaneVR.Input
 
         private static bool IsCombatScene(string sceneName)
         {
-            return sceneName == "BattleSceen2" ||
-                   sceneName == "BattleScene2" ||
-                   sceneName.EndsWith("Coloseum");
+            return sceneName == "ElectricColoseum" ||
+                   sceneName == "FireColoseum" ||
+                   sceneName == "IceColoseum";
         }
 
         private void HandleVoiceCommand(ElementType element)

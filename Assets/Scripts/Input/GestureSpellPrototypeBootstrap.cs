@@ -22,7 +22,8 @@ namespace ArcaneVR.Input
         private static void SetupPrototypeScene()
         {
             var sceneName = SceneManager.GetActiveScene().name;
-            if (!HandGestureDebugOverlay.IsPrototypeScene(sceneName))
+            var isPrototypeScene = HandGestureDebugOverlay.IsPrototypeScene(sceneName);
+            if (!HandGestureDebugOverlay.IsGestureOverlayScene(sceneName))
             {
                 return;
             }
@@ -52,6 +53,22 @@ namespace ArcaneVR.Input
             var spawnRoot = GameObject.Find("SpellSpawnRoot");
             if (spawnRoot == null)
                 spawnRoot = new GameObject("SpellSpawnRoot");
+
+            var combatManager = Object.FindAnyObjectByType<CombatManager>();
+            if (combatManager == null)
+                combatManager = spellRoot.AddComponent<CombatManager>();
+
+            var voiceRecognizer = Object.FindAnyObjectByType<VoiceRecognizer>();
+            if (voiceRecognizer == null)
+                voiceRecognizer = spellRoot.AddComponent<VoiceRecognizer>();
+
+            var combinationChecker = Object.FindAnyObjectByType<CombinationChecker>();
+            if (combinationChecker == null)
+                combinationChecker = spellRoot.AddComponent<CombinationChecker>();
+
+            var actionModeController = Object.FindAnyObjectByType<ArcaneActionModeController>();
+            if (actionModeController == null)
+                actionModeController = spellRoot.AddComponent<ArcaneActionModeController>();
 
             var spellCaster = Object.FindAnyObjectByType<SpellCaster>();
             if (spellCaster == null)
@@ -87,8 +104,11 @@ namespace ArcaneVR.Input
             if (HandGestureDebugOverlay.ShouldAutoCreateOverlay(sceneName))
                 EnsureDebugOverlay(gestureDetector);
 
-            EnsureTestTarget();
-            EnsureMovementReferenceWorld();
+            if (isPrototypeScene)
+            {
+                EnsureTestTarget();
+                EnsureMovementReferenceWorld();
+            }
         }
 
         public static bool NormalizeSceneOvrHands(out OVRHand leftHand, out OVRHand rightHand, out OVRCameraRig cameraRig)
@@ -410,8 +430,12 @@ namespace ArcaneVR.Input
 
         private static void EnsureMovementReferenceWorld()
         {
-            if (GameObject.Find("Arcane Prototype Movement World") != null)
+            var existingRoot = GameObject.Find("Arcane Prototype Movement World");
+            if (existingRoot != null)
+            {
+                RemoveReferenceText(existingRoot.transform);
                 return;
+            }
 
             var root = new GameObject("Arcane Prototype Movement World");
 
@@ -473,12 +497,16 @@ namespace ArcaneVR.Input
                 new Vector3(0.06f, 0.04f, 1.2f),
                 Color.white);
 
-            CreateReferenceText(
-                "MovementLabel",
-                root.transform,
-                "ARCANE FIELD",
-                new Vector3(0f, 1.75f, 6.4f),
-                new Color(0.85f, 0.95f, 1f, 1f));
+        }
+
+        private static void RemoveReferenceText(Transform root)
+        {
+            if (root == null)
+                return;
+
+            var label = root.Find("MovementLabel");
+            if (label != null)
+                Object.Destroy(label.gameObject);
         }
 
         private static GameObject CreateReferenceCube(

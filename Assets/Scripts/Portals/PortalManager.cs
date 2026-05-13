@@ -4,7 +4,7 @@ public class PortalManager : MonoBehaviour
 {
     private const string LastPortalKey = "LastPortalID";
     private const string ReturnWorldSceneKey = "ReturnWorldScene";
-    private const string DefaultWorldSceneName = "World";
+    private const string DefaultWorldSceneName = "World_main";
 
     private static PortalManager instance;
     
@@ -56,6 +56,7 @@ public class PortalManager : MonoBehaviour
 
     public string GetReturnWorldScene()
     {
-        return PlayerPrefs.GetString(ReturnWorldSceneKey, DefaultWorldSceneName);
+        var sceneName = PlayerPrefs.GetString(ReturnWorldSceneKey, DefaultWorldSceneName);
+        return sceneName == "World" ? DefaultWorldSceneName : sceneName;
     }
 }
