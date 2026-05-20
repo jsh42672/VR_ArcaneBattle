@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 7639decd42b41e3449b0a8b4efa21025
+labels:
+- isdkRequirePackage-com.unity.xr.openxr
+- isdkRecommendPackage-com.unity.xr.hands
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
