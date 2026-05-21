@@ -1,6 +1,5 @@
 using ArcaneVR.Spell;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace ArcaneVR.UI
 {
@@ -29,40 +28,6 @@ namespace ArcaneVR.UI
         private float nextReferenceRefreshTime;
 
         public static ArcaneAimReticle ActiveReticle { get; private set; }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RegisterSceneLoadHook()
-        {
-            SceneManager.sceneLoaded -= HandleSceneLoaded;
-            SceneManager.sceneLoaded += HandleSceneLoaded;
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateForActiveScene()
-        {
-            CreateForScene(SceneManager.GetActiveScene().name);
-        }
-
-        private static void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode mode)
-        {
-            CreateForScene(scene.name);
-        }
-
-        private static void CreateForScene(string sceneName)
-        {
-            if (!IsReticleScene(sceneName) || FindAnyObjectByType<ArcaneAimReticle>() != null)
-                return;
-
-            new GameObject("Arcane Aim Reticle").AddComponent<ArcaneAimReticle>();
-        }
-
-        private static bool IsReticleScene(string sceneName)
-        {
-            return sceneName == "Main" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum" ||
-                   sceneName == "ElectricColoseum";
-        }
 
         private void Awake()
         {

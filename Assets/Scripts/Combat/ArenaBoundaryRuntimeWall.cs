@@ -28,56 +28,15 @@ namespace ArcaneVR.Combat
         public float Radius => radius;
         public float ClampRadius => Mathf.Max(0.1f, radius - Mathf.Max(0f, playerClampMargin));
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RegisterSceneHook()
-        {
-            SceneManager.sceneLoaded -= HandleSceneLoaded;
-            SceneManager.sceneLoaded += HandleSceneLoaded;
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void EnsureForActiveScene()
-        {
-            EnsureForScene(SceneManager.GetActiveScene().name);
-        }
-
         public static bool TryClampInside(Vector3 worldPosition, out Vector3 clampedPosition)
         {
             clampedPosition = worldPosition;
-
-            if (activeBoundary == null)
-                EnsureForScene(SceneManager.GetActiveScene().name);
 
             if (activeBoundary == null)
                 return false;
 
             activeBoundary.EnsureBuilt();
             return activeBoundary.TryClamp(worldPosition, out clampedPosition);
-        }
-
-        private static void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode mode)
-        {
-            activeBoundary = null;
-            EnsureForScene(scene.name);
-        }
-
-        private static void EnsureForScene(string sceneName)
-        {
-            if (!IsBattleScene(sceneName) || activeBoundary != null)
-                return;
-
-            var host = GameObject.Find("Arena Runtime Boundary") ?? new GameObject("Arena Runtime Boundary");
-            activeBoundary = host.GetComponent<ArenaBoundaryRuntimeWall>();
-            if (activeBoundary == null)
-                activeBoundary = host.AddComponent<ArenaBoundaryRuntimeWall>();
-            activeBoundary.EnsureBuilt();
-        }
-
-        private static bool IsBattleScene(string sceneName)
-        {
-            return sceneName == "ElectricColoseum" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum";
         }
 
         private void Awake()

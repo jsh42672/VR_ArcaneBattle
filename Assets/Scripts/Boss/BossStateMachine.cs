@@ -43,49 +43,6 @@ namespace ArcaneVR.Boss
         public float NextAttackIn => Mathf.Max(0f, nextAttackTime - Time.time);
         public float NextDefenseIn => Mathf.Max(0f, nextDefenseTime - Time.time);
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RegisterSceneLoadHook()
-        {
-            SceneManager.sceneLoaded -= HandleSceneLoaded;
-            SceneManager.sceneLoaded += HandleSceneLoaded;
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateForBattleScenes()
-        {
-            CreateForScene(SceneManager.GetActiveScene().name);
-        }
-
-        private static void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode mode)
-        {
-            CreateForScene(scene.name);
-        }
-
-        private static void CreateForScene(string sceneName)
-        {
-            if (!IsBattleScene(sceneName))
-                return;
-
-            if (FindAnyObjectByType<BossStateMachine>() != null)
-                return;
-
-            var host = GameObject.Find("BattleManager") ??
-                       GameObject.Find("Arcane Test Hub") ??
-                       new GameObject("Boss State Machine");
-
-            if (FindAnyObjectByType<BossAI>() == null)
-                host.AddComponent<BossAI>();
-
-            host.AddComponent<BossStateMachine>();
-        }
-
-        private static bool IsBattleScene(string sceneName)
-        {
-            return sceneName == "ElectricColoseum" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum";
-        }
-
         private void Awake()
         {
             ResolveReferences();

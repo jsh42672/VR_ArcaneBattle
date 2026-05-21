@@ -80,19 +80,6 @@ namespace ArcaneVR.Boss
         public float DistanceToTarget { get; private set; } = -1f;
         public bool IsInAttackRange => DistanceToTarget >= 0f && DistanceToTarget <= attackRange;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RegisterSceneHook()
-        {
-            SceneManager.sceneLoaded -= HandleSceneLoaded;
-            SceneManager.sceneLoaded += HandleSceneLoaded;
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void EnsureForActiveScene()
-        {
-            EnsureForScene(SceneManager.GetActiveScene().name);
-        }
-
         public static BossChaseController EnsureForTarget(GolemCombatTarget target)
         {
             if (target == null)
@@ -123,30 +110,6 @@ namespace ArcaneVR.Boss
             enableAttackResponsePatterns = false;
             meleeAttackCooldown = Mathf.Min(meleeAttackCooldown, 2.75f);
             attackPauseDuration = Mathf.Min(attackPauseDuration, 1.35f);
-        }
-
-        private static void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode mode)
-        {
-            EnsureForScene(scene.name);
-        }
-
-        private static void EnsureForScene(string sceneName)
-        {
-            if (!IsBattleScene(sceneName))
-                return;
-
-            var target = FindAnyObjectByType<GolemCombatTarget>();
-            if (target == null)
-                target = ResolveOrCreateGolemTarget();
-
-            EnsureForTarget(target);
-        }
-
-        private static bool IsBattleScene(string sceneName)
-        {
-            return sceneName == "ElectricColoseum" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum";
         }
 
         private static GolemCombatTarget ResolveOrCreateGolemTarget()

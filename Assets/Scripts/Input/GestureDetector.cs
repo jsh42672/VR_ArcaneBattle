@@ -275,6 +275,11 @@ namespace ArcaneVR.Input
             SubscribeRouterEvents();
         }
 
+        public void SetAllowOvrPrototypeOverrideRouter(bool allowOverride)
+        {
+            allowOvrPrototypeOverrideRouter = allowOverride;
+        }
+
         public void SetTuningData(HandPoseTuningData data)
         {
             tuningData = data;

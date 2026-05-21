@@ -71,41 +71,6 @@ namespace ArcaneVR.Input
         public float NextBarrierResponseIn => enableAutomaticTestWindows ? Mathf.Max(0f, nextBarrierResponseTime - Time.time) : -1f;
         public float NextChargeWindowIn => enableAutomaticTestWindows ? Mathf.Max(0f, nextChargeTime - Time.time) : -1f;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RegisterSceneLoadHook()
-        {
-            SceneManager.sceneLoaded -= HandleSceneLoaded;
-            SceneManager.sceneLoaded += HandleSceneLoaded;
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateForArcaneScenes()
-        {
-            CreateForScene(SceneManager.GetActiveScene().name);
-        }
-
-        private static void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode mode)
-        {
-            CreateForScene(scene.name);
-        }
-
-        private static void CreateForScene(string sceneName)
-        {
-            if (sceneName == "World_main")
-                return;
-
-            if (!HandGestureDebugOverlay.IsGestureOverlayScene(sceneName))
-                return;
-
-            if (FindAnyObjectByType<MagicSystemTestDriver>() != null)
-                return;
-
-            var host = GameObject.Find("Arcane Test Hub") ??
-                       GameObject.Find("MagicSystemTestDriver") ??
-                       new GameObject("MagicSystemTestDriver");
-            host.AddComponent<MagicSystemTestDriver>();
-        }
-
         private void Awake()
         {
             ResolveOrCreateReferences();

@@ -2,27 +2,14 @@ using UnityEngine;
 
 namespace ArcaneVR.Combat
 {
-    /// <summary>
-    /// Debug/demo bridge: failed low-attack guard windows damage player HP through CombatManager.
-    /// Remove or disable when real boss hitboxes take over.
-    /// </summary>
+    [DefaultExecutionOrder(130)]
     public class BarrierPlayerDamageBridge : MonoBehaviour
     {
         [SerializeField] private BarrierController barrierController;
         [SerializeField] private CombatManager combatManager;
-        [SerializeField] private bool applyDamageOnFailedWindow = true;
-        [SerializeField] private float lowAttackDamage = 18f;
-        [SerializeField] private float defaultAttackDamage = 12f;
+        [SerializeField] private float failedBarrierDamage = 10f;
 
-        private BossAttackType activeAttackType = BossAttackType.Low;
-
-        public string LastDamageStatus { get; private set; } = "PlayerHit: idle";
-        public float LastDamageApplied { get; private set; }
-
-        private void Awake()
-        {
-            ResolveReferences();
-        }
+        private BarrierController subscribedBarrierController;
 
         private void OnEnable()
         {
@@ -35,85 +22,46 @@ namespace ArcaneVR.Combat
             Unsubscribe();
         }
 
-        private void Subscribe()
-        {
-            if (barrierController == null)
-                return;
-
-            barrierController.OnResponseWindowStarted -= HandleResponseWindowStarted;
-            barrierController.OnResponseWindowResolved -= HandleResponseWindowResolved;
-            barrierController.OnResponseWindowStarted += HandleResponseWindowStarted;
-            barrierController.OnResponseWindowResolved += HandleResponseWindowResolved;
-        }
-
-        private void Unsubscribe()
-        {
-            if (barrierController == null)
-                return;
-
-            barrierController.OnResponseWindowStarted -= HandleResponseWindowStarted;
-            barrierController.OnResponseWindowResolved -= HandleResponseWindowResolved;
-        }
-
-        private void HandleResponseWindowStarted(BossAttackType attackType)
-        {
-            activeAttackType = attackType;
-            LastDamageApplied = 0f;
-            LastDamageStatus = $"PlayerHit: incoming {attackType}";
-        }
-
-        private void HandleResponseWindowResolved(bool success, string result)
+        private void Update()
         {
             ResolveReferences();
-
-            if (success)
-            {
-                LastDamageApplied = 0f;
-                LastDamageStatus = "PlayerHit: blocked";
-                return;
-            }
-
-            if (!applyDamageOnFailedWindow || !IsFailureResult(result))
-            {
-                LastDamageApplied = 0f;
-                LastDamageStatus = $"PlayerHit: no damage ({result})";
-                return;
-            }
-
-            var damage = ResolveDamage(activeAttackType);
-            if (combatManager != null)
-                combatManager.ApplyPlayerHit(damage);
-
-            LastDamageApplied = damage;
-            LastDamageStatus = $"PlayerHit: -{damage:0.#} ({activeAttackType})";
+            Subscribe();
         }
 
         private void ResolveReferences()
         {
             if (barrierController == null)
-            {
-                barrierController = GetComponent<BarrierController>() ??
-                                    FindAnyObjectByType<BarrierController>();
-                Subscribe();
-            }
+                barrierController = FindAnyObjectByType<BarrierController>();
 
             if (combatManager == null)
                 combatManager = FindAnyObjectByType<CombatManager>();
         }
 
-        private float ResolveDamage(BossAttackType attackType)
+        private void Subscribe()
         {
-            return attackType == BossAttackType.Low
-                ? Mathf.Max(0f, lowAttackDamage)
-                : Mathf.Max(0f, defaultAttackDamage);
+            if (subscribedBarrierController == barrierController)
+                return;
+
+            Unsubscribe();
+            subscribedBarrierController = barrierController;
+            if (subscribedBarrierController != null)
+                subscribedBarrierController.OnResponseWindowResolved += HandleResponseWindowResolved;
         }
 
-        private static bool IsFailureResult(string result)
+        private void Unsubscribe()
         {
-            return string.IsNullOrEmpty(result) ||
-                   result.Contains("Fail") ||
-                   result.Contains("timeout") ||
-                   result.Contains("no mana");
+            if (subscribedBarrierController != null)
+                subscribedBarrierController.OnResponseWindowResolved -= HandleResponseWindowResolved;
+
+            subscribedBarrierController = null;
+        }
+
+        private void HandleResponseWindowResolved(bool success, string result)
+        {
+            if (success)
+                return;
+
+            combatManager?.ApplyPlayerHit(failedBarrierDamage);
         }
     }
 }

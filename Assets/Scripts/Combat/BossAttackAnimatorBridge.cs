@@ -2,10 +2,7 @@ using UnityEngine;
 
 namespace ArcaneVR.Combat
 {
-    /// <summary>
-    /// Plays boss animation hooks when a high/middle/low attack window starts.
-    /// Works with future animator controllers via triggers, and falls back to known attack state names.
-    /// </summary>
+    [DefaultExecutionOrder(129)]
     public class BossAttackAnimatorBridge : MonoBehaviour
     {
         [SerializeField] private BossPatternCombatBridge patternBridge;
@@ -13,6 +10,8 @@ namespace ArcaneVR.Combat
         [SerializeField] private string highAttackTrigger = "AttackHigh";
         [SerializeField] private string middleAttackTrigger = "AttackMiddle";
         [SerializeField] private string lowAttackTrigger = "AttackLow";
+        [SerializeField] private string chargeTrigger = "Charge";
+        [SerializeField] private string barrierTrigger = "Barrier";
         [SerializeField] private string highAttackState = "AttackHigh";
         [SerializeField] private string middleAttackState = "AttackMiddle";
         [SerializeField] private string lowAttackState = "AttackLow";
@@ -22,18 +21,11 @@ namespace ArcaneVR.Combat
         [SerializeField] private float crossFadeDuration = 0.05f;
         [SerializeField] private bool showDebugLog;
 
-        private BossPatternCombatBridge subscribedBridge;
-        private RuntimeAnimatorController fallbackAttackController;
+        private BossPatternCombatBridge subscribedPatternBridge;
+        private RuntimeAnimatorController fallbackController;
         private RuntimeAnimatorController controllerBeforeFallback;
-        private bool hasControllerBeforeFallback;
-        private float restoreFallbackControllerAtTime;
-
-        public string LastAnimatorStatus { get; private set; } = "BossAnim: idle";
-
-        private void Awake()
-        {
-            ResolveReferences();
-        }
+        private float restoreControllerAtTime;
+        private bool usingFallbackController;
 
         private void OnEnable()
         {
@@ -44,13 +36,14 @@ namespace ArcaneVR.Combat
         private void OnDisable()
         {
             Unsubscribe();
+            RestoreFallbackController(force: true);
         }
 
         private void Update()
         {
             ResolveReferences();
             Subscribe();
-            RestoreFallbackControllerIfNeeded();
+            RestoreFallbackController(force: false);
         }
 
         private void ResolveReferences()
@@ -59,155 +52,139 @@ namespace ArcaneVR.Combat
                 patternBridge = FindAnyObjectByType<BossPatternCombatBridge>();
 
             if (bossAnimator == null)
-                bossAnimator = ResolveBossAnimator();
-
-            if (fallbackAttackController == null && !string.IsNullOrEmpty(resourcesFallbackControllerPath))
-                fallbackAttackController = Resources.Load<RuntimeAnimatorController>(resourcesFallbackControllerPath);
-        }
-
-        private Animator ResolveBossAnimator()
-        {
-            var golemTarget = FindAnyObjectByType<GolemCombatTarget>();
-            if (golemTarget != null)
             {
-                var targetAnimator = golemTarget.GetComponentInChildren<Animator>();
-                if (targetAnimator != null)
-                    return targetAnimator;
+                var target = FindAnyObjectByType<GolemCombatTarget>();
+                bossAnimator = target != null ? target.GetComponentInChildren<Animator>(true) : GetComponentInChildren<Animator>(true);
             }
 
-            foreach (var animator in FindObjectsByType<Animator>(FindObjectsInactive.Exclude))
-            {
-                if (animator == null)
-                    continue;
-
-                var name = animator.gameObject.name.ToLowerInvariant();
-                if (name.Contains("golem") || name.Contains("boss") || name.Contains("attack"))
-                    return animator;
-            }
-
-            return null;
+            if (fallbackController == null && !string.IsNullOrEmpty(resourcesFallbackControllerPath))
+                fallbackController = Resources.Load<RuntimeAnimatorController>(resourcesFallbackControllerPath);
         }
 
         private void Subscribe()
         {
-            if (patternBridge == null || subscribedBridge == patternBridge)
+            if (subscribedPatternBridge == patternBridge)
                 return;
 
             Unsubscribe();
-            subscribedBridge = patternBridge;
-            subscribedBridge.OnAttackResponseWindowStarted += HandleAttackResponseWindowStarted;
+            subscribedPatternBridge = patternBridge;
+            if (subscribedPatternBridge == null)
+                return;
+
+            subscribedPatternBridge.OnAttackResponseWindowStarted += HandleAttackStarted;
+            subscribedPatternBridge.OnChargeCounterWindowStarted += HandleChargeStarted;
+            subscribedPatternBridge.OnGolemBarrierStarted += HandleBarrierStarted;
         }
 
         private void Unsubscribe()
         {
-            if (subscribedBridge == null)
-                return;
+            if (subscribedPatternBridge != null)
+            {
+                subscribedPatternBridge.OnAttackResponseWindowStarted -= HandleAttackStarted;
+                subscribedPatternBridge.OnChargeCounterWindowStarted -= HandleChargeStarted;
+                subscribedPatternBridge.OnGolemBarrierStarted -= HandleBarrierStarted;
+            }
 
-            subscribedBridge.OnAttackResponseWindowStarted -= HandleAttackResponseWindowStarted;
-            subscribedBridge = null;
+            subscribedPatternBridge = null;
         }
 
-        private void HandleAttackResponseWindowStarted(BossAttackType attackType, float duration)
+        private void HandleAttackStarted(BossAttackType attackType, float duration)
         {
-            PlayAttackAnimation(attackType);
+            var trigger = attackType switch
+            {
+                BossAttackType.High => highAttackTrigger,
+                BossAttackType.Middle => middleAttackTrigger,
+                BossAttackType.Low => lowAttackTrigger,
+                _ => string.Empty
+            };
+
+            var stateName = attackType switch
+            {
+                BossAttackType.High => highAttackState,
+                BossAttackType.Middle => middleAttackState,
+                BossAttackType.Low => lowAttackState,
+                _ => fallbackAttackState
+            };
+
+            PlayAnimation(trigger, stateName);
         }
 
-        private void PlayAttackAnimation(BossAttackType attackType)
+        private void HandleChargeStarted(float duration)
         {
-            ResolveReferences();
-
-            if (bossAnimator == null || bossAnimator.runtimeAnimatorController == null)
-            {
-                if (!TryPlayFallbackController(attackType))
-                {
-                    LastAnimatorStatus = bossAnimator == null ? "BossAnim: no animator" : "BossAnim: no controller";
-                    return;
-                }
-
-                return;
-            }
-
-            bossAnimator.speed = 1f;
-            var triggerName = ResolveTriggerName(attackType);
-            if (HasTriggerParameter(triggerName))
-            {
-                ResetTriggerIfExists(highAttackTrigger);
-                ResetTriggerIfExists(middleAttackTrigger);
-                ResetTriggerIfExists(lowAttackTrigger);
-                bossAnimator.SetTrigger(triggerName);
-                LastAnimatorStatus = $"BossAnim: trigger {triggerName}";
-                return;
-            }
-
-            if (TryCrossFade(ResolveStateName(attackType), attackType) ||
-                TryCrossFade(fallbackAttackState, attackType) ||
-                TryCrossFade("Attack", attackType))
-            {
-                return;
-            }
-
-            if (TryPlayFallbackController(attackType))
-                return;
-
-            LastAnimatorStatus = $"BossAnim: no state for {attackType}";
-            if (showDebugLog)
-                Debug.Log($"[BossAttackAnimatorBridge] No animation state or trigger found for {attackType}.");
+            PlayAnimation(chargeTrigger, fallbackAttackState);
         }
 
-        private bool TryPlayFallbackController(BossAttackType attackType)
+        private void HandleBarrierStarted(float duration)
         {
-            ResolveReferences();
+            PlayAnimation(barrierTrigger, fallbackAttackState);
+        }
 
-            if (bossAnimator == null || fallbackAttackController == null)
-                return false;
+        private void PlayAnimation(string triggerName, string preferredState)
+        {
+            if (bossAnimator == null)
+                return;
 
-            bossAnimator.speed = 1f;
-            if (bossAnimator.runtimeAnimatorController != fallbackAttackController)
+            if (TrySetTrigger(triggerName))
             {
-                controllerBeforeFallback = bossAnimator.runtimeAnimatorController;
-                hasControllerBeforeFallback = true;
-                bossAnimator.runtimeAnimatorController = fallbackAttackController;
+                MaybeLog($"Animator trigger: {triggerName}");
+                return;
             }
 
-            restoreFallbackControllerAtTime = Time.time + Mathf.Max(0.1f, fallbackControllerRestoreDelay);
+            EnsureFallbackController();
+            if (TryCrossFade(preferredState) || TryCrossFade(fallbackAttackState))
+            {
+                MaybeLog($"Animator state: {preferredState}");
+                return;
+            }
 
-            if (!TryCrossFade(fallbackAttackState, attackType))
+            if (!string.IsNullOrEmpty(fallbackAttackState) && bossAnimator.runtimeAnimatorController != null)
                 bossAnimator.Play(fallbackAttackState, 0, 0f);
-
-            LastAnimatorStatus = $"BossAnim: fallback controller ({attackType})";
-            return true;
         }
 
-        private void RestoreFallbackControllerIfNeeded()
+        private void EnsureFallbackController()
         {
-            if (restoreFallbackControllerAtTime <= 0f || Time.time < restoreFallbackControllerAtTime)
+            if (bossAnimator == null || fallbackController == null)
                 return;
 
-            restoreFallbackControllerAtTime = 0f;
-
-            if (bossAnimator == null ||
-                bossAnimator.runtimeAnimatorController != fallbackAttackController ||
-                !hasControllerBeforeFallback)
+            if (bossAnimator.runtimeAnimatorController == fallbackController)
             {
+                usingFallbackController = true;
+                restoreControllerAtTime = Time.time + Mathf.Max(0.1f, fallbackControllerRestoreDelay);
                 return;
             }
 
-            bossAnimator.runtimeAnimatorController = controllerBeforeFallback;
-            controllerBeforeFallback = null;
-            hasControllerBeforeFallback = false;
-            LastAnimatorStatus = "BossAnim: restored controller";
+            controllerBeforeFallback = bossAnimator.runtimeAnimatorController;
+            bossAnimator.runtimeAnimatorController = fallbackController;
+            usingFallbackController = true;
+            restoreControllerAtTime = Time.time + Mathf.Max(0.1f, fallbackControllerRestoreDelay);
         }
 
-        private bool HasTriggerParameter(string triggerName)
+        private void RestoreFallbackController(bool force)
         {
-            if (string.IsNullOrEmpty(triggerName) || bossAnimator == null)
+            if (!usingFallbackController || bossAnimator == null)
+                return;
+
+            if (!force && (restoreControllerAtTime <= 0f || Time.time < restoreControllerAtTime))
+                return;
+
+            if (bossAnimator.runtimeAnimatorController == fallbackController)
+                bossAnimator.runtimeAnimatorController = controllerBeforeFallback;
+
+            controllerBeforeFallback = null;
+            restoreControllerAtTime = 0f;
+            usingFallbackController = false;
+        }
+
+        private bool TrySetTrigger(string triggerName)
+        {
+            if (string.IsNullOrEmpty(triggerName) || bossAnimator == null || bossAnimator.runtimeAnimatorController == null)
                 return false;
 
             foreach (var parameter in bossAnimator.parameters)
             {
-                if (parameter.type == AnimatorControllerParameterType.Trigger &&
-                    parameter.name == triggerName)
+                if (parameter.type == AnimatorControllerParameterType.Trigger && parameter.name == triggerName)
                 {
+                    bossAnimator.SetTrigger(triggerName);
                     return true;
                 }
             }
@@ -215,15 +192,9 @@ namespace ArcaneVR.Combat
             return false;
         }
 
-        private void ResetTriggerIfExists(string triggerName)
+        private bool TryCrossFade(string stateName)
         {
-            if (HasTriggerParameter(triggerName))
-                bossAnimator.ResetTrigger(triggerName);
-        }
-
-        private bool TryCrossFade(string stateName, BossAttackType attackType)
-        {
-            if (string.IsNullOrEmpty(stateName) || bossAnimator == null)
+            if (string.IsNullOrEmpty(stateName) || bossAnimator == null || bossAnimator.runtimeAnimatorController == null)
                 return false;
 
             var stateHash = Animator.StringToHash(stateName);
@@ -232,42 +203,19 @@ namespace ArcaneVR.Combat
                 if (!bossAnimator.HasState(layer, stateHash))
                     continue;
 
-                bossAnimator.CrossFadeInFixedTime(stateHash, crossFadeDuration, layer);
-                LastAnimatorStatus = $"BossAnim: state {stateName} ({attackType})";
+                bossAnimator.CrossFadeInFixedTime(stateHash, Mathf.Max(0f, crossFadeDuration), layer);
                 return true;
             }
 
             return false;
         }
 
-        private string ResolveTriggerName(BossAttackType attackType)
+        private void MaybeLog(string message)
         {
-            switch (attackType)
-            {
-                case BossAttackType.High:
-                    return highAttackTrigger;
-                case BossAttackType.Middle:
-                    return middleAttackTrigger;
-                case BossAttackType.Low:
-                    return lowAttackTrigger;
-                default:
-                    return string.Empty;
-            }
-        }
+            if (!showDebugLog)
+                return;
 
-        private string ResolveStateName(BossAttackType attackType)
-        {
-            switch (attackType)
-            {
-                case BossAttackType.High:
-                    return highAttackState;
-                case BossAttackType.Middle:
-                    return middleAttackState;
-                case BossAttackType.Low:
-                    return lowAttackState;
-                default:
-                    return string.Empty;
-            }
+            Debug.Log($"[BossAttackAnimatorBridge] {message}", this);
         }
     }
 }

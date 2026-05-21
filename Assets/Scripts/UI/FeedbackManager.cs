@@ -4,7 +4,6 @@ using ArcaneVR.Combat;
 using ArcaneVR.Input;
 using ArcaneVR.Spell;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace ArcaneVR.UI
 {
@@ -50,32 +49,6 @@ namespace ArcaneVR.UI
         private string lastCueText = "Cue: idle";
         private string lastVoiceText = "Voice: idle";
         private float nextReferenceRefreshTime;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateForArcaneScenes()
-        {
-            var sceneName = SceneManager.GetActiveScene().name;
-            if (!IsArcaneRuntimeScene(sceneName))
-                return;
-
-            if (FindAnyObjectByType<FeedbackManager>() != null)
-                return;
-
-            var host = GameObject.Find("Arcane Test Hub") ??
-                       GameObject.Find("BattleManager") ??
-                       new GameObject("FeedbackManager");
-
-            host.AddComponent<FeedbackManager>();
-        }
-
-        private static bool IsArcaneRuntimeScene(string sceneName)
-        {
-            return sceneName == "World" ||
-                   sceneName == "Tutorial" ||
-                   sceneName == "ElectricColoseum" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum";
-        }
 
         private void Awake()
         {

@@ -9,34 +9,28 @@ namespace ArcaneVR.Combat
     /// </summary>
     public class CombatManager : MonoBehaviour
     {
-        [Header("Player Health")]
         [SerializeField] private float currentHP = 100f;
         [SerializeField] private float maxHP = 100f;
-
-        [Header("Mana")]
         [SerializeField] private float currentMana = 4f;
         [SerializeField] private float maxMana = 4f;
-        [SerializeField] private float manaRegenPerSecond = 0.3333333f;
+        [SerializeField] private float manaRegenPerSecond = 0.35f;
         [SerializeField] private float voiceRefundAmount = 0.5f;
         [SerializeField] private float thunderManaDamage = 1f;
         [SerializeField] private float disruptionDuration = 3f;
         [SerializeField, Range(0f, 1f)] private float disruptedRegenMultiplier = 0.25f;
 
         public event Action<float> OnPlayerHit;
-        public event Action<float, ElementType> OnBossHit;
         public event Action<float, float> OnPlayerHealthChanged;
-        public event Action OnPlayerDefeated;
+        public event Action<float, ElementType> OnBossHit;
         public event Action<float, float> OnManaChanged;
         public event Action<float, float> OnManaDisrupted;
 
         private float disruptionRemaining;
-        private bool playerDefeatedNotified;
 
-        public float CurrentHP => currentHP;
-        public float MaxHP => maxHP;
-        public bool IsPlayerDefeated => currentHP <= 0f;
         public float CurrentMana => currentMana;
         public float MaxMana => maxMana;
+        public float CurrentHP => currentHP;
+        public float MaxHP => maxHP;
         public float ManaRegenPerSecond => manaRegenPerSecond;
         public float VoiceRefundAmount => voiceRefundAmount;
         public bool IsManaDisrupted => disruptionRemaining > 0f;
@@ -44,8 +38,8 @@ namespace ArcaneVR.Combat
 
         private void Awake()
         {
-            currentHP = Mathf.Clamp(currentHP <= 0f ? maxHP : currentHP, 0f, maxHP);
             currentMana = Mathf.Clamp(currentMana, 0f, maxMana);
+            currentHP = Mathf.Clamp(currentHP <= 0f ? maxHP : currentHP, 0f, maxHP);
             NotifyPlayerHealthChanged();
             NotifyManaChanged();
         }
@@ -99,8 +93,9 @@ namespace ArcaneVR.Combat
             if (damage <= 0f)
                 return;
 
+            currentHP = Mathf.Max(0f, currentHP - damage);
+            NotifyPlayerHealthChanged();
             OnPlayerHit?.Invoke(damage);
-            SetPlayerHP(currentHP - damage);
         }
 
         public void ApplyPlayerHit(SpellHitData hitData)
@@ -121,19 +116,6 @@ namespace ArcaneVR.Combat
 
             disruptionRemaining = Mathf.Max(disruptionRemaining, duration);
             OnManaDisrupted?.Invoke(Mathf.Max(0f, manaDamage), disruptionRemaining);
-        }
-
-        public void HealPlayer(float amount)
-        {
-            if (amount <= 0f)
-                return;
-
-            SetPlayerHP(currentHP + amount);
-        }
-
-        public void RestorePlayerHealth()
-        {
-            SetPlayerHP(maxHP);
         }
 
         public void ApplyBossHit(SpellProjectile projectile)
@@ -162,33 +144,14 @@ namespace ArcaneVR.Combat
             NotifyManaChanged();
         }
 
-        private void SetPlayerHP(float value)
+        private void NotifyManaChanged()
         {
-            var nextHP = Mathf.Clamp(value, 0f, maxHP);
-            if (Mathf.Approximately(currentHP, nextHP))
-                return;
-
-            currentHP = nextHP;
-            if (currentHP > 0f)
-                playerDefeatedNotified = false;
-
-            NotifyPlayerHealthChanged();
-
-            if (currentHP <= 0f && !playerDefeatedNotified)
-            {
-                playerDefeatedNotified = true;
-                OnPlayerDefeated?.Invoke();
-            }
+            OnManaChanged?.Invoke(currentMana, maxMana);
         }
 
         private void NotifyPlayerHealthChanged()
         {
             OnPlayerHealthChanged?.Invoke(currentHP, maxHP);
-        }
-
-        private void NotifyManaChanged()
-        {
-            OnManaChanged?.Invoke(currentMana, maxMana);
         }
     }
 }

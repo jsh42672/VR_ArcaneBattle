@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace ArcaneVR.Combat
 {
@@ -36,26 +35,6 @@ namespace ArcaneVR.Combat
         private float lastResolveEffectTime = -999f;
 
         public string LastEffectStatus { get; private set; } = "AttackFx: idle";
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateForBattleScene()
-        {
-            var sceneName = SceneManager.GetActiveScene().name;
-            if (!IsBattleScene(sceneName) || FindAnyObjectByType<BossAttackEffectController>() != null)
-                return;
-
-            var host = GameObject.Find("BattleManager") ??
-                       GameObject.Find("Arcane Test Hub") ??
-                       new GameObject("Boss Attack Effects");
-            host.AddComponent<BossAttackEffectController>();
-        }
-
-        private static bool IsBattleScene(string sceneName)
-        {
-            return sceneName == "ElectricColoseum" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum";
-        }
 
         private void Awake()
         {

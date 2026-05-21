@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using System;
 
 namespace ArcaneVR.Combat
 {
@@ -44,6 +45,10 @@ namespace ArcaneVR.Combat
         private float attackResponseConstraintExtraDuration = 0.2f;
 
         private Coroutine pendingAttackResponseRoutine;
+
+        public event Action<BossAttackType, float> OnAttackResponseWindowStarted;
+        public event Action<float> OnChargeCounterWindowStarted;
+        public event Action<float> OnGolemBarrierStarted;
 
         public string LastBridgeStatus { get; private set; } = "Bridge: idle";
 

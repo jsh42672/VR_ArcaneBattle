@@ -88,21 +88,6 @@ namespace ArcaneVR.Input
             ? Mathf.Max(0f, castModeTimeout - (Time.time - castModeStartTime))
             : -1f;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateForArcaneScenes()
-        {
-            var sceneName = SceneManager.GetActiveScene().name;
-            if (!HandGestureDebugOverlay.IsGestureOverlayScene(sceneName))
-                return;
-
-            if (FindAnyObjectByType<ArcaneActionModeController>() != null)
-                return;
-
-            var host = GameObject.Find("Arcane Test Hub") ??
-                       GameObject.Find("MagicSystemTestDriver") ??
-                       new GameObject("Arcane Action Mode Controller");
-            host.AddComponent<ArcaneActionModeController>();
-        }
 
         private void Awake()
         {

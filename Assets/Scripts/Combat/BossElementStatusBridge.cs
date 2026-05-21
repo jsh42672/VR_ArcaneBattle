@@ -3,50 +3,72 @@ using UnityEngine;
 
 namespace ArcaneVR.Combat
 {
-    /// <summary>
-    /// Optional bridge for boss teammates: maps elemental combat status to the simple BossAI state contract.
-    /// Attach this next to BossAI/GolemCombatTarget when the real boss object is ready.
-    /// </summary>
+    [DefaultExecutionOrder(133)]
     public class BossElementStatusBridge : MonoBehaviour
     {
         [SerializeField] private GolemCombatTarget combatTarget;
         [SerializeField] private BossAI bossAI;
         [SerializeField] private bool driveBossAiState = true;
 
-        public string LastStatusText { get; private set; } = "BossStatus: idle";
-        public BossElementStatusSnapshot LastSnapshot { get; private set; }
+        private GolemCombatTarget subscribedCombatTarget;
 
-        private void Awake()
-        {
-            ResolveReferences();
-        }
+        public string LastBridgeStatus { get; private set; } = "BossStatusBridge: idle";
 
         private void OnEnable()
         {
             ResolveReferences();
-            if (combatTarget != null)
-                combatTarget.OnElementStatusChanged += HandleElementStatusChanged;
+            Subscribe();
         }
 
         private void OnDisable()
         {
-            if (combatTarget != null)
-                combatTarget.OnElementStatusChanged -= HandleElementStatusChanged;
+            Unsubscribe();
         }
 
-        public void RefreshNow()
+        private void Update()
         {
             ResolveReferences();
-            if (combatTarget != null)
-                HandleElementStatusChanged(combatTarget.GetStatusSnapshot());
+            Subscribe();
         }
 
-        private void HandleElementStatusChanged(BossElementStatusSnapshot snapshot)
+        private void ResolveReferences()
         {
-            LastSnapshot = snapshot;
-            LastStatusText =
-                $"BossStatus: {snapshot.combatCue} HP {snapshot.currentHealth:0}/{snapshot.maxHealth:0} " +
-                $"Move {snapshot.movementSpeedMultiplier:0.00} Act {snapshot.actionSpeedMultiplier:0.00}";
+            if (combatTarget == null)
+                combatTarget = GetComponent<GolemCombatTarget>() ?? FindAnyObjectByType<GolemCombatTarget>();
+
+            if (bossAI == null)
+                bossAI = GetComponent<BossAI>() ?? FindAnyObjectByType<BossAI>();
+        }
+
+        private void Subscribe()
+        {
+            if (subscribedCombatTarget == combatTarget)
+                return;
+
+            Unsubscribe();
+            subscribedCombatTarget = combatTarget;
+            if (subscribedCombatTarget == null)
+                return;
+
+            subscribedCombatTarget.OnElementStatusChanged += HandleStatusChanged;
+            subscribedCombatTarget.OnDefeated += HandleDefeated;
+            HandleStatusChanged(subscribedCombatTarget.GetStatusSnapshot());
+        }
+
+        private void Unsubscribe()
+        {
+            if (subscribedCombatTarget != null)
+            {
+                subscribedCombatTarget.OnElementStatusChanged -= HandleStatusChanged;
+                subscribedCombatTarget.OnDefeated -= HandleDefeated;
+            }
+
+            subscribedCombatTarget = null;
+        }
+
+        private void HandleStatusChanged(BossElementStatusSnapshot snapshot)
+        {
+            LastBridgeStatus = $"BossStatusBridge: {snapshot.combatCue}";
 
             if (!driveBossAiState || bossAI == null)
                 return;
@@ -57,7 +79,7 @@ namespace ArcaneVR.Combat
                 return;
             }
 
-            if (snapshot.isStaggered || snapshot.isWeakExposed)
+            if (snapshot.isWeakExposed || snapshot.isStaggered)
             {
                 bossAI.ExposeWeakness();
                 return;
@@ -78,13 +100,10 @@ namespace ArcaneVR.Combat
             bossAI.ChangeState(BossState.Idle);
         }
 
-        private void ResolveReferences()
+        private void HandleDefeated()
         {
-            if (combatTarget == null)
-                combatTarget = GetComponent<GolemCombatTarget>() ?? FindAnyObjectByType<GolemCombatTarget>();
-
-            if (bossAI == null)
-                bossAI = GetComponent<BossAI>() ?? FindAnyObjectByType<BossAI>();
+            bossAI?.Die();
+            LastBridgeStatus = "BossStatusBridge: defeated";
         }
     }
 }

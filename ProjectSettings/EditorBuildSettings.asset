@@ -21,14 +21,8 @@ EditorBuildSettings:
     path: Assets/Scenes/Tutorial.unity
     guid: 8f5d94df3b6c7fa42b679e6590ebc2dc
   - enabled: 0
-    path: Assets/Scenes/DogeTest.unity
-    guid: b52a9165cbcd639489ae1101dc808be1
-  - enabled: 0
     path: Assets/Scenes/Main.unity
     guid: d9a4b3570afb4ae6864259430a273292
-  - enabled: 0
-    path: Assets/Scenes/World.unity
-    guid: ca03a07aff48ebc45aadddba431cac2a
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 1d884ad9c3b0d19419ff27819852f67a, type: 3}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 32f8dea26c1aa7148b05f6e4f814bd7e, type: 2}

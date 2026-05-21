@@ -1,6 +1,7 @@
 using System.Collections;
 using ArcaneVR.Combat;
 using ArcaneVR.Core;
+using ArcaneVR.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,43 +13,6 @@ namespace ArcaneVR.Boss
         private const float SpawnBackDistance = 6f;
         private const float DesiredHeadHeightAboveGround = 1.65f;
         private bool spawnAligned;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RegisterSceneHook()
-        {
-            SceneManager.sceneLoaded -= HandleSceneLoaded;
-            SceneManager.sceneLoaded += HandleSceneLoaded;
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void EnsureForActiveScene()
-        {
-            EnsureForScene(SceneManager.GetActiveScene().name);
-        }
-
-        private static void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode mode)
-        {
-            EnsureForScene(scene.name);
-        }
-
-        private static void EnsureForScene(string sceneName)
-        {
-            if (!IsBattleScene(sceneName))
-                return;
-
-            if (FindAnyObjectByType<BossBattleRuntimeBinder>() != null)
-                return;
-
-            var host = GameObject.Find("BattleManager") ?? new GameObject("BattleManager");
-            host.AddComponent<BossBattleRuntimeBinder>();
-        }
-
-        private static bool IsBattleScene(string sceneName)
-        {
-            return sceneName == "ElectricColoseum" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum";
-        }
 
         private void Start()
         {
@@ -79,6 +43,7 @@ namespace ArcaneVR.Boss
                 return;
 
             EnsureBossPhysics(golemTarget);
+            EnsureBattleHelpers(golemTarget);
 
             if (FindAnyObjectByType<BossAI>() == null)
                 golemTarget.gameObject.AddComponent<BossAI>();
@@ -89,6 +54,35 @@ namespace ArcaneVR.Boss
             var chase = BossChaseController.EnsureForTarget(golemTarget);
             if (chase != null)
                 chase.ApplyPresentationDefaults();
+        }
+
+        private static void EnsureBattleHelpers(GolemCombatTarget golemTarget)
+        {
+            if (golemTarget == null)
+                return;
+
+            var patternHost = FindSceneObject("BossPatternBridge") ??
+                              FindOrCreateScenePath("GameSystems", "CombatSystems", "BossPatternBridge");
+            var attackHost = FindSceneObject("BossAttackControllers") ??
+                             FindOrCreateScenePath("GameSystems", "CombatSystems", "BossAttackControllers");
+            var uiFeedbackHost = FindSceneObject("FeedbackManager") ??
+                                 FindOrCreateScenePath("GameSystems", "UIManagers", "FeedbackManager");
+            var uiHealthHost = FindSceneObject("BossHealthBarUI") ??
+                               FindOrCreateScenePath("GameSystems", "UIManagers", "BossHealthBarUI");
+
+            EnsureComponent(patternHost, () => patternHost.AddComponent<BossPatternCombatBridge>());
+            EnsureComponent(attackHost, () => attackHost.AddComponent<BossAttackTelegraphController>());
+            EnsureComponent(attackHost, () => attackHost.AddComponent<BossAttackEffectController>());
+            EnsureComponent(attackHost, () => attackHost.AddComponent<BossAttackAnimatorBridge>());
+            EnsureComponent(attackHost, () => attackHost.AddComponent<BossCombatFeedbackController>());
+            EnsureComponent(attackHost, () => attackHost.AddComponent<DodgePlayerDamageBridge>());
+            EnsureComponent(attackHost, () => attackHost.AddComponent<BarrierPlayerDamageBridge>());
+            EnsureComponent(attackHost, () => attackHost.AddComponent<BarrierVisualController>());
+            EnsureComponent(uiFeedbackHost, () => uiFeedbackHost.AddComponent<FeedbackManager>());
+            EnsureComponent(uiHealthHost, () => uiHealthHost.AddComponent<BossHealthBarUI>());
+            EnsureComponent(golemTarget.gameObject, () => golemTarget.gameObject.AddComponent<BossElementStatusBridge>());
+            EnsureComponent(golemTarget.gameObject, () => golemTarget.gameObject.AddComponent<BossElementStatusVfx>());
+            EnsureComponent(golemTarget.gameObject, () => golemTarget.gameObject.AddComponent<LightningAuraController>());
         }
 
         private static GolemCombatTarget ResolveOrCreateGolemTarget()
@@ -149,6 +143,60 @@ namespace ArcaneVR.Boss
             }
 
             return null;
+        }
+
+        private static GameObject FindOrCreateScenePath(params string[] pathSegments)
+        {
+            if (pathSegments == null || pathSegments.Length == 0)
+                return null;
+
+            GameObject current = null;
+            foreach (var segment in pathSegments)
+            {
+                if (string.IsNullOrEmpty(segment))
+                    continue;
+
+                var next = current == null
+                    ? FindSceneObject(segment)
+                    : FindChildByName(current.transform, segment);
+
+                if (next == null)
+                {
+                    next = new GameObject(segment);
+                    if (current != null)
+                        next.transform.SetParent(current.transform, false);
+                }
+
+                current = next;
+            }
+
+            return current;
+        }
+
+        private static GameObject FindChildByName(Transform parent, string childName)
+        {
+            if (parent == null)
+                return null;
+
+            foreach (Transform child in parent)
+            {
+                if (child != null && child.name == childName)
+                    return child.gameObject;
+            }
+
+            return null;
+        }
+
+        private static T EnsureComponent<T>(GameObject host, System.Func<T> createComponent) where T : Component
+        {
+            var existing = FindAnyObjectByType<T>();
+            if (existing != null)
+                return existing;
+
+            if (host == null || createComponent == null)
+                return null;
+
+            return host.GetComponent<T>() ?? createComponent();
         }
 
         private static void EnsureBossPhysics(GolemCombatTarget golemTarget)

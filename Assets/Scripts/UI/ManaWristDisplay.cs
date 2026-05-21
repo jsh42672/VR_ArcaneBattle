@@ -1,6 +1,5 @@
 using ArcaneVR.Combat;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace ArcaneVR.UI
 {
@@ -29,29 +28,6 @@ namespace ArcaneVR.UI
         private float maxMana = 4f;
         private bool subscribed;
         private float nextReferenceRefreshTime;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateForArcaneScenes()
-        {
-            var sceneName = SceneManager.GetActiveScene().name;
-            if (!IsArcaneScene(sceneName) || FindAnyObjectByType<ManaWristDisplay>() != null)
-                return;
-
-            var host = GameObject.Find("FeedbackManager") ??
-                       GameObject.Find("BattleManager") ??
-                       new GameObject("ManaWristDisplay");
-            host.AddComponent<ManaWristDisplay>();
-        }
-
-        private static bool IsArcaneScene(string sceneName)
-        {
-            return sceneName == "Main" ||
-                   sceneName == "World" ||
-                   sceneName == "Tutorial" ||
-                   sceneName == "ElectricColoseum" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum";
-        }
 
         private void Awake()
         {

@@ -10,6 +10,8 @@ namespace ArcaneVR.Input
     {
         public event Action OnConstraintStart;
         public event Action OnConstraintEnd;
+        public event Action OnConstraintStarted;
+        public event Action OnConstraintEnded;
 
         public bool IsConstrained { get; private set; }
         public string LastDebugMessage { get; private set; } = "Constraint: idle";
@@ -22,6 +24,7 @@ namespace ArcaneVR.Input
             IsConstrained = true;
             LastDebugMessage = "Constraint: start";
             OnConstraintStart?.Invoke();
+            OnConstraintStarted?.Invoke();
         }
 
         public void EndConstraint()
@@ -32,6 +35,7 @@ namespace ArcaneVR.Input
             IsConstrained = false;
             LastDebugMessage = "Constraint: end";
             OnConstraintEnd?.Invoke();
+            OnConstraintEnded?.Invoke();
         }
 
         public void SetConstraintActive(bool active)

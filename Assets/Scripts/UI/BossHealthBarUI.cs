@@ -1,6 +1,5 @@
 using ArcaneVR.Combat;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace ArcaneVR.UI
 {
@@ -31,26 +30,6 @@ namespace ArcaneVR.UI
         private float maxHealth = 1f;
 
         public string LastHealthBarStatus { get; private set; } = "BossHP: idle";
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateForBattleScene()
-        {
-            var sceneName = SceneManager.GetActiveScene().name;
-            if (!IsBattleScene(sceneName) || FindAnyObjectByType<BossHealthBarUI>() != null)
-                return;
-
-            var host = GameObject.Find("BattleManager") ??
-                       GameObject.Find("Arcane Test Hub") ??
-                       new GameObject("Boss Health Bar UI");
-            host.AddComponent<BossHealthBarUI>();
-        }
-
-        private static bool IsBattleScene(string sceneName)
-        {
-            return sceneName == "ElectricColoseum" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum";
-        }
 
         private void Awake()
         {

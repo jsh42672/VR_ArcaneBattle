@@ -2,27 +2,14 @@ using UnityEngine;
 
 namespace ArcaneVR.Combat
 {
-    /// <summary>
-    /// Applies player damage when high/middle dodge windows fail.
-    /// Low attacks are handled by BarrierPlayerDamageBridge.
-    /// </summary>
+    [DefaultExecutionOrder(130)]
     public class DodgePlayerDamageBridge : MonoBehaviour
     {
         [SerializeField] private DodgeDetector dodgeDetector;
         [SerializeField] private CombatManager combatManager;
-        [SerializeField] private bool applyDamageOnDodgeFail = true;
-        [SerializeField] private float highAttackDamage = 14f;
-        [SerializeField] private float middleAttackDamage = 12f;
+        [SerializeField] private float failedDodgeDamage = 10f;
 
         private DodgeDetector subscribedDodgeDetector;
-
-        public string LastDamageStatus { get; private set; } = "DodgeHit: idle";
-        public float LastDamageApplied { get; private set; }
-
-        private void Awake()
-        {
-            ResolveReferences();
-        }
 
         private void OnEnable()
         {
@@ -44,7 +31,7 @@ namespace ArcaneVR.Combat
         private void ResolveReferences()
         {
             if (dodgeDetector == null)
-                dodgeDetector = GetComponent<DodgeDetector>() ?? FindAnyObjectByType<DodgeDetector>();
+                dodgeDetector = FindAnyObjectByType<DodgeDetector>();
 
             if (combatManager == null)
                 combatManager = FindAnyObjectByType<CombatManager>();
@@ -52,65 +39,26 @@ namespace ArcaneVR.Combat
 
         private void Subscribe()
         {
-            if (dodgeDetector == null || subscribedDodgeDetector == dodgeDetector)
+            if (subscribedDodgeDetector == dodgeDetector)
                 return;
 
             Unsubscribe();
             subscribedDodgeDetector = dodgeDetector;
-            subscribedDodgeDetector.OnDodgeSuccess += HandleDodgeSuccess;
-            subscribedDodgeDetector.OnDodgeFail += HandleDodgeFail;
+            if (subscribedDodgeDetector != null)
+                subscribedDodgeDetector.OnDodgeFail += HandleDodgeFail;
         }
 
         private void Unsubscribe()
         {
-            if (subscribedDodgeDetector == null)
-                return;
+            if (subscribedDodgeDetector != null)
+                subscribedDodgeDetector.OnDodgeFail -= HandleDodgeFail;
 
-            subscribedDodgeDetector.OnDodgeSuccess -= HandleDodgeSuccess;
-            subscribedDodgeDetector.OnDodgeFail -= HandleDodgeFail;
             subscribedDodgeDetector = null;
-        }
-
-        private void HandleDodgeSuccess()
-        {
-            LastDamageApplied = 0f;
-            LastDamageStatus = $"DodgeHit: dodged {subscribedDodgeDetector.CurrentAttackType}";
         }
 
         private void HandleDodgeFail()
         {
-            if (subscribedDodgeDetector == null)
-                return;
-
-            var attackType = subscribedDodgeDetector.CurrentAttackType;
-            if (attackType == BossAttackType.Low)
-            {
-                LastDamageApplied = 0f;
-                LastDamageStatus = "DodgeHit: low attack uses barrier";
-                return;
-            }
-
-            if (!applyDamageOnDodgeFail)
-            {
-                LastDamageApplied = 0f;
-                LastDamageStatus = $"DodgeHit: disabled ({attackType})";
-                return;
-            }
-
-            ResolveReferences();
-            var damage = ResolveDamage(attackType);
-            if (combatManager != null)
-                combatManager.ApplyPlayerHit(damage);
-
-            LastDamageApplied = damage;
-            LastDamageStatus = $"DodgeHit: -{damage:0.#} ({attackType})";
-        }
-
-        private float ResolveDamage(BossAttackType attackType)
-        {
-            return attackType == BossAttackType.High
-                ? Mathf.Max(0f, highAttackDamage)
-                : Mathf.Max(0f, middleAttackDamage);
+            combatManager?.ApplyPlayerHit(failedDodgeDamage);
         }
     }
 }

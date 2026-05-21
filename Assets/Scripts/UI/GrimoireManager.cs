@@ -3,7 +3,6 @@ using ArcaneVR.Input;
 using ArcaneVR.Spell;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 
 namespace ArcaneVR.UI
 {
@@ -76,31 +75,6 @@ namespace ArcaneVR.UI
         private bool magicSuppressionApplied;
         private float nextMagicSuppressionRefreshTime;
         private Transform currentBookAnchor;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateForArcaneScenes()
-        {
-            var sceneName = SceneManager.GetActiveScene().name;
-            if (!IsArcaneScene(sceneName) || FindAnyObjectByType<GrimoireManager>() != null)
-                return;
-
-            var host = GameObject.Find("GrimoireSystem") ??
-                       GameObject.Find("BattleManager") ??
-                       GameObject.Find("Arcane Test Hub") ??
-                       new GameObject("GrimoireSystem");
-            host.AddComponent<GrimoireManager>();
-        }
-
-        private static bool IsArcaneScene(string sceneName)
-        {
-            return sceneName == "Main" ||
-                   sceneName == "DogeTest" ||
-                   sceneName == "DodgeTest" ||
-                   sceneName == "World" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum" ||
-                   sceneName == "ElectricColoseum";
-        }
 
         private void Awake()
         {

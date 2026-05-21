@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace ArcaneVR.Combat
 {
@@ -40,26 +39,6 @@ namespace ArcaneVR.Combat
         private float lastSuccessFeedbackTime = -999f;
 
         public string LastFeedbackStatus { get; private set; } = "BossFeedback: idle";
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateForBattleScene()
-        {
-            var sceneName = SceneManager.GetActiveScene().name;
-            if (!IsBattleScene(sceneName) || FindAnyObjectByType<BossCombatFeedbackController>() != null)
-                return;
-
-            var host = GameObject.Find("BattleManager") ??
-                       GameObject.Find("Arcane Test Hub") ??
-                       new GameObject("Boss Combat Feedback");
-            host.AddComponent<BossCombatFeedbackController>();
-        }
-
-        private static bool IsBattleScene(string sceneName)
-        {
-            return sceneName == "ElectricColoseum" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum";
-        }
 
         private void Awake()
         {
