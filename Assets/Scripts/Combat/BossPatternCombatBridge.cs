@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 namespace ArcaneVR.Combat
 {
@@ -10,6 +11,10 @@ namespace ArcaneVR.Combat
         [SerializeField] private float defaultResponseWindowDuration = 1.2f;
         [SerializeField] private float defaultChargeCounterDuration = 3f;
         [SerializeField] private float defaultGolemBarrierDuration = 8f;
+
+        public event Action<BossAttackType, float> OnAttackResponseWindowStarted;
+        public event Action<float> OnChargeCounterWindowStarted;
+        public event Action<float> OnGolemBarrierStarted;
 
         public string LastBridgeStatus { get; private set; } = "Bridge: idle";
 
@@ -31,11 +36,13 @@ namespace ArcaneVR.Combat
             {
                 barrierController?.BeginResponseWindow(attackType, duration);
                 LastBridgeStatus = $"Barrier window: {attackType}";
+                OnAttackResponseWindowStarted?.Invoke(attackType, duration);
                 return;
             }
 
             dodgeDetector?.BeginDodgeWindow(attackType);
             LastBridgeStatus = $"Dodge window: {attackType}";
+            OnAttackResponseWindowStarted?.Invoke(attackType, duration);
         }
 
         public void BeginChargeCounterWindow()
@@ -48,6 +55,7 @@ namespace ArcaneVR.Combat
             ResolveReferences();
             golemTarget?.BeginChargeCounterWindow(duration);
             LastBridgeStatus = "Charge counter window";
+            OnChargeCounterWindowStarted?.Invoke(duration);
         }
 
         public void BeginGolemBarrier()
@@ -60,6 +68,7 @@ namespace ArcaneVR.Combat
             ResolveReferences();
             golemTarget?.BeginBarrier(duration);
             LastBridgeStatus = "Golem barrier";
+            OnGolemBarrierStarted?.Invoke(duration);
         }
 
         private void ResolveReferences()

@@ -9,6 +9,8 @@ namespace ArcaneVR.Combat
     /// </summary>
     public class CombatManager : MonoBehaviour
     {
+        [SerializeField] private float currentHP = 100f;
+        [SerializeField] private float maxHP = 100f;
         [SerializeField] private float currentMana = 4f;
         [SerializeField] private float maxMana = 4f;
         [SerializeField] private float manaRegenPerSecond = 0.35f;
@@ -18,6 +20,7 @@ namespace ArcaneVR.Combat
         [SerializeField, Range(0f, 1f)] private float disruptedRegenMultiplier = 0.25f;
 
         public event Action<float> OnPlayerHit;
+        public event Action<float, float> OnPlayerHealthChanged;
         public event Action<float, ElementType> OnBossHit;
         public event Action<float, float> OnManaChanged;
         public event Action<float, float> OnManaDisrupted;
@@ -26,6 +29,8 @@ namespace ArcaneVR.Combat
 
         public float CurrentMana => currentMana;
         public float MaxMana => maxMana;
+        public float CurrentHP => currentHP;
+        public float MaxHP => maxHP;
         public float ManaRegenPerSecond => manaRegenPerSecond;
         public float VoiceRefundAmount => voiceRefundAmount;
         public bool IsManaDisrupted => disruptionRemaining > 0f;
@@ -34,6 +39,8 @@ namespace ArcaneVR.Combat
         private void Awake()
         {
             currentMana = Mathf.Clamp(currentMana, 0f, maxMana);
+            currentHP = Mathf.Clamp(currentHP <= 0f ? maxHP : currentHP, 0f, maxHP);
+            NotifyPlayerHealthChanged();
             NotifyManaChanged();
         }
 
@@ -86,6 +93,8 @@ namespace ArcaneVR.Combat
             if (damage <= 0f)
                 return;
 
+            currentHP = Mathf.Max(0f, currentHP - damage);
+            NotifyPlayerHealthChanged();
             OnPlayerHit?.Invoke(damage);
         }
 
@@ -138,6 +147,11 @@ namespace ArcaneVR.Combat
         private void NotifyManaChanged()
         {
             OnManaChanged?.Invoke(currentMana, maxMana);
+        }
+
+        private void NotifyPlayerHealthChanged()
+        {
+            OnPlayerHealthChanged?.Invoke(currentHP, maxHP);
         }
     }
 }

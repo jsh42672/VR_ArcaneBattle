@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(Get-Content \"C:\\\\Users\\\\전수환.DESKTOP-6R2G2F7.000\\\\Documents\\\\project\\\\VR_ArcaneBattle\\\\Packages\\\\packages-lock.json\")",
+      "Bash(Select-String \"mcp\")",
+      "PowerShell(uvx *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(claude mcp *)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "unityMCP"
+  ]
+}

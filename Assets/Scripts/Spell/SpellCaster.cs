@@ -98,6 +98,8 @@ namespace ArcaneVR.Spell
         private string lastCastStatus = "Cast: idle";
         private string lastManaCostStatus = "Cost: idle";
         private string lastVoiceBoostStatus = "VoiceLink: waiting";
+        private bool isCastingSuppressed;
+        private string castingSuppressionSource = string.Empty;
         private float lastManaCost;
         private float lastProcessedVoiceRecognitionTime = -999f;
 
@@ -115,6 +117,7 @@ namespace ArcaneVR.Spell
         public ElementType LastCastElement => lastCastElement;
         public float LastManaCost => lastManaCost;
         public ElementType PrototypeArmedElement => prototypeArmedElement;
+        public bool IsCastingSuppressed => isCastingSuppressed;
         public bool IsPrototypeArmed => prototypeArmedElement != ElementType.None && prototypeArmedPose != PoseType.None;
         public bool IsPrototypeVoiceBoosted => IsPrototypeVoiceBoostActive(prototypeArmedElement);
         public float PrototypeLastForwardSpeed => prototypeLastForwardSpeed;
@@ -128,6 +131,14 @@ namespace ArcaneVR.Spell
         private float EffectivePrototypeVoiceFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.9f, prototypeVoiceFeedbackVolume));
         private float EffectivePrototypeArmFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.35f, prototypeArmFeedbackVolume));
         private float EffectivePrototypeCastFeedbackVolume => Mathf.Clamp01(Mathf.Max(0.75f, prototypeCastFeedbackVolume));
+
+        public void SetCastingSuppressed(bool suppressed, string source)
+        {
+            isCastingSuppressed = suppressed;
+            castingSuppressionSource = suppressed ? (string.IsNullOrWhiteSpace(source) ? "unknown" : source) : string.Empty;
+            if (suppressed)
+                lastCastStatus = $"Blocked: {castingSuppressionSource}";
+        }
 
         private void Awake()
         {

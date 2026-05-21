@@ -18,6 +18,7 @@ namespace ArcaneVR.Input
 
         public event Action<ElementType> OnVoiceCommand;
         public event Action<string> OnVoiceStatusChanged;
+        public event Action OnModeToggleCommand;
 
         public bool IsListening { get; private set; }
         public bool IsAvailable { get; private set; }
@@ -218,6 +219,13 @@ namespace ArcaneVR.Input
         {
             LastRecognizedPhrase = phrase ?? string.Empty;
             LastRecognizedTime = Time.time;
+            if (IsModeToggleCommand(LastRecognizedPhrase))
+            {
+                SetStatus($"Voice: mode toggle from '{LastRecognizedPhrase}'", "Mode", successDiagnosticText);
+                OnModeToggleCommand?.Invoke();
+                return;
+            }
+
             LastRecognizedElement = ParseElement(LastRecognizedPhrase);
 
             if (LastRecognizedElement == ElementType.None)
@@ -259,6 +267,17 @@ namespace ArcaneVR.Input
             }
 
             return ElementType.None;
+        }
+
+        private static bool IsModeToggleCommand(string phrase)
+        {
+            if (string.IsNullOrWhiteSpace(phrase))
+                return false;
+
+            var normalized = phrase.Trim().ToUpperInvariant();
+            return normalized.Contains("ARCANE FOCUS") ||
+                   normalized.Contains("CAST MODE") ||
+                   normalized.Contains("MAGIC MODE");
         }
 
         [ContextMenu("Voice Mock/FIRE")]

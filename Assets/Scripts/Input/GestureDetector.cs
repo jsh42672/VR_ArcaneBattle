@@ -66,6 +66,7 @@ namespace ArcaneVR.Input
 
         [Header("XR Hands Static Gesture Router")]
         [SerializeField] private bool useXrHandsStaticGestureRouter = true;
+        [SerializeField] private bool allowOvrPrototypeOverrideRouter = true;
         [SerializeField] private GestureEventRouter gestureEventRouter;
 
         [Header("Quest Tuning")]

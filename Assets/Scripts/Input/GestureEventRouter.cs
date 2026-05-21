@@ -49,6 +49,12 @@ namespace ArcaneVR.Input
             SetRightPose(PoseType.ThumbsUp);
         }
 
+        public void OnTwoFingerStart()
+        {
+            MarkEvent();
+            SetRightPose(PoseType.TwoFinger);
+        }
+
         public void OnLeftFistDetected()
         {
             MarkEvent();
@@ -92,16 +98,34 @@ namespace ArcaneVR.Input
             ClearRightPoseIf(PoseType.ThumbsUp);
         }
 
+        public void OnTwoFingerEnd()
+        {
+            MarkEvent();
+            ClearRightPoseIf(PoseType.TwoFinger);
+        }
+
         public void OnThumbsUpLeftStart()
         {
             MarkEvent();
             SetLeftPose(PoseType.ThumbsUp);
         }
 
+        public void OnTwoFingerLeftStart()
+        {
+            MarkEvent();
+            SetLeftPose(PoseType.TwoFinger);
+        }
+
         public void OnThumbsUpLeftEnd()
         {
             MarkEvent();
             ClearLeftPoseIf(PoseType.ThumbsUp);
+        }
+
+        public void OnTwoFingerLeftEnd()
+        {
+            MarkEvent();
+            ClearLeftPoseIf(PoseType.TwoFinger);
         }
 
         public void OnLeftFistLost()
