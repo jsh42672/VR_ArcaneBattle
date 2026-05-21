@@ -11,7 +11,7 @@ namespace ArcaneVR.Input
         private const int LeftHand = 0;
         private const int RightHand = 1;
         private const int OpenGesture = 0;
-        private const int TwoGesture = 1;
+        private const int FistGesture = 1;
         private const int ThumbGesture = 2;
 
         [SerializeField] private GestureDetector gestureDetector;
@@ -61,8 +61,6 @@ namespace ArcaneVR.Input
         {
             return sceneName.StartsWith("HandTest") ||
                    sceneName == "Main" ||
-                   sceneName == "DogeTest" ||
-                   sceneName == "DodgeTest" ||
                    sceneName == "TestScene_GestureProto" ||
                    sceneName == "TestScene_Input";
         }
@@ -78,11 +76,8 @@ namespace ArcaneVR.Input
         {
             return IsPrototypeScene(sceneName) ||
                    sceneName == "World" ||
-                   sceneName == "World_main" ||
-                   sceneName == "Tutorial" ||
-                   sceneName == "FireColoseum" ||
-                   sceneName == "IceColoseum" ||
-                   sceneName == "ElectricColoseum";
+                   sceneName == "BattleSceen2" ||
+                   sceneName == "BattleScene2";
         }
 
         public void Configure(GestureDetector detector)
@@ -176,7 +171,7 @@ namespace ArcaneVR.Input
             CreateText(title, new Vector3(x, 0.33f, 0f), anchor, Color.white);
 
             BuildGestureRow(handIndex, OpenGesture, "OPEN", x, 0.23f, anchor);
-            BuildGestureRow(handIndex, TwoGesture, "TWO", x, 0.13f, anchor);
+            BuildGestureRow(handIndex, FistGesture, "FIST", x, 0.13f, anchor);
             BuildGestureRow(handIndex, ThumbGesture, "THUMB", x, 0.03f, anchor);
             poseTexts[handIndex] = CreateText("POSE: None", new Vector3(x, -0.09f, 0f), anchor, Color.gray);
             handStatusTexts[handIndex] = CreateText("TRACK: WAIT", new Vector3(x, -0.19f, 0f), anchor, Color.gray);
@@ -305,7 +300,7 @@ namespace ArcaneVR.Input
         {
             var displayPose = ResolveDisplayPose(pose, prototypePose);
             SetStatus(handIndex, OpenGesture, displayPose == PoseType.OpenPalm);
-            SetStatus(handIndex, TwoGesture, displayPose == PoseType.TwoFinger);
+            SetStatus(handIndex, FistGesture, displayPose == PoseType.Fist);
             SetStatus(handIndex, ThumbGesture, displayPose == PoseType.ThumbsUp);
 
             var poseText = poseTexts[handIndex];
@@ -349,7 +344,8 @@ namespace ArcaneVR.Input
             return pose switch
             {
                 PoseId.OpenPalm => PoseType.OpenPalm,
-                PoseId.Ok => PoseType.TwoFinger,
+                PoseId.Fist => PoseType.Fist,
+                PoseId.FistPush => PoseType.Fist,
                 _ => PoseType.None
             };
         }

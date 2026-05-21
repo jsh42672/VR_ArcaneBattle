@@ -17,10 +17,8 @@ namespace ArcaneVR.UI
         [SerializeField] private VoiceRecognizer voiceRecognizer;
         [SerializeField] private SpellCaster spellCaster;
         [SerializeField] private GolemCombatTarget golemTarget;
-        [SerializeField] private BossElementStatusVfx bossStatusVfx;
         [SerializeField] private ArcaneActionModeController actionModeController;
         [SerializeField] private HandPullMovementController handPullMovement;
-        [SerializeField] private BarrierPlayerDamageBridge barrierPlayerDamageBridge;
         [SerializeField] private GestureConflictDiagnostics gestureDiagnostics;
         [SerializeField] private MagicSystemTestDriver testDriver;
         [SerializeField] private MetaVoiceSdkAutoBridge metaVoiceSdkBridge;
@@ -33,8 +31,6 @@ namespace ArcaneVR.UI
         [SerializeField] private bool usePresentationLayout = true;
         [SerializeField] private bool showGestureModeLine = true;
         [SerializeField] private bool showLowLevelDetails;
-        [SerializeField] private bool useVoicePopupOnlyInMain = true;
-        [SerializeField] private float voicePopupDuration = 3f;
 
         private readonly StringBuilder builder = new StringBuilder();
         private TextMesh textMesh;
@@ -44,7 +40,7 @@ namespace ArcaneVR.UI
         private static void CreateForArcaneScenes()
         {
             var sceneName = SceneManager.GetActiveScene().name;
-            if (!ShouldCreateDebugPanel(sceneName))
+            if (!HandGestureDebugOverlay.IsGestureOverlayScene(sceneName))
                 return;
 
             if (FindAnyObjectByType<ArcaneDebugStatusPanel>() != null)
@@ -52,12 +48,6 @@ namespace ArcaneVR.UI
 
             var host = new GameObject("Arcane Debug Status Panel");
             host.AddComponent<ArcaneDebugStatusPanel>();
-        }
-
-        private static bool ShouldCreateDebugPanel(string sceneName)
-        {
-            return sceneName != "World_main" &&
-                   HandGestureDebugOverlay.IsGestureOverlayScene(sceneName);
         }
 
         private void Awake()
@@ -91,7 +81,6 @@ namespace ArcaneVR.UI
             textMesh.fontSize = fontSize;
             textMesh.characterSize = characterSize;
             textMesh.color = Color.white;
-            textMesh.fontStyle = FontStyle.Bold;
         }
 
         private void ResolveReferences()
@@ -110,14 +99,10 @@ namespace ArcaneVR.UI
                 spellCaster = FindAnyObjectByType<SpellCaster>();
             if (golemTarget == null)
                 golemTarget = FindAnyObjectByType<GolemCombatTarget>();
-            if (bossStatusVfx == null)
-                bossStatusVfx = FindAnyObjectByType<BossElementStatusVfx>();
             if (actionModeController == null)
                 actionModeController = FindAnyObjectByType<ArcaneActionModeController>();
             if (handPullMovement == null)
                 handPullMovement = FindAnyObjectByType<HandPullMovementController>();
-            if (barrierPlayerDamageBridge == null)
-                barrierPlayerDamageBridge = FindAnyObjectByType<BarrierPlayerDamageBridge>();
             if (gestureDiagnostics == null)
                 gestureDiagnostics = FindAnyObjectByType<GestureConflictDiagnostics>();
             if (testDriver == null)
@@ -149,12 +134,6 @@ namespace ArcaneVR.UI
 
         private void RefreshText()
         {
-            if (ShouldUseMainVoicePopup())
-            {
-                RefreshMainVoicePopup();
-                return;
-            }
-
             builder.Clear();
             builder.AppendLine(usePresentationLayout ? "ARCANE DEMO" : "ARCANE TEST");
             AppendVoiceStatus();
@@ -169,78 +148,6 @@ namespace ArcaneVR.UI
             textMesh.text = builder.ToString();
         }
 
-        private bool ShouldUseMainVoicePopup()
-        {
-            return useVoicePopupOnlyInMain && SceneManager.GetActiveScene().name == "Main";
-        }
-
-        private void RefreshMainVoicePopup()
-        {
-            if (voiceRecognizer == null)
-            {
-                SetPanelText(string.Empty);
-                return;
-            }
-
-            var hasRecentVoice =
-                !string.IsNullOrWhiteSpace(voiceRecognizer.LastRecognizedPhrase) &&
-                Time.time - voiceRecognizer.LastRecognizedTime <= Mathf.Max(0.5f, voicePopupDuration);
-
-            if (!hasRecentVoice)
-            {
-                SetPanelText(string.Empty);
-                return;
-            }
-
-            builder.Clear();
-            builder.AppendLine("VOICE");
-            builder.Append("인식: \"");
-            builder.Append(Compact(voiceRecognizer.LastRecognizedPhrase, 32));
-            builder.AppendLine("\"");
-            builder.Append("처리: ");
-            builder.AppendLine(ResolveVoiceProcessText());
-            builder.Append("상태: ");
-            builder.AppendLine(ResolveVoiceStateText());
-            SetPanelText(builder.ToString());
-        }
-
-        private string ResolveVoiceProcessText()
-        {
-            if (voiceRecognizer == null)
-                return "Voice recognizer missing";
-
-            var phrase = voiceRecognizer.LastRecognizedPhrase;
-            if (voiceRecognizer.IsModeTogglePhrase(phrase))
-                return "Arcane Focus / 조합 모드 전환";
-
-            var element = voiceRecognizer.LastRecognizedElement;
-            if (element == ElementType.None)
-                return "No Match";
-
-            return $"{element} 보이스 보너스 / 마나 +0.5";
-        }
-
-        private string ResolveVoiceStateText()
-        {
-            if (voiceRecognizer == null)
-                return "Missing";
-
-            if (voiceRecognizer.IsListening || voiceRecognizer.IsExternalSttListening)
-                return "Listening";
-
-            return string.IsNullOrWhiteSpace(voiceRecognizer.ShortStatusText)
-                ? "-"
-                : voiceRecognizer.ShortStatusText;
-        }
-
-        private void SetPanelText(string value)
-        {
-            if (textMesh == null)
-                return;
-
-            textMesh.text = value;
-        }
-
         private void AppendVoiceStatus()
         {
             builder.Append("VOICE ");
@@ -250,33 +157,11 @@ namespace ArcaneVR.UI
                 return;
             }
 
-            builder.Append(voiceRecognizer.ShortStatusText);
-            builder.Append(" | ");
             builder.Append(string.IsNullOrEmpty(voiceRecognizer.LastRecognizedPhrase)
                 ? "-"
                 : Compact(voiceRecognizer.LastRecognizedPhrase, 36));
             builder.Append(" | ");
             builder.AppendLine(voiceRecognizer.LastRecognizedElement.ToString());
-
-            builder.Append("STT ");
-            builder.Append(voiceRecognizer.ActiveProviderName);
-            builder.Append(" | ");
-            builder.Append(Compact(voiceRecognizer.DiagnosticText, 54));
-            builder.AppendLine();
-
-            if (metaVoiceSdkBridge == null)
-                return;
-
-            builder.Append("META VOICE ");
-            builder.Append(metaVoiceSdkBridge.IsSdkTypeAvailable ? "SDK O" : "SDK X");
-            builder.Append(" | ");
-            builder.Append(metaVoiceSdkBridge.IsVoiceExperienceFound ? "App O" : "App X");
-            builder.Append(" | ");
-            builder.Append(metaVoiceSdkBridge.IsBound ? "Bind O" : "Bind X");
-            builder.Append(" | ");
-            builder.Append(metaVoiceSdkBridge.HasConfiguration ? "Cfg O" : "Cfg X");
-            builder.Append(" | ");
-            builder.AppendLine(Compact(metaVoiceSdkBridge.StatusText, 42));
         }
 
         private void AppendComboStatus()
@@ -384,11 +269,6 @@ namespace ArcaneVR.UI
                 builder.Append(" | ");
             }
             builder.AppendLine(barrierController.LastResultText);
-            if (barrierPlayerDamageBridge != null)
-            {
-                builder.Append("HIT ");
-                builder.AppendLine(Compact(barrierPlayerDamageBridge.LastDamageStatus, 52));
-            }
         }
 
         private void AppendGolemStatus()
@@ -407,30 +287,17 @@ namespace ArcaneVR.UI
             builder.Append(Mark(golemTarget.IsWeakExposed));
             builder.Append(" C ");
             builder.Append(Mark(golemTarget.IsChargeCounterWindowOpen));
-            builder.Append(" Burn ");
-            builder.Append(Mark(golemTarget.IsBurning));
-            builder.Append(" Slow ");
-            builder.Append(golemTarget.MovementSpeedMultiplier.ToString("0.00"));
-            builder.Append(" Stag ");
-            builder.Append(Mark(golemTarget.IsStaggered));
             builder.Append(" HP ");
             builder.Append(golemTarget.CurrentHealth.ToString("0"));
             builder.Append("/");
             builder.AppendLine(golemTarget.MaxHealth.ToString("0"));
-            if (bossStatusVfx != null && showLowLevelDetails)
-            {
-                builder.Append("VFX ");
-                builder.AppendLine(Compact(bossStatusVfx.LastVfxStatus, 52));
-            }
         }
 
         private void AppendCastStatus()
         {
             builder.Append("CAST ");
             builder.Append(spellCaster != null ? spellCaster.PrototypeArmStatus : "missing");
-            builder.Append(" | HP ");
-            builder.Append(combatManager != null ? $"{combatManager.CurrentHP:0.#}/{combatManager.MaxHP:0.#}" : "-/-");
-            builder.Append(" Mana ");
+            builder.Append(" | Mana ");
             builder.Append(combatManager != null ? $"{combatManager.CurrentMana:0.#}/{combatManager.MaxMana:0.#}" : "-/-");
             builder.Append(" | ");
             builder.Append(spellCaster != null ? spellCaster.LastManaCostStatus : "Cost: missing");

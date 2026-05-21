@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using UnityEngine;
 using System;
 
@@ -7,44 +5,12 @@ namespace ArcaneVR.Combat
 {
     public class BossPatternCombatBridge : MonoBehaviour
     {
-        public event Action<BossAttackType, float> OnAttackResponseWindowStarted;
-        public event Action<float> OnChargeCounterWindowStarted;
-        public event Action<float> OnGolemBarrierStarted;
-
-        [SerializeField]
-        private DodgeDetector dodgeDetector;
-
-        [SerializeField]
-        private BarrierController barrierController;
-
-        [SerializeField]
-        private GolemCombatTarget golemTarget;
-
-        [SerializeField]
-        private ConstraintController constraintController;
-
-        [SerializeField]
-        private bool enablePlayerConstraints;
-
-        [SerializeField]
-        private bool enableAttackResponseWindows;
-
-        [SerializeField]
-        private float defaultResponseWindowDuration = 1.2f;
-
-        [SerializeField]
-        private float defaultChargeCounterDuration = 3f;
-
-        [SerializeField]
-        private float defaultGolemBarrierDuration = 8f;
-
-        [SerializeField]
-        private float attackResponseConstraintLeadIn = 0.35f;
-
-        [SerializeField]
-        private float attackResponseConstraintExtraDuration = 0.2f;
-
-        private Coroutine pendingAttackResponseRoutine;
+        [SerializeField] private DodgeDetector dodgeDetector;
+        [SerializeField] private BarrierController barrierController;
+        [SerializeField] private GolemCombatTarget golemTarget;
+        [SerializeField] private float defaultResponseWindowDuration = 1.2f;
+        [SerializeField] private float defaultChargeCounterDuration = 3f;
+        [SerializeField] private float defaultGolemBarrierDuration = 8f;
 
         public event Action<BossAttackType, float> OnAttackResponseWindowStarted;
         public event Action<float> OnChargeCounterWindowStarted;
@@ -57,60 +23,12 @@ namespace ArcaneVR.Combat
             ResolveReferences();
         }
 
-        private void OnDisable()
-        {
-            if (pendingAttackResponseRoutine != null)
-            {
-                StopCoroutine(pendingAttackResponseRoutine);
-                pendingAttackResponseRoutine = null;
-            }
-        }
-
         public void BeginAttackResponseWindow(BossAttackType attackType)
         {
             BeginAttackResponseWindow(attackType, defaultResponseWindowDuration);
         }
 
         public void BeginAttackResponseWindow(BossAttackType attackType, float duration)
-        {
-            if (!enableAttackResponseWindows)
-            {
-                LastBridgeStatus = $"Attack response disabled: {attackType}";
-                return;
-            }
-
-            ResolveReferences();
-
-            if (pendingAttackResponseRoutine != null)
-            {
-                StopCoroutine(pendingAttackResponseRoutine);
-                pendingAttackResponseRoutine = null;
-            }
-
-            var responseDuration = Mathf.Max(0.1f, duration);
-            var leadIn = Mathf.Max(0f, attackResponseConstraintLeadIn);
-            var constraintDuration = leadIn + responseDuration + Mathf.Max(0f, attackResponseConstraintExtraDuration);
-            if (enablePlayerConstraints)
-                constraintController?.BeginResponseConstraint(constraintDuration);
-
-            if (leadIn > 0f)
-            {
-                LastBridgeStatus = $"Constraint before {attackType}";
-                pendingAttackResponseRoutine = StartCoroutine(BeginAttackResponseAfterLeadIn(attackType, responseDuration, leadIn));
-                return;
-            }
-
-            StartAttackResponseWindow(attackType, responseDuration);
-        }
-
-        private IEnumerator BeginAttackResponseAfterLeadIn(BossAttackType attackType, float duration, float leadIn)
-        {
-            yield return new WaitForSeconds(leadIn);
-            pendingAttackResponseRoutine = null;
-            StartAttackResponseWindow(attackType, duration);
-        }
-
-        private void StartAttackResponseWindow(BossAttackType attackType, float duration)
         {
             ResolveReferences();
 
@@ -122,7 +40,7 @@ namespace ArcaneVR.Combat
                 return;
             }
 
-            dodgeDetector?.BeginDodgeWindow(attackType, duration);
+            dodgeDetector?.BeginDodgeWindow(attackType);
             LastBridgeStatus = $"Dodge window: {attackType}";
             OnAttackResponseWindowStarted?.Invoke(attackType, duration);
         }
@@ -136,8 +54,6 @@ namespace ArcaneVR.Combat
         {
             ResolveReferences();
             golemTarget?.BeginChargeCounterWindow(duration);
-            if (enablePlayerConstraints)
-                constraintController?.BeginConstraint(duration);
             LastBridgeStatus = "Charge counter window";
             OnChargeCounterWindowStarted?.Invoke(duration);
         }
@@ -158,22 +74,13 @@ namespace ArcaneVR.Combat
         private void ResolveReferences()
         {
             if (dodgeDetector == null)
-                dodgeDetector = FindAnyObjectByType<DodgeDetector>() ?? gameObject.AddComponent<DodgeDetector>();
+                dodgeDetector = FindAnyObjectByType<DodgeDetector>();
 
             if (barrierController == null)
-                barrierController = FindAnyObjectByType<BarrierController>() ?? gameObject.AddComponent<BarrierController>();
+                barrierController = FindAnyObjectByType<BarrierController>();
 
             if (golemTarget == null)
                 golemTarget = FindAnyObjectByType<GolemCombatTarget>();
-
-            if (constraintController == null && enablePlayerConstraints)
-                constraintController = FindAnyObjectByType<ConstraintController>();
-
-            if (constraintController == null && enablePlayerConstraints)
-                constraintController = gameObject.AddComponent<ConstraintController>();
-
-            if (!enablePlayerConstraints && constraintController != null && constraintController.IsConstrained)
-                constraintController.EndConstraint();
         }
     }
 }

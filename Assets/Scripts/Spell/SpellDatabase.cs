@@ -212,7 +212,7 @@ namespace ArcaneVR.Spell
                 overwriteExistingValues);
 
             EnsureDefaultPoseSpell(CreateDefaultPoseSpell(
-                PoseType.TwoFinger,
+                PoseType.Fist,
                 ElementType.Ice,
                 StatusEffect.Slow,
                 8f,

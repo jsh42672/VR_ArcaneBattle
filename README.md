@@ -119,9 +119,9 @@ Meta Quest 환경에서 손 제스처, 헤드 트래킹, 보이스 입력을 활
 
 | 속성 | 주문 |
 | --- | --- |
-| 화염 | Fire |
-| 냉기 | Ice |
-| 전기 | Thunder |
+| 화염 | Ignis |
+| 냉기 | Glacies |
+| 전기 | Fulgur |
 
 ## HCI 설계 방향
 

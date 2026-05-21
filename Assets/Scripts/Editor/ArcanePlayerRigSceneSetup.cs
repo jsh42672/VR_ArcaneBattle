@@ -12,16 +12,8 @@ namespace ArcaneVR.Editor
     {
         private const string OvrCameraRigPrefabPath = "Packages/com.meta.xr.sdk.core/Prefabs/OVRCameraRig.prefab";
         private const string OvrHandPrefabPath = "Packages/com.meta.xr.sdk.core/Prefabs/OVRHandPrefab.prefab";
-        private static readonly string[] RuntimeScenePaths =
-        {
-            "Assets/Scenes/Main.unity",
-            "Assets/Scenes/World.unity",
-            "Assets/Scenes/World_main.unity",
-            "Assets/Scenes/Tutorial.unity",
-            "Assets/Scenes/FireColoseum.unity",
-            "Assets/Scenes/IceColoseum.unity",
-            "Assets/Scenes/ElectricColoseum.unity"
-        };
+        private const string WorldScenePath = "Assets/Scenes/World.unity";
+        private const string BattleScenePath = "Assets/Scenes/BattleSceen2.unity";
 
         [MenuItem("ArcaneVR/Scenes/Install Main OVR Player Rig In Active Scene")]
         public static void InstallInActiveScene()
@@ -41,39 +33,27 @@ namespace ArcaneVR.Editor
         [MenuItem("ArcaneVR/Scenes/Install Main OVR Player Rig In World And Battle")]
         public static void InstallInWorldAndBattleScenes()
         {
-            InstallInRuntimeScenes();
-        }
-
-        [MenuItem("ArcaneVR/Scenes/Install Main OVR Player Rig In Runtime Scenes")]
-        public static void InstallInRuntimeScenes()
-        {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 return;
 
             if (!EditorUtility.DisplayDialog(
                     "Arcane Player Rig",
-                    "This will open all runtime scenes, add the Main-style OVRCameraRig with left/right OVR hands when missing, and disable the old XR Origin object instead of deleting it.",
+                    "This will open World and BattleSceen2, add the Main-style OVRCameraRig with left/right OVR hands when missing, and disable the old XR Origin object instead of deleting it.",
                     "Proceed",
                     "Cancel"))
             {
                 return;
             }
 
-            foreach (var scenePath in RuntimeScenePaths)
-                InstallAndSaveScene(scenePath);
-
-            EditorUtility.DisplayDialog("Arcane Player Rig", "Runtime scenes were prepared. Reopen your working scene if needed.", "OK");
+            InstallAndSaveScene(WorldScenePath);
+            InstallAndSaveScene(BattleScenePath);
+            EditorUtility.DisplayDialog("Arcane Player Rig", "World and BattleSceen2 were prepared. Reopen your working scene if needed.", "OK");
         }
 
         public static void InstallInWorldAndBattleScenesBatch()
         {
-            InstallInRuntimeScenesBatch();
-        }
-
-        public static void InstallInRuntimeScenesBatch()
-        {
-            foreach (var scenePath in RuntimeScenePaths)
-                InstallAndSaveScene(scenePath, true);
+            InstallAndSaveScene(WorldScenePath, true);
+            InstallAndSaveScene(BattleScenePath, true);
         }
 
         private static void InstallAndSaveScene(string scenePath)
