@@ -1,4 +1,5 @@
 using System;
+using ArcaneVR.Combat;
 using UnityEngine;
 
 namespace ArcaneVR.Input
@@ -89,8 +90,8 @@ namespace ArcaneVR.Input
 
             if (constraintController != null)
             {
-                constraintController.OnConstraintStart += HandleConstraintStart;
-                constraintController.OnConstraintEnd += HandleConstraintEnd;
+                constraintController.OnConstraintStarted += HandleConstraintStart;
+                constraintController.OnConstraintEnded += HandleConstraintEnd;
             }
         }
 
@@ -100,8 +101,8 @@ namespace ArcaneVR.Input
 
             if (constraintController != null)
             {
-                constraintController.OnConstraintStart -= HandleConstraintStart;
-                constraintController.OnConstraintEnd -= HandleConstraintEnd;
+                constraintController.OnConstraintStarted -= HandleConstraintStart;
+                constraintController.OnConstraintEnded -= HandleConstraintEnd;
             }
         }
 
