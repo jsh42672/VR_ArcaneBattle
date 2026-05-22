@@ -61,6 +61,7 @@ namespace ArcaneVR.Combat
         [SerializeField] private float burnDuration = 4f;
         [SerializeField] private float defaultChargeCounterDuration = 3f;
         [SerializeField] private float defaultBarrierDuration = 8f;
+        [SerializeField] private bool enableDebugLogs = false;
 
         public event Action<float, float> OnHealthChanged;
         public event Action<string> OnCombatCueChanged;
@@ -125,6 +126,14 @@ namespace ArcaneVR.Combat
         {
             if (hitData == null)
                 return;
+
+            if (enableDebugLogs)
+            {
+                Debug.Log(
+                    $"[{nameof(GolemCombatTarget)}] Hit spellId:{hitData.spellId} element:{hitData.element} " +
+                    $"statusEffect:{hitData.statusEffect} damage:{hitData.damage} statusDuration:{hitData.statusDuration}",
+                    this);
+            }
 
             var resolvedChargeCounter = IsChargeCounterWindowOpen && hitData.IncludesElement(ElementType.Thunder);
             var brokeBarrier = IsBarrierActive &&

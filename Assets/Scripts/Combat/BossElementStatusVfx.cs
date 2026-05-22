@@ -10,6 +10,9 @@ namespace ArcaneVR.Combat
         [SerializeField] private Color barrierColor = new Color(0.2f, 0.55f, 1f, 1f);
         [SerializeField] private Color weakColor = new Color(1f, 0.85f, 0.2f, 1f);
         [SerializeField] private Color chargeColor = new Color(0.8f, 0.35f, 1f, 1f);
+        [SerializeField] private Color burnColor = new Color(1f, 0.35f, 0.1f, 1f);
+        [SerializeField] private Color slowColor = new Color(0.25f, 0.85f, 1f, 1f);
+        [SerializeField] private Color staggerColor = new Color(1f, 0.95f, 0.3f, 1f);
 
         private GolemCombatTarget subscribedGolemTarget;
         private BossElementStatusSnapshot lastSnapshot;
@@ -77,7 +80,13 @@ namespace ArcaneVR.Combat
                 return;
 
             Color? color = null;
-            if (lastSnapshot.isBarrierActive)
+            if (lastSnapshot.isStaggered)
+                color = staggerColor;
+            else if (lastSnapshot.isBurning)
+                color = burnColor;
+            else if (lastSnapshot.isSlowed)
+                color = slowColor;
+            else if (lastSnapshot.isBarrierActive)
                 color = barrierColor;
             else if (lastSnapshot.isWeakExposed)
                 color = weakColor;

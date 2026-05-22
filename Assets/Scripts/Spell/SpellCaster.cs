@@ -2,6 +2,7 @@ using ArcaneVR.Combat;
 using ArcaneVR.Input;
 using ArcaneVR.UI;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ArcaneVR.Spell
 {
@@ -166,6 +167,7 @@ namespace ArcaneVR.Spell
             if (headTransform == null && Camera.main != null)
                 headTransform = Camera.main.transform;
 
+            EnableCombatGesturePrototype();
             ResolvePrototypeReferences();
         }
 
@@ -599,6 +601,17 @@ namespace ArcaneVR.Spell
                     prototypeSpawnPoint = hand.transform;
                 return;
             }
+        }
+
+        private void EnableCombatGesturePrototype()
+        {
+            if (enableGesturePrototype)
+                return;
+
+            var sceneName = SceneManager.GetActiveScene().name;
+            enableGesturePrototype = sceneName == "ElectricColoseum" ||
+                                     sceneName == "FireColoseum" ||
+                                     sceneName == "IceColoseum";
         }
 
         private Transform ResolvePrototypeSpawnPoint()
