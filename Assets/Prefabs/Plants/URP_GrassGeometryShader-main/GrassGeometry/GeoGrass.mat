@@ -29,7 +29,7 @@ Material:
     - _Height: 0.8
     - _RandomHeight: 0.1
     - _RandomWidth: 0.1
-    - _TessellationUniform: 4
+    - _TessellationUniform: 10
     - _Width: 0.1
     - _WindStrength: 0.1
     m_Colors:

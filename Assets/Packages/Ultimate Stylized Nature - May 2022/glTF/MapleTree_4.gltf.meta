@@ -1,0 +1,40 @@
+fileFormatVersion: 2
+guid: 5ab712a3889ac82478ad07c7191c5a6a
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 715df9372183c47e389bb6e19fbc3b52, type: 3}
+  editorImportSettings:
+    generateSecondaryUVSet: 0
+  importSettings:
+    nodeNameMethod: 1
+    animationMethod: 2
+    generateMipMaps: 1
+    texturesReadable: 0
+    defaultMinFilterMode: 9729
+    defaultMagFilterMode: 9729
+    anisotropicFilterLevel: 1
+  instantiationSettings:
+    mask: -1
+    layer: 0
+    skinUpdateWhenOffscreen: 1
+    lightIntensityFactor: 1
+    sceneObjectCreation: 2
+  assetDependencies:
+  - type: 0
+    originalUri: Assets\Packages\Ultimate Stylized Nature - May 2022\glTF\MapleTree_4.bin
+    assetPath: Assets\Packages\Ultimate Stylized Nature - May 2022\glTF\MapleTree_4.bin
+  - type: 1
+    originalUri: Assets\Packages\Ultimate Stylized Nature - May 2022\glTF\MapleTree_Bark_Normal.png
+    assetPath: Assets\Packages\Ultimate Stylized Nature - May 2022\glTF\MapleTree_Bark_Normal.png
+  - type: 1
+    originalUri: Assets\Packages\Ultimate Stylized Nature - May 2022\glTF\MapleTree_Bark.jpg
+    assetPath: Assets\Packages\Ultimate Stylized Nature - May 2022\glTF\MapleTree_Bark.jpg
+  - type: 1
+    originalUri: Assets\Packages\Ultimate Stylized Nature - May 2022\glTF\MapleTree_Leaves.png
+    assetPath: Assets\Packages\Ultimate Stylized Nature - May 2022\glTF\MapleTree_Leaves.png
+  reportItems: []
