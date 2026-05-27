@@ -21,6 +21,7 @@ namespace ArcaneVR.Input
         [SerializeField] private bool allowLockedCombosInEditor = true;
         [SerializeField] private HandPullMovementController handPullMovement;
         [SerializeField] private ArcaneActionModeController actionModeController;
+        [SerializeField] private CombinationFocusModeController focusModeController;
 
         public event Action<SpellId> OnCombinationSuccess;
         public event Action OnCombinationFail;
@@ -60,6 +61,9 @@ namespace ArcaneVR.Input
 
             if (actionModeController == null)
                 actionModeController = FindAnyObjectByType<ArcaneActionModeController>();
+
+            if (focusModeController == null)
+                focusModeController = FindAnyObjectByType<CombinationFocusModeController>();
         }
 
         private void OnEnable()
@@ -148,6 +152,13 @@ namespace ArcaneVR.Input
                 return;
             }
 
+            if (IsComboSpell(spellId) && !IsCombinationFocusActive())
+            {
+                LastComboStatus = "Combo: focus required";
+                RefreshComboCandidate(now);
+                return;
+            }
+
             if (isGrimoireOpen && IsComboSpell(spellId))
             {
                 EmitFail();
@@ -178,7 +189,7 @@ namespace ArcaneVR.Input
             var now = Time.time;
             RefreshComboCandidate(now, ignoreLeftPull: ignoreCastMode, ignoreCastMode: ignoreCastMode);
 
-            if (!ignoreCastMode && !IsCastModeActive())
+            if (!ignoreCastMode && !IsCombinationFocusActive())
             {
                 EmitFail();
                 return false;
@@ -292,12 +303,12 @@ namespace ArcaneVR.Input
             if (isLeft)
             {
                 IsLeftDeclarationSuppressedByPull = !ignoreLeftPull && IsLeftPullActive();
-                IsLeftDeclarationSuppressedByMode = !ignoreCastMode && !IsCastModeActive();
+                IsLeftDeclarationSuppressedByMode = !ignoreCastMode && !IsCombinationFocusActive();
                 if (IsLeftDeclarationSuppressedByPull || IsLeftDeclarationSuppressedByMode)
                 {
                     LastComboStatus = IsLeftDeclarationSuppressedByPull
                         ? "Combo: left blocked by pull"
-                        : "Combo: left blocked by move mode";
+                        : "Combo: focus required";
                     RefreshComboCandidate(now, ignoreLeftPull, ignoreCastMode);
                     return false;
                 }
@@ -320,19 +331,23 @@ namespace ArcaneVR.Input
         private void RefreshComboCandidate(float now, bool ignoreLeftPull = false, bool ignoreCastMode = false)
         {
             IsLeftDeclarationSuppressedByPull = !ignoreLeftPull && IsLeftPullActive();
-            IsLeftDeclarationSuppressedByMode = !ignoreCastMode && !IsCastModeActive();
+            IsLeftDeclarationSuppressedByMode = !ignoreCastMode && !IsCombinationFocusActive();
+            var modeActive = ignoreCastMode || IsCombinationFocusActive();
 
             var leftValid = LeftDeclaredElement != ElementType.None &&
                             !IsLeftDeclarationSuppressedByPull &&
                             !IsLeftDeclarationSuppressedByMode &&
                             now - lastLeftDeclarationTime <= comboDeclarationWindow;
             var rightValid = RightDeclaredElement != ElementType.None &&
+                             modeActive &&
                              now - lastRightDeclarationTime <= comboDeclarationWindow;
 
             if (!leftValid || !rightValid || LeftDeclaredElement == RightDeclaredElement)
             {
                 var hand = BuildDeclarationHand(leftValid, rightValid);
-                var status = LeftDeclaredElement == RightDeclaredElement && leftValid && rightValid
+                var status = !modeActive && (LeftDeclaredElement != ElementType.None || RightDeclaredElement != ElementType.None)
+                    ? "Combo: focus required"
+                    : LeftDeclaredElement == RightDeclaredElement && leftValid && rightValid
                     ? "Combo: same element"
                     : "Combo: waiting";
                 SetComboCandidate(false, SpellId.None, hand, status);
@@ -394,6 +409,14 @@ namespace ArcaneVR.Input
         {
             RefreshActionModeReference();
             return actionModeController != null && actionModeController.IsCastModeActive;
+        }
+
+        private bool IsCombinationFocusActive()
+        {
+            if (focusModeController == null)
+                focusModeController = FindAnyObjectByType<CombinationFocusModeController>();
+
+            return focusModeController != null && focusModeController.IsFocusActive;
         }
 
         private void RefreshActionModeReference()

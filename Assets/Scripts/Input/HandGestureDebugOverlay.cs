@@ -60,7 +60,6 @@ namespace ArcaneVR.Input
         public static bool IsPrototypeScene(string sceneName)
         {
             return sceneName.StartsWith("HandTest") ||
-                   sceneName == "Main" ||
                    sceneName == "TestScene_GestureProto" ||
                    sceneName == "TestScene_Input";
         }

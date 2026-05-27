@@ -1407,7 +1407,7 @@ PrefabInstance:
     - target: {fileID: 8294664476542146151, guid: 296cf872f22a70e4fa57c50c81f46578, type: 3}
       propertyPath: _hand
       value: 
-      objectReference: {fileID: 1887117898}
+      objectReference: {fileID: 1887117899}
     - target: {fileID: 9188698552412479649, guid: 296cf872f22a70e4fa57c50c81f46578, type: 3}
       propertyPath: _whenSelected.m_PersistentCalls.m_Calls.Array.size
       value: 2
@@ -2100,7 +2100,7 @@ PrefabInstance:
     - target: {fileID: 8128658391804672828, guid: 81652cbfea1c0174a994a3e0b2284e08, type: 3}
       propertyPath: _hand
       value: 
-      objectReference: {fileID: 729933297}
+      objectReference: {fileID: 1887117898}
     - target: {fileID: 8200719428768432577, guid: 81652cbfea1c0174a994a3e0b2284e08, type: 3}
       propertyPath: _transformFeatureStateProvider
       value: 
@@ -2837,65 +2837,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 316360590}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &316886272
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 316886273}
-  - component: {fileID: 316886274}
-  m_Layer: 0
-  m_Name: CombinationFocusModeController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &316886273
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 316886272}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1030191333}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &316886274
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 316886272}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 21e40d7a38557504f875ab2974b88b76, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombinationFocusModeController
-  combinationChecker: {fileID: 1428252387}
-  handPullMovement: {fileID: 1016462461}
-  headTransform: {fileID: 1828776557}
-  slowTimeScale: 0.2
-  maxDuration: 10
-  autoExitAfterDuration: 1
-  enableHandsTogetherEntry: 1
-  handsTogetherDistance: 0.12
-  handsReleaseDistance: 0.22
-  handsTogetherHoldTime: 0.35
-  combinePushDistance: 0.18
-  combinePushVelocity: 0.45
-  combinePushCooldown: 0.7
-  allowKeyboardToggleInEditor: 1
-  keyboardToggleKey: 289
 --- !u!21 &334231940
 Material:
   serializedVersion: 8
@@ -3063,7 +3004,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bffe606b408599b4fad696ddc889a943, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.PoseDetection.TransformFeatureStateProvider
-  _hand: {fileID: 729933297}
+  _hand: {fileID: 1887117898}
   _hmd: {fileID: 1887117897}
   _trackingToWorldTransformer: {fileID: 1887117896}
   _disableProactiveEvaluation: 0
@@ -3079,7 +3020,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b942c16a6d6a4edaad7c18c7d5762cdf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.PoseDetection.FingerFeatureStateProvider
-  _hand: {fileID: 729933297}
+  _hand: {fileID: 1887117898}
   _fingerStateThresholds:
   - Finger: 0
     StateThresholds: {fileID: 11400000, guid: 1ee82d2d63daf8b4c93040e331f8e801, type: 2}
@@ -3291,10 +3232,6 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3202}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-      propertyPath: handPullMovement
-      value: 
-      objectReference: {fileID: 1016462461}
-    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: gestureEventRouter
       value: 
       objectReference: {fileID: 522477926}
@@ -3304,7 +3241,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: allowOvrPrototypeOverrideRouter
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: gestureRouter
@@ -3326,10 +3263,6 @@ PrefabInstance:
       propertyPath: gestureDetector
       value: 
       objectReference: {fileID: 522477927}
-    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-      propertyPath: focusModeController
-      value: 
-      objectReference: {fileID: 316886274}
     - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: prototypeSpawnPoint
       value: 
@@ -3398,32 +3331,13 @@ PrefabInstance:
       propertyPath: gestureDetector
       value: 
       objectReference: {fileID: 522477927}
-    - target: {fileID: 8536111531490673972, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-      propertyPath: handPullMovement
-      value: 
-      objectReference: {fileID: 1016462461}
-    - target: {fileID: 8536111531490673972, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-      propertyPath: focusModeController
-      value: 
-      objectReference: {fileID: 316886274}
-    - target: {fileID: 8536111531490673972, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-      propertyPath: actionModeController
-      value: 
-      objectReference: {fileID: 1472324413}
-    - target: {fileID: 8536111531490673972, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-      propertyPath: comboDeclarationWindow
-      value: 10
-      objectReference: {fileID: 0}
     - target: {fileID: 9086706931665325395, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: createWorldStatusText
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 8028382763193974252, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 316886273}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
 --- !u!114 &522477926 stripped
@@ -3478,7 +3392,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bffe606b408599b4fad696ddc889a943, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.PoseDetection.TransformFeatureStateProvider
-  _hand: {fileID: 1887117898}
+  _hand: {fileID: 1887117899}
   _hmd: {fileID: 1887117897}
   _trackingToWorldTransformer: {fileID: 1887117896}
   _disableProactiveEvaluation: 0
@@ -3494,7 +3408,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b942c16a6d6a4edaad7c18c7d5762cdf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.PoseDetection.FingerFeatureStateProvider
-  _hand: {fileID: 1887117898}
+  _hand: {fileID: 1887117899}
   _fingerStateThresholds:
   - Finger: 0
     StateThresholds: {fileID: 11400000, guid: 1ee82d2d63daf8b4c93040e331f8e801, type: 2}
@@ -3788,17 +3702,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 683542009}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &729933297 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 294092324644085340, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
-  m_PrefabInstance: {fileID: 1887117895}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a379f34d4f4f2e408d34f14bfb753ce, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!21 &764380890
 Material:
   serializedVersion: 8
@@ -4414,7 +4317,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &923607993
 Transform:
   m_ObjectHideFlags: 0
@@ -4803,17 +4706,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1966113154}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1016462461 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7376023887014848145, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-  m_PrefabInstance: {fileID: 522477925}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07327af1a52bc0843b7e008bc1500b8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.HandPullMovementController
 --- !u!1001 &1019336896
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4945,7 +4837,7 @@ PrefabInstance:
     - target: {fileID: 7274138455158954298, guid: d1aa959d0b417694584892ce68d82cd2, type: 3}
       propertyPath: _hand
       value: 
-      objectReference: {fileID: 729933297}
+      objectReference: {fileID: 1887117898}
     - target: {fileID: 7729375806098414371, guid: d1aa959d0b417694584892ce68d82cd2, type: 3}
       propertyPath: _hand
       value: 
@@ -5205,11 +5097,6 @@ Material:
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!4 &1030191333 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8028382763193974252, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-  m_PrefabInstance: {fileID: 522477925}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1077275015
 GameObject:
   m_ObjectHideFlags: 0
@@ -5734,7 +5621,7 @@ PrefabInstance:
     - target: {fileID: 6748726635391897672, guid: 78141918db59a8541955a20ae41c99f3, type: 3}
       propertyPath: _hand
       value: 
-      objectReference: {fileID: 1887117898}
+      objectReference: {fileID: 1887117899}
     - target: {fileID: 6754812868015615539, guid: 78141918db59a8541955a20ae41c99f3, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -6384,17 +6271,6 @@ Material:
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!114 &1428252387 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8536111531490673972, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-  m_PrefabInstance: {fileID: 522477925}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b728a0fa6bad8b4da5c367dd9498e66, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombinationChecker
 --- !u!1 &1468826601
 GameObject:
   m_ObjectHideFlags: 0
@@ -6507,17 +6383,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1468826601}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &1472324413 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7677195893269296369, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
-  m_PrefabInstance: {fileID: 522477925}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96de2d0be47f45b58e1efb28fd8ef8ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.ArcaneActionModeController
 --- !u!1 &1498103064
 GameObject:
   m_ObjectHideFlags: 0
@@ -6680,7 +6545,7 @@ PrefabInstance:
     - target: {fileID: 3791414377709122258, guid: bf86a42b2f088de49879264e41e7c2fe, type: 3}
       propertyPath: _hand
       value: 
-      objectReference: {fileID: 1887117898}
+      objectReference: {fileID: 1887117899}
     - target: {fileID: 4852983481990886430, guid: bf86a42b2f088de49879264e41e7c2fe, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -7220,7 +7085,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1573203385
 Transform:
   m_ObjectHideFlags: 0
@@ -8329,7 +8194,7 @@ PrefabInstance:
     - target: {fileID: 5086753746293949895, guid: 48779954c6fda49439e689d81afed3bd, type: 3}
       propertyPath: _hand
       value: 
-      objectReference: {fileID: 1887117898}
+      objectReference: {fileID: 1887117899}
     - target: {fileID: 5532675425717233055, guid: 48779954c6fda49439e689d81afed3bd, type: 3}
       propertyPath: _transformFeatureStateProvider
       value: 
@@ -8655,10 +8520,6 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 869462150282368534, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 869462150883743412, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -8837,10 +8698,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1599655339009105641, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
       propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1608942276161464029, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
-      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1687964256050891971, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
@@ -9155,10 +9012,6 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4148996117326696413, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4297615674294703695, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
       propertyPath: _hmd
       value: 
@@ -9207,10 +9060,6 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4596701009645232662, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4715635074521552634, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -9237,10 +9086,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5153110309120091559, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
       propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5197386516731752889, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
-      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5239121883031923791, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
@@ -9387,10 +9232,6 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7043080950486431090, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 7241068639330065109, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -9491,10 +9332,6 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8549669563970757635, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 8549669564922991445, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -9593,7 +9430,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9038904586143564635, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9046125705854948648, guid: 5c149baf016750b42ac7e9cdbc905b96, type: 3}
       propertyPath: m_Enabled
@@ -10286,8 +10123,8 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1001}
-  - {fileID: 1887117895}
   - {fileID: 280072183}
+  - {fileID: 1887117895}
   - {fileID: 1573203385}
   - {fileID: 923607993}
   - {fileID: 522477925}

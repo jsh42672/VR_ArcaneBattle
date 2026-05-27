@@ -62,7 +62,7 @@ MonoBehaviour:
   voiceBoostDamageMultiplier: 1.25
   voiceBoostStatusMagnitudeMultiplier: 1.15
   consumeManaOnlyInCombatScenes: 1
-  enableGesturePrototype: 0
+  enableGesturePrototype: 1
   gestureDetector: {fileID: 0}
   gestureRouter: {fileID: 0}
   prototypeHand: {fileID: 0}
@@ -941,7 +941,7 @@ MonoBehaviour:
   leftOvrHand: {fileID: 0}
   rightOvrHand: {fileID: 0}
   useXrHandsStaticGestureRouter: 1
-  allowOvrPrototypeOverrideRouter: 1
+  allowOvrPrototypeOverrideRouter: 0
   gestureEventRouter: {fileID: 0}
   tuningData: {fileID: 0}
   stablePoseDuration: 0.1

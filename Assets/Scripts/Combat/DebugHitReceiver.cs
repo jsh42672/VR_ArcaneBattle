@@ -6,6 +6,8 @@ namespace ArcaneVR.Combat
 {
     public class DebugHitReceiver : MonoBehaviour, ISpellTarget
     {
+        [SerializeField] private bool showHitWorldText;
+
         private Renderer targetRenderer;
         private Color originalColor = Color.white;
         private SpellHitWorldText hitWorldText;
@@ -20,8 +22,10 @@ namespace ArcaneVR.Combat
             }
 
             hitWorldText = GetComponent<SpellHitWorldText>();
-            if (hitWorldText == null)
+            if (showHitWorldText && hitWorldText == null)
                 hitWorldText = gameObject.AddComponent<SpellHitWorldText>();
+            else if (!showHitWorldText && hitWorldText != null)
+                Destroy(hitWorldText);
         }
 
         public void ConfigureBaseColor(Color color)

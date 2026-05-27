@@ -48,6 +48,12 @@ namespace ArcaneVR.UI
             Unsubscribe();
         }
 
+        private void OnDestroy()
+        {
+            if (visualRoot != null)
+                Destroy(visualRoot.gameObject);
+        }
+
         private void LateUpdate()
         {
             if (Time.time >= nextReferenceRefreshTime)
@@ -111,6 +117,7 @@ namespace ArcaneVR.UI
             if (visualRoot != null)
                 return;
 
+            DestroyOrphanVisualRoots();
             visualRoot = new GameObject("Right Wrist Mana Display").transform;
             visualRoot.gameObject.hideFlags = HideFlags.DontSave;
             ParkVisualRoot();
@@ -162,7 +169,7 @@ namespace ArcaneVR.UI
             {
                 currentAnchor = null;
                 ParkVisualRoot();
-                visualRoot.gameObject.SetActive(true);
+                visualRoot.gameObject.SetActive(false);
                 return;
             }
 
@@ -315,6 +322,17 @@ namespace ArcaneVR.UI
                 ApplyColor(segmentMaterials[i], color);
             }
 
+        }
+
+        private void DestroyOrphanVisualRoots()
+        {
+            foreach (var root in FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (root == null || root == visualRoot || root.name != "Right Wrist Mana Display")
+                    continue;
+
+                Destroy(root.gameObject);
+            }
         }
 
         private static OVRHand FindRightHand()

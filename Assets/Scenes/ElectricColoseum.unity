@@ -504,7 +504,6 @@ Transform:
   - {fileID: 1577224938}
   - {fileID: 868746105}
   - {fileID: 1541898459}
-  - {fileID: 1157934246}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &42807537
@@ -738,20 +737,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PortalTeleporter
   portalData: {fileID: 0}
   isExitPortal: 1
-  triggerRadius: 2.5
-  enableProximityActivation: 1
-  proximityActivationRadius: 2.5
-  proximityVerticalTolerance: 3
-  proximityCheckInterval: 0.1
-  activationStartDelay: 0.55
-  activationDwellDuration: 0.28
-  maxActivationWorldRadius: 1.35
-  minimumActivationWorldRadius: 0.35
-  maximumVerticalTolerance: 3
-  minimumVerticalTolerance: 0.55
-  visualActivationRadiusMultiplier: 0.12
-  visualActivationRadiusMax: 0.95
-  useTransformPositionForActivation: 1
 --- !u!23 &150917300
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1031,83 +1016,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &274086204
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 8036273}
-    m_Modifications:
-    - target: {fileID: 4952131365919966842, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_Name
-      value: VFX_Point_Light
-      objectReference: {fileID: 0}
-    - target: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 14.63
-      objectReference: {fileID: 0}
-    - target: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 8.66
-      objectReference: {fileID: 0}
-    - target: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 18.19
-      objectReference: {fileID: 0}
-    - target: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7552325380232887710, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_Range
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 7552325380232887710, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_Color.b
-      value: 0.9528302
-      objectReference: {fileID: 0}
-    - target: {fileID: 7552325380232887710, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_Color.g
-      value: 0.38831574
-      objectReference: {fileID: 0}
-    - target: {fileID: 7552325380232887710, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_Color.r
-      value: 0.31910825
-      objectReference: {fileID: 0}
-    - target: {fileID: 7552325380232887710, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-      propertyPath: m_ColorTemperature
-      value: 15238
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
 --- !u!1001 &366502856
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1204,9 +1112,6 @@ PrefabInstance:
       addedObject: {fileID: 366502861}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 366502860}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 366502859}
   m_SourcePrefab: {fileID: 100100000, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
 --- !u!1 &366502857 stripped
@@ -1226,6 +1131,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fee606bb0f18e344aa8f39fa73f2df0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightningAuraController
+  golemTarget: {fileID: 0}
+  auraLights: []
+  idleIntensity: 0
+  activeIntensity: 1.1
+  activeColor: {r: 0.45, g: 0.8, b: 1, a: 1}
 --- !u!114 &366502859
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1241,24 +1151,6 @@ MonoBehaviour:
   combatTarget: {fileID: 0}
   bossAI: {fileID: 0}
   driveBossAiState: 1
---- !u!114 &366502860
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 366502857}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6c504ac828a48d9942b412b518930e2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossElementStatusVfx
-  combatTarget: {fileID: 0}
-  tintRenderers: 1
-  showParticles: 1
-  showBarrierRings: 1
-  showWeakMarker: 1
-  boundsRefreshInterval: 0.35
 --- !u!114 &366502861
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1385,12 +1277,9 @@ MonoBehaviour:
   weakDuration: 5
   staggerDuration: 2.5
   slowDuration: 3
-  defaultSlowMultiplier: 0.45
   burnDuration: 4
   defaultChargeCounterDuration: 3
   defaultBarrierDuration: 8
-  steamBurstKnockbackDistance: 2.4
-  steamBurstKnockbackDuration: 0.35
 --- !u!1 &398343750
 GameObject:
   m_ObjectHideFlags: 0
@@ -1536,8 +1425,6 @@ GameObject:
   m_Component:
   - component: {fileID: 427515334}
   - component: {fileID: 427515336}
-  - component: {fileID: 427515335}
-  - component: {fileID: 427515337}
   m_Layer: 0
   m_Name: Bolt_Diag2
   m_TagString: Untagged
@@ -1562,29 +1449,6 @@ Transform:
   - {fileID: 757240211}
   m_Father: {fileID: 8036273}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &427515335
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 427515333}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 946c0a34555a28e438f5da3cf715cd1d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StartObject: {fileID: 216601153}
-  StartPosition: {x: 85, y: 0.1, z: -85}
-  EndObject: {fileID: 757240210}
-  EndPosition: {x: -85, y: 0.1, z: 85}
-  Generations: 8
-  Duration: 0.10284028
-  ChaosFactor: 0.25
-  ManualMode: 1
-  Rows: 8
-  Columns: 1
-  AnimationMode: 3
 --- !u!120 &427515336
 LineRenderer:
   serializedVersion: 3
@@ -1702,21 +1566,6 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 0
---- !u!114 &427515337
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 427515333}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ab8f23d66dab114c9d0880b5f9097ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LightningIntervalController
-  minInterval: 1.5
-  maxInterval: 5
-  strikeDuration: 0.10284028
 --- !u!1 &521105926
 GameObject:
   m_ObjectHideFlags: 0
@@ -1908,8 +1757,6 @@ GameObject:
   m_Component:
   - component: {fileID: 776732716}
   - component: {fileID: 776732718}
-  - component: {fileID: 776732717}
-  - component: {fileID: 776732719}
   m_Layer: 0
   m_Name: Bolt_Diag1
   m_TagString: Untagged
@@ -1934,29 +1781,6 @@ Transform:
   - {fileID: 1399118274}
   m_Father: {fileID: 8036273}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &776732717
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 776732715}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 946c0a34555a28e438f5da3cf715cd1d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StartObject: {fileID: 1785949246}
-  StartPosition: {x: -85, y: 0.1, z: -85}
-  EndObject: {fileID: 1399118273}
-  EndPosition: {x: 85, y: 0.1, z: 85}
-  Generations: 8
-  Duration: 0.25396723
-  ChaosFactor: 0.25
-  ManualMode: 1
-  Rows: 8
-  Columns: 1
-  AnimationMode: 3
 --- !u!120 &776732718
 LineRenderer:
   serializedVersion: 3
@@ -2074,21 +1898,6 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 0
---- !u!114 &776732719
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 776732715}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ab8f23d66dab114c9d0880b5f9097ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LightningIntervalController
-  minInterval: 1.5
-  maxInterval: 5
-  strikeDuration: 0.25396723
 --- !u!1 &868746104
 GameObject:
   m_ObjectHideFlags: 0
@@ -2099,8 +1908,6 @@ GameObject:
   m_Component:
   - component: {fileID: 868746105}
   - component: {fileID: 868746107}
-  - component: {fileID: 868746106}
-  - component: {fileID: 868746108}
   m_Layer: 0
   m_Name: Bolt_V
   m_TagString: Untagged
@@ -2125,29 +1932,6 @@ Transform:
   - {fileID: 263459594}
   m_Father: {fileID: 8036273}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &868746106
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 868746104}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 946c0a34555a28e438f5da3cf715cd1d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StartObject: {fileID: 1775863398}
-  StartPosition: {x: 0, y: 0.1, z: -90}
-  EndObject: {fileID: 263459593}
-  EndPosition: {x: 0, y: 0.1, z: 90}
-  Generations: 8
-  Duration: 0.2633186
-  ChaosFactor: 0.25
-  ManualMode: 1
-  Rows: 8
-  Columns: 1
-  AnimationMode: 3
 --- !u!120 &868746107
 LineRenderer:
   serializedVersion: 3
@@ -2265,21 +2049,6 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 0
---- !u!114 &868746108
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 868746104}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ab8f23d66dab114c9d0880b5f9097ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LightningIntervalController
-  minInterval: 1.5
-  maxInterval: 5
-  strikeDuration: 0.2633186
 --- !u!1 &910503000
 GameObject:
   m_ObjectHideFlags: 0
@@ -2373,11 +2142,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1278329177}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1157934246 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6040056879142927025, guid: 9f90aa15c6b14234ea7247f33f09e816, type: 3}
-  m_PrefabInstance: {fileID: 274086204}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1179940077
 GameObject:
   m_ObjectHideFlags: 0
@@ -3097,8 +2861,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1541898459}
   - component: {fileID: 1541898461}
-  - component: {fileID: 1541898460}
-  - component: {fileID: 1541898462}
   m_Layer: 0
   m_Name: Bolt_RingCurve
   m_TagString: Untagged
@@ -3123,29 +2885,6 @@ Transform:
   - {fileID: 1534574487}
   m_Father: {fileID: 8036273}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1541898460
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1541898458}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 946c0a34555a28e438f5da3cf715cd1d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StartObject: {fileID: 1498444646}
-  StartPosition: {x: 90, y: 0.1, z: 0}
-  EndObject: {fileID: 1534574486}
-  EndPosition: {x: 0, y: 0.1, z: 90}
-  Generations: 8
-  Duration: 0.1801049
-  ChaosFactor: 0.25
-  ManualMode: 1
-  Rows: 8
-  Columns: 1
-  AnimationMode: 3
 --- !u!120 &1541898461
 LineRenderer:
   serializedVersion: 3
@@ -3263,21 +3002,6 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 0
---- !u!114 &1541898462
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1541898458}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ab8f23d66dab114c9d0880b5f9097ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LightningIntervalController
-  minInterval: 1.5
-  maxInterval: 5
-  strikeDuration: 0.1801049
 --- !u!1 &1577224937
 GameObject:
   m_ObjectHideFlags: 0
@@ -3288,8 +3012,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1577224938}
   - component: {fileID: 1577224940}
-  - component: {fileID: 1577224939}
-  - component: {fileID: 1577224941}
   m_Layer: 0
   m_Name: Bolt_H
   m_TagString: Untagged
@@ -3314,29 +3036,6 @@ Transform:
   - {fileID: 1414440076}
   m_Father: {fileID: 8036273}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1577224939
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1577224937}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 946c0a34555a28e438f5da3cf715cd1d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StartObject: {fileID: 2068695376}
-  StartPosition: {x: -90, y: 0.1, z: 0}
-  EndObject: {fileID: 1414440075}
-  EndPosition: {x: 90, y: 0.1, z: 0}
-  Generations: 8
-  Duration: 0.2785953
-  ChaosFactor: 0.25
-  ManualMode: 1
-  Rows: 8
-  Columns: 1
-  AnimationMode: 3
 --- !u!120 &1577224940
 LineRenderer:
   serializedVersion: 3
@@ -3454,21 +3153,6 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 0
---- !u!114 &1577224941
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1577224937}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ab8f23d66dab114c9d0880b5f9097ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LightningIntervalController
-  minInterval: 1.5
-  maxInterval: 5
-  strikeDuration: 0.2785953
 --- !u!1 &1618798417
 GameObject:
   m_ObjectHideFlags: 0
@@ -4462,7 +4146,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: GrimoireSystem
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8204880505624769998, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+    - {fileID: 6821662366605605311, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -4519,7 +4205,13 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 2841568734461601741, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+    - {fileID: 7661661343282000158, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+    - {fileID: 7929364663835717832, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+    - {fileID: 3402852720032889955, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+    - {fileID: 7637620584788293126, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+    - {fileID: 6498349946654474205, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

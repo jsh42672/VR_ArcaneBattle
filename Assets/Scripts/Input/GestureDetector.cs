@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ArcaneVR.Spell;
 using UnityEngine;
 using UnityEngine.XR.Hands;
 
@@ -66,7 +67,7 @@ namespace ArcaneVR.Input
 
         [Header("XR Hands Static Gesture Router")]
         [SerializeField] private bool useXrHandsStaticGestureRouter = true;
-        [SerializeField] private bool allowOvrPrototypeOverrideRouter = true;
+        [SerializeField] private bool allowOvrPrototypeOverrideRouter = false;
         [SerializeField] private GestureEventRouter gestureEventRouter;
 
         [Header("Quest Tuning")]
@@ -115,6 +116,8 @@ namespace ArcaneVR.Input
         [SerializeField] private bool showBoneAngleDebug = false;
         [SerializeField] private bool debugRightHandAngles = true;
         [SerializeField] private bool showPrototypeDebugLog;
+        [SerializeField] private bool showPlayModeDebugOverlay;
+        [SerializeField] private KeyCode debugOverlayToggleKey = KeyCode.BackQuote;
 
         [Header("Gesture Spell Prototype")]
         [SerializeField] private float prototypePoseHoldTime = 0.3f;
@@ -130,6 +133,7 @@ namespace ArcaneVR.Input
         [SerializeField, Range(0f, 1f)] private float prototypeThumbOpenCurlMax = 0.55f;
         [SerializeField, Range(0f, 1f)] private float prototypeThumbClosedCurlMin = 0.45f;
         [SerializeField, Range(0f, 1f)] private float prototypeFingerClosedCurlMin = 0.55f;
+        [SerializeField] private HandPullMovementController handPullMovement;
 
         public event Action<PoseId, PoseId> OnPoseDetected;
         public event Action OnGrimTrigger;
@@ -182,6 +186,12 @@ namespace ArcaneVR.Input
         private float leftFistMovementReleaseTimer;
         private string leftPrototypeDebug = "L: waiting";
         private string rightPrototypeDebug = "R: waiting";
+        private GUIStyle playModeDebugStyle;
+        private readonly StringBuilder playModeDebugBuilder = new StringBuilder(1024);
+        private CombinationFocusModeController debugFocusModeController;
+        private CombinationChecker debugCombinationChecker;
+        private SpellCaster debugSpellCaster;
+        private HandPullMovementController debugHandPullMovement;
         private int debugBindingLogFrame;
         private bool routerEventsSubscribed;
         private Vector3 previousCombineMidpoint;
@@ -235,7 +245,7 @@ namespace ArcaneVR.Input
         private bool IsRouterDrivingPoses =>
             useXrHandsStaticGestureRouter &&
             gestureEventRouter != null &&
-            gestureEventRouter.HasReceivedGestureEvent;
+            (!allowOvrPrototypeOverrideRouter || gestureEventRouter.HasReceivedGestureEvent);
 
         private void Awake()
         {
@@ -317,8 +327,19 @@ namespace ArcaneVR.Input
 
                 if (gestureEventRouter != null)
                 {
-                    rightPrototypeDebug = "XR Gesture Router: waiting for StaticHandGesture event; OVR fallback active";
-                    leftPrototypeDebug = "XR Gesture Router: waiting for StaticHandGesture event; OVR fallback active";
+                    rightPrototypeDebug = allowOvrPrototypeOverrideRouter
+                        ? "XR Gesture Router: waiting for prefab event; OVR fallback active"
+                        : "XR Gesture Router: waiting for prefab event; OVR fallback disabled";
+                    leftPrototypeDebug = allowOvrPrototypeOverrideRouter
+                        ? "XR Gesture Router: waiting for prefab event; OVR fallback active"
+                        : "XR Gesture Router: waiting for prefab event; OVR fallback disabled";
+
+                    if (!allowOvrPrototypeOverrideRouter)
+                    {
+                        SyncRouterStateForDebug();
+                        LogHandBindingState();
+                        return;
+                    }
                 }
             }
 
@@ -342,6 +363,101 @@ namespace ArcaneVR.Input
                 OnPoseDetected?.Invoke(stableLeftPose, stableRightPose);
         }
 
+        private void OnGUI()
+        {
+            if (!Application.isPlaying)
+                return;
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (UnityEngine.Input.GetKeyDown(debugOverlayToggleKey))
+                showPlayModeDebugOverlay = !showPlayModeDebugOverlay;
+#endif
+
+            if (showPlayModeDebugOverlay)
+                DrawPlayModeDebugOverlay();
+
+            if (showBoneAngleDebug)
+                DrawBoneAngleDebug();
+        }
+
+        private void DrawPlayModeDebugOverlay()
+        {
+            if (playModeDebugStyle == null)
+            {
+                playModeDebugStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 16,
+                    normal = { textColor = Color.white },
+                    padding = new RectOffset(8, 8, 6, 6),
+                    wordWrap = false
+                };
+            }
+
+            playModeDebugBuilder.Clear();
+            playModeDebugBuilder.AppendLine("HAND POSE DEBUG  (` toggle)");
+            playModeDebugBuilder.AppendLine($"Left OVR : {BuildOverlayHandStatus(leftOvrHand)}");
+            playModeDebugBuilder.AppendLine($"Right OVR: {BuildOverlayHandStatus(rightOvrHand)}");
+            playModeDebugBuilder.AppendLine($"L Pose raw:{stableLeftPose} proto:{leftPrototypeConfirmedPose}");
+            playModeDebugBuilder.AppendLine($"R Pose raw:{stableRightPose} proto:{rightPrototypeConfirmedPose}");
+            playModeDebugBuilder.AppendLine($"L Debug: {leftPrototypeDebug}");
+            playModeDebugBuilder.AppendLine($"R Debug: {rightPrototypeDebug}");
+            if (gestureEventRouter != null)
+            {
+                playModeDebugBuilder.AppendLine(
+                    $"Router: R:{gestureEventRouter.CurrentRightPose} L:{gestureEventRouter.CurrentLeftPose} events:{gestureEventRouter.ReceivedEventCount}");
+            }
+
+            ResolvePlayModeDebugReferences();
+            if (debugFocusModeController != null)
+            {
+                playModeDebugBuilder.AppendLine(
+                    $"Focus: {(debugFocusModeController.IsFocusActive ? "ON" : "OFF")} remain:{debugFocusModeController.RemainingSeconds:0.0}s hands:{debugFocusModeController.CurrentHandDistance:0.000} push:{debugFocusModeController.CurrentCombineForwardSpeed:0.00}");
+                playModeDebugBuilder.AppendLine($"FocusStatus: {debugFocusModeController.LastStatus}");
+            }
+
+            if (debugCombinationChecker != null)
+            {
+                playModeDebugBuilder.AppendLine(
+                    $"Combo: L:{debugCombinationChecker.LeftDeclaredElement} R:{debugCombinationChecker.RightDeclaredElement} ready:{debugCombinationChecker.IsComboReady} candidate:{debugCombinationChecker.CurrentComboCandidate}");
+                playModeDebugBuilder.AppendLine($"ComboStatus: {debugCombinationChecker.LastComboStatus}");
+            }
+
+            if (debugHandPullMovement != null)
+            {
+                playModeDebugBuilder.AppendLine(
+                    $"Pull: {(debugHandPullMovement.IsMovementSuppressed ? "SUPPRESSED" : "free")} reason:{debugHandPullMovement.MovementSuppressionReason} active:{debugHandPullMovement.ActiveHandName}");
+            }
+
+            if (debugSpellCaster != null)
+                playModeDebugBuilder.AppendLine($"Caster: {debugSpellCaster.PrototypeArmStatus} | {debugSpellCaster.LastCastStatus}");
+
+            var rect = new Rect(12f, 10f, Mathf.Min(1180f, Screen.width - 24f), Mathf.Max(180f, Screen.height - 20f));
+            GUI.Label(rect, playModeDebugBuilder.ToString(), playModeDebugStyle);
+        }
+
+        private void ResolvePlayModeDebugReferences()
+        {
+            if (debugFocusModeController == null)
+                debugFocusModeController = FindAnyObjectByType<CombinationFocusModeController>();
+
+            if (debugCombinationChecker == null)
+                debugCombinationChecker = FindAnyObjectByType<CombinationChecker>();
+
+            if (debugSpellCaster == null)
+                debugSpellCaster = FindAnyObjectByType<SpellCaster>();
+
+            if (debugHandPullMovement == null)
+                debugHandPullMovement = FindAnyObjectByType<HandPullMovementController>();
+        }
+
+        private static string BuildOverlayHandStatus(OVRHand hand)
+        {
+            if (hand == null)
+                return "missing";
+
+            return $"active:{hand.gameObject.activeInHierarchy} tracked:{hand.IsTracked} valid:{hand.IsDataValid} conf:{hand.HandConfidence}";
+        }
+
         private void ResolveGestureEventRouter()
         {
             if (!useXrHandsStaticGestureRouter || gestureEventRouter != null)
@@ -357,6 +473,8 @@ namespace ArcaneVR.Input
 
             gestureEventRouter.OnRightPoseConfirmed += HandleRouterRightPoseConfirmed;
             gestureEventRouter.OnRightPoseCleared += HandleRouterRightPoseCleared;
+            gestureEventRouter.OnLeftPoseConfirmed += HandleRouterLeftPoseConfirmed;
+            gestureEventRouter.OnLeftPoseCleared += HandleRouterLeftPoseCleared;
             gestureEventRouter.OnLeftFistStart += HandleRouterLeftFistStart;
             gestureEventRouter.OnLeftFistEnd += HandleRouterLeftFistEnd;
             routerEventsSubscribed = true;
@@ -369,6 +487,8 @@ namespace ArcaneVR.Input
 
             gestureEventRouter.OnRightPoseConfirmed -= HandleRouterRightPoseConfirmed;
             gestureEventRouter.OnRightPoseCleared -= HandleRouterRightPoseCleared;
+            gestureEventRouter.OnLeftPoseConfirmed -= HandleRouterLeftPoseConfirmed;
+            gestureEventRouter.OnLeftPoseCleared -= HandleRouterLeftPoseCleared;
             gestureEventRouter.OnLeftFistStart -= HandleRouterLeftFistStart;
             gestureEventRouter.OnLeftFistEnd -= HandleRouterLeftFistEnd;
             routerEventsSubscribed = false;
@@ -384,7 +504,9 @@ namespace ArcaneVR.Input
             stableRightPose = ToPoseId(gestureEventRouter.CurrentRightPose);
             stableLeftPose = ToPoseId(gestureEventRouter.CurrentLeftPose);
             rightPrototypeDebug = gestureEventRouter.DebugStatus;
-            leftPrototypeDebug = gestureEventRouter.LeftFistActive
+            leftPrototypeDebug = gestureEventRouter.CurrentLeftPose != PoseType.None
+                ? $"XR Gesture Router: Left {gestureEventRouter.CurrentLeftPose}"
+                : gestureEventRouter.LeftFistActive
                 ? "XR Gesture Router: Left Fist active"
                 : "XR Gesture Router: Left Fist none";
         }
@@ -438,6 +560,44 @@ namespace ArcaneVR.Input
             OnPoseDetected?.Invoke(stableLeftPose, stableRightPose);
         }
 
+        private void HandleRouterLeftPoseConfirmed(PoseType pose)
+        {
+            if (pose == PoseType.Fist)
+                return;
+
+            leftPrototypeCandidatePose = pose;
+            leftPrototypeConfirmedPose = pose;
+            leftPrototypePoseHoldTimer = 0f;
+            stableLeftPose = ToPoseId(pose);
+            candidateLeftPose = stableLeftPose;
+            leftFistMovementConfirmed = pose == PoseType.Fist;
+            leftPrototypeDebug = $"XR Gesture Router: Left {pose}";
+
+            OnHandPoseConfirmed?.Invoke(true, pose);
+            OnPoseDetected?.Invoke(stableLeftPose, stableRightPose);
+        }
+
+        private void HandleRouterLeftPoseCleared()
+        {
+            if (leftPrototypeConfirmedPose == PoseType.Fist || stableLeftPose == PoseId.Fist)
+                return;
+
+            var hadPose = leftPrototypeConfirmedPose != PoseType.None || stableLeftPose != PoseId.None;
+            leftPrototypeCandidatePose = PoseType.None;
+            leftPrototypeConfirmedPose = PoseType.None;
+            leftPrototypePoseHoldTimer = 0f;
+            stableLeftPose = PoseId.None;
+            candidateLeftPose = PoseId.None;
+            leftFistMovementConfirmed = false;
+            leftPrototypeDebug = "XR Gesture Router: Left none";
+
+            if (!hadPose)
+                return;
+
+            OnHandPoseCleared?.Invoke(true);
+            OnPoseDetected?.Invoke(stableLeftPose, stableRightPose);
+        }
+
         private void HandleRouterLeftFistEnd()
         {
             var hadFist = leftFistMovementConfirmed || stableLeftPose == PoseId.Fist;
@@ -464,6 +624,7 @@ namespace ArcaneVR.Input
                 PoseType.OpenPalm => PoseId.OpenPalm,
                 PoseType.Fist => PoseId.Fist,
                 PoseType.ThumbsUp => PoseId.Horn,
+                PoseType.TwoFinger => PoseId.IndexPoint,
                 _ => PoseId.None
             };
         }
@@ -757,7 +918,7 @@ namespace ArcaneVR.Input
             return Mathf.Clamp01(Mathf.Max(straightnessCurl, palmCurl));
         }
 
-        private void OnGUI()
+        private void DrawBoneAngleDebug()
         {
             if (!showBoneAngleDebug)
                 return;
@@ -1563,6 +1724,13 @@ namespace ArcaneVR.Input
                 return false;
             }
 
+            if (IsLeftPullMovementActive())
+            {
+                IsCombineCandidate = false;
+                hasPreviousCombineMidpoint = false;
+                return false;
+            }
+
             IsCombineCandidate = Vector3.Distance(leftPalmPosition, rightPalmPosition) <= CombineDistance;
             if (!IsCombineCandidate)
             {
@@ -1588,6 +1756,19 @@ namespace ArcaneVR.Input
             previousCombineMidpoint = midpoint;
             hasPreviousCombineMidpoint = true;
             return true;
+        }
+
+        private bool IsLeftPullMovementActive()
+        {
+            if (leftFistMovementConfirmed)
+                return true;
+
+            if (handPullMovement == null)
+                handPullMovement = FindAnyObjectByType<HandPullMovementController>();
+
+            return handPullMovement != null &&
+                   handPullMovement.IsPulling &&
+                   handPullMovement.ActiveHandName == "Left";
         }
 
         private void UpdateStablePose(bool isLeft, PoseId detectedPose)

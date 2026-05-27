@@ -82,7 +82,7 @@ MonoBehaviour:
     statusMagnitude: 2
     statusTickInterval: 1
     projectileSpeed: 10
-    prefab: {fileID: 0}
+    prefab: {fileID: 6780806729480605841, guid: d624832531f95a846aaca3a81ba1dabf, type: 3}
   - pose: 2
     element: 2
     statusEffect: 2
@@ -91,7 +91,7 @@ MonoBehaviour:
     statusMagnitude: 0.45
     statusTickInterval: 0
     projectileSpeed: 10
-    prefab: {fileID: 0}
+    prefab: {fileID: 647664199890191740, guid: ec39cfcc6455d1b44a90a57bf15166d7, type: 3}
   - pose: 3
     element: 3
     statusEffect: 3
@@ -100,4 +100,4 @@ MonoBehaviour:
     statusMagnitude: 1
     statusTickInterval: 0
     projectileSpeed: 12
-    prefab: {fileID: 0}
+    prefab: {fileID: 357080079533716389, guid: 0dffd89118a9819428de7928cf668f54, type: 3}

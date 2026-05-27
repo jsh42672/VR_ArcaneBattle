@@ -992,7 +992,6 @@ namespace ArcaneVR.Editor
                 handObject = runtimeHandObject;
 
             var changed = WirePoseRoot(root, sourceName);
-            changed |= RelaxPoseRootToShapeOnly(root);
             changed |= WireProviderRefs(root, handObject, providerPair.FingerProvider, providerPair.TransformProvider);
             changed |= WireDebugLogger(root, sourceName);
 
@@ -1037,6 +1036,43 @@ namespace ArcaneVR.Editor
                 Undo.RecordObject(transformRef, "Wire Meta transform feature provider");
                 transformRef.InjectTransformFeatureStateProvider(transformProvider);
                 EditorUtility.SetDirty(transformRef);
+                changed = true;
+            }
+
+            foreach (var shapeRecognizer in root.GetComponentsInChildren<ShapeRecognizerActiveState>(true))
+            {
+                Undo.RecordObject(shapeRecognizer, "Wire Meta shape recognizer provider");
+#pragma warning disable CS0612
+                if (handObject is IHand hand)
+                    shapeRecognizer.InjectHand(hand);
+#pragma warning restore CS0612
+                shapeRecognizer.InjectFingerFeatureStateProvider(fingerProvider);
+                EditorUtility.SetDirty(shapeRecognizer);
+                changed = true;
+            }
+
+            foreach (var transformRecognizer in root.GetComponentsInChildren<TransformRecognizerActiveState>(true))
+            {
+                Undo.RecordObject(transformRecognizer, "Wire Meta transform recognizer provider");
+#pragma warning disable CS0612
+                if (handObject is IHand hand)
+                    transformRecognizer.InjectHand(hand);
+#pragma warning restore CS0612
+                transformRecognizer.InjectTransformFeatureStateProvider(transformProvider);
+                transformRecognizer.enabled = true;
+                EditorUtility.SetDirty(transformRecognizer);
+                changed = true;
+            }
+
+            var hmd = FindConcreteHmdSource();
+            foreach (var hmdOffset in root.GetComponentsInChildren<HmdOffset>(true))
+            {
+                if (hmd == null)
+                    continue;
+
+                Undo.RecordObject(hmdOffset, "Wire Meta HMD offset");
+                hmdOffset.InjectHmd(hmd);
+                EditorUtility.SetDirty(hmdOffset);
                 changed = true;
             }
 
@@ -1133,7 +1169,7 @@ namespace ArcaneVR.Editor
                 return true;
             }
 
-            if (lower.Contains("two") || lower.Contains("vsign") || lower.Contains("victory"))
+            if (lower.Contains("two") || lower.Contains("vsign") || lower.Contains("victory") || lower.Contains("scissors"))
             {
                 pose = PoseType.TwoFinger;
                 return true;
@@ -1147,13 +1183,13 @@ namespace ArcaneVR.Editor
                 return true;
             }
 
-            if (lower.Contains("fist") || lower.Contains("guard") || lower.Contains("barrier"))
+            if (lower.Contains("fist") || lower.Contains("guard") || lower.Contains("barrier") || lower.Contains("rock"))
             {
                 pose = PoseType.Fist;
                 return true;
             }
 
-            if (lower.Contains("open") || lower.Contains("palm") || lower.Contains("grimoire"))
+            if (lower.Contains("open") || lower.Contains("palm") || lower.Contains("grimoire") || lower.Contains("paper") || lower.Contains("stop"))
             {
                 pose = PoseType.OpenPalm;
                 return true;

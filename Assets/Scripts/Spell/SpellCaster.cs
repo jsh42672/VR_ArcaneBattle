@@ -30,8 +30,10 @@ namespace ArcaneVR.Spell
 
         [Header("Gesture Spell Prototype")]
         [SerializeField] private bool enableGesturePrototype;
+        [SerializeField] private bool allowCombinationSpellCasts = true;
         [SerializeField] private GestureDetector gestureDetector;
         [SerializeField] private GestureEventRouter gestureRouter;
+        [SerializeField] private CombinationFocusModeController focusModeController;
         [SerializeField] private OVRHand prototypeHand;
         [SerializeField] private Transform prototypeSpawnPoint;
         [SerializeField] private Transform prototypeTrackingSpaceRoot;
@@ -163,6 +165,9 @@ namespace ArcaneVR.Spell
             if (gestureRouter == null)
                 gestureRouter = FindAnyObjectByType<GestureEventRouter>();
 
+            if (focusModeController == null)
+                focusModeController = FindAnyObjectByType<CombinationFocusModeController>();
+
             if (headTransform == null && Camera.main != null)
                 headTransform = Camera.main.transform;
 
@@ -206,6 +211,12 @@ namespace ArcaneVR.Spell
 
         private void HandleCombinationSuccess(SpellId spellId)
         {
+            if (!IsCombinationCastAllowed(spellId))
+            {
+                lastCastStatus = $"Combo cast locked: {SpellHitData.GetDisplayName(spellId)}";
+                return;
+            }
+
             Cast(spellId);
         }
 
@@ -483,7 +494,7 @@ namespace ArcaneVR.Spell
 
         private void SyncPrototypePoseFromDetector()
         {
-            if (gestureRouter != null && gestureRouter.HasReceivedGestureEvent)
+            if (gestureRouter != null)
             {
                 if (currentPrototypePose != gestureRouter.CurrentRightPose)
                 {
@@ -660,6 +671,7 @@ namespace ArcaneVR.Spell
             prototypeAuraRoot.transform.localScale = Vector3.one;
 
             prototypeAuraParticles = prototypeAuraRoot.AddComponent<ParticleSystem>();
+            prototypeAuraParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             ConfigurePrototypeAuraParticles(prototypeAuraParticles);
 
             prototypeAuraRenderer = prototypeAuraRoot.GetComponent<ParticleSystemRenderer>();
@@ -809,6 +821,9 @@ namespace ArcaneVR.Spell
 
         private void ConfigurePrototypeAuraParticles(ParticleSystem particles)
         {
+            if (particles.isPlaying || particles.isEmitting)
+                particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
             var main = particles.main;
             main.playOnAwake = false;
             main.loop = true;
@@ -1639,6 +1654,13 @@ namespace ArcaneVR.Spell
 
         public bool Cast(SpellId spellId)
         {
+            if (!IsCombinationCastAllowed(spellId))
+            {
+                lastCastStatus = $"Combo cast locked: {SpellHitData.GetDisplayName(spellId)}";
+                lastManaCostStatus = "Cost: combo locked";
+                return false;
+            }
+
             if (spellDatabase == null)
             {
                 Debug.LogWarning("SpellCaster needs a SpellDatabase reference.");
@@ -1815,16 +1837,19 @@ namespace ArcaneVR.Spell
                     parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(90f, 0f, 0f);
                     break;
                 case SpellId.Combo_FireIce:
-                    AddPrimitiveVisual("FireIce_LeftOrb", PrimitiveType.Sphere, parent, new Vector3(-0.13f, 0f, 0f), Vector3.one * 0.18f, GetElementColor(ElementType.Fire));
-                    AddPrimitiveVisual("FireIce_RightOrb", PrimitiveType.Sphere, parent, new Vector3(0.13f, 0f, 0f), Vector3.one * 0.18f, GetElementColor(ElementType.Ice));
+                    AddPrimitiveVisual("SteamBurst_Core", PrimitiveType.Sphere, parent, Vector3.zero, Vector3.one * 0.26f, new Color(1f, 0.48f, 0.16f, 1f));
+                    AddPrimitiveVisual("SteamBurst_Mist", PrimitiveType.Sphere, parent, new Vector3(0f, 0.02f, 0f), new Vector3(0.42f, 0.22f, 0.42f), new Color(0.72f, 0.92f, 1f, 0.78f));
                     break;
                 case SpellId.Combo_IceThunder:
-                    AddPrimitiveVisual("IceThunder_Cylinder", PrimitiveType.Cylinder, parent, Vector3.zero, new Vector3(0.24f, 0.16f, 0.24f), Color.Lerp(GetElementColor(ElementType.Ice), GetElementColor(ElementType.Thunder), 0.5f));
+                    AddPrimitiveVisual("BarrierBreak_IceCore", PrimitiveType.Cylinder, parent, Vector3.zero, new Vector3(0.26f, 0.14f, 0.26f), new Color(0.35f, 0.85f, 1f, 1f));
                     parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(90f, 0f, 0f);
+                    AddPrimitiveVisual("BarrierBreak_Arc", PrimitiveType.Capsule, parent, Vector3.zero, new Vector3(0.08f, 0.42f, 0.08f), new Color(0.62f, 0.38f, 1f, 1f));
+                    parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(0f, 0f, 55f);
                     break;
                 case SpellId.Combo_ThunderFire:
-                    AddPrimitiveVisual("ThunderFire_Diamond", PrimitiveType.Cube, parent, Vector3.zero, Vector3.one * 0.28f, Color.Lerp(GetElementColor(ElementType.Thunder), GetElementColor(ElementType.Fire), 0.45f));
+                    AddPrimitiveVisual("OverloadFlame_Diamond", PrimitiveType.Cube, parent, Vector3.zero, Vector3.one * 0.28f, new Color(1f, 0.62f, 0.05f, 1f));
                     parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(45f, 45f, 0f);
+                    AddPrimitiveVisual("OverloadFlame_Spark", PrimitiveType.Sphere, parent, new Vector3(0f, 0.12f, 0f), Vector3.one * 0.16f, new Color(1f, 0.12f, 0.03f, 1f));
                     break;
                 default:
                     AddPrimitiveVisual("Fallback_Sphere", PrimitiveType.Sphere, parent, Vector3.zero, Vector3.one * 0.18f, color);
@@ -1896,6 +1921,20 @@ namespace ArcaneVR.Spell
             return spellId == SpellId.Single_Pointer ||
                    spellId == SpellId.Single_Wave ||
                    spellId == SpellId.Single_Strike;
+        }
+
+        private bool IsCombinationCastAllowed(SpellId spellId)
+        {
+            if (!SpellHitData.IsComboSpellId(spellId))
+                return true;
+
+            if (allowCombinationSpellCasts)
+                return true;
+
+            if (focusModeController == null)
+                focusModeController = FindAnyObjectByType<CombinationFocusModeController>();
+
+            return focusModeController != null && focusModeController.IsFocusActive;
         }
     }
 }
