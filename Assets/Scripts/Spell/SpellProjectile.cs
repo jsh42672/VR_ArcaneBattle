@@ -141,7 +141,11 @@ namespace ArcaneVR.Spell
 
             hasHit = true;
 
-            if (boss != null && combatManager != null)
+            var golemTarget = boss.GetComponent<GolemCombatTarget>() ??
+                              boss.GetComponentInParent<GolemCombatTarget>();
+            if (golemTarget != null)
+                golemTarget.OnHit(GetHitData());
+            else if (combatManager != null)
                 combatManager.ApplyBossHit(this);
 
             Destroy(gameObject);

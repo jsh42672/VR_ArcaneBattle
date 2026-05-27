@@ -738,20 +738,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PortalTeleporter
   portalData: {fileID: 0}
   isExitPortal: 1
-  triggerRadius: 2.5
-  enableProximityActivation: 1
-  proximityActivationRadius: 2.5
-  proximityVerticalTolerance: 3
-  proximityCheckInterval: 0.1
-  activationStartDelay: 0.55
-  activationDwellDuration: 0.28
-  maxActivationWorldRadius: 1.35
-  minimumActivationWorldRadius: 0.35
-  maximumVerticalTolerance: 3
-  minimumVerticalTolerance: 0.55
-  visualActivationRadiusMultiplier: 0.12
-  visualActivationRadiusMax: 0.95
-  useTransformPositionForActivation: 1
 --- !u!23 &150917300
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1189,9 +1175,6 @@ PrefabInstance:
       addedObject: {fileID: 366502858}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 366502865}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 366502864}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
       insertIndex: -1
@@ -1208,6 +1191,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
       insertIndex: -1
       addedObject: {fileID: 366502859}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 366502866}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 366502869}
   m_SourcePrefab: {fileID: 100100000, guid: 512502a7c54800b4b8e96e3d6d16b551, type: 3}
 --- !u!1 &366502857 stripped
 GameObject:
@@ -1226,6 +1215,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fee606bb0f18e344aa8f39fa73f2df0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightningAuraController
+  golemTarget: {fileID: 0}
+  auraLights: []
+  idleIntensity: 0
+  activeIntensity: 1.1
+  activeColor: {r: 0.45, g: 0.8, b: 1, a: 1}
 --- !u!114 &366502859
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1253,12 +1247,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6c504ac828a48d9942b412b518930e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossElementStatusVfx
-  combatTarget: {fileID: 0}
-  tintRenderers: 1
-  showParticles: 1
-  showBarrierRings: 1
-  showWeakMarker: 1
-  boundsRefreshInterval: 0.35
 --- !u!114 &366502861
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1366,7 +1354,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 702e010a91e279242bac7aeddca56fbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Boss.BossAI
---- !u!114 &366502865
+--- !u!114 &366502866
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1378,19 +1366,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c10d309d2f954750852996376b4c9411, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.GolemCombatTarget
-  maxHealth: 300
-  currentHealth: 300
+  maxHealth: 10000
+  currentHealth: 10000
   barrierDamageMultiplier: 0.2
   weakDamageMultiplier: 1.5
   weakDuration: 5
   staggerDuration: 2.5
   slowDuration: 3
-  defaultSlowMultiplier: 0.45
   burnDuration: 4
   defaultChargeCounterDuration: 3
   defaultBarrierDuration: 8
-  steamBurstKnockbackDistance: 2.4
-  steamBurstKnockbackDuration: 0.35
+  enableDebugLogs: 1
+--- !u!136 &366502869
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 366502857}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.6
+  m_Height: 1.5
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.7, z: 0}
 --- !u!1 &398343750
 GameObject:
   m_ObjectHideFlags: 0
@@ -1574,17 +1583,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 946c0a34555a28e438f5da3cf715cd1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StartObject: {fileID: 216601153}
-  StartPosition: {x: 85, y: 0.1, z: -85}
-  EndObject: {fileID: 757240210}
-  EndPosition: {x: -85, y: 0.1, z: 85}
-  Generations: 8
-  Duration: 0.10284028
-  ChaosFactor: 0.25
-  ManualMode: 1
-  Rows: 8
-  Columns: 1
-  AnimationMode: 3
 --- !u!120 &427515336
 LineRenderer:
   serializedVersion: 3
@@ -1714,9 +1712,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ab8f23d66dab114c9d0880b5f9097ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightningIntervalController
-  minInterval: 1.5
-  maxInterval: 5
-  strikeDuration: 0.10284028
 --- !u!1 &521105926
 GameObject:
   m_ObjectHideFlags: 0
@@ -1946,17 +1941,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 946c0a34555a28e438f5da3cf715cd1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StartObject: {fileID: 1785949246}
-  StartPosition: {x: -85, y: 0.1, z: -85}
-  EndObject: {fileID: 1399118273}
-  EndPosition: {x: 85, y: 0.1, z: 85}
-  Generations: 8
-  Duration: 0.25396723
-  ChaosFactor: 0.25
-  ManualMode: 1
-  Rows: 8
-  Columns: 1
-  AnimationMode: 3
 --- !u!120 &776732718
 LineRenderer:
   serializedVersion: 3
@@ -2086,9 +2070,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ab8f23d66dab114c9d0880b5f9097ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightningIntervalController
-  minInterval: 1.5
-  maxInterval: 5
-  strikeDuration: 0.25396723
 --- !u!1 &868746104
 GameObject:
   m_ObjectHideFlags: 0
@@ -2137,17 +2118,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 946c0a34555a28e438f5da3cf715cd1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StartObject: {fileID: 1775863398}
-  StartPosition: {x: 0, y: 0.1, z: -90}
-  EndObject: {fileID: 263459593}
-  EndPosition: {x: 0, y: 0.1, z: 90}
-  Generations: 8
-  Duration: 0.2633186
-  ChaosFactor: 0.25
-  ManualMode: 1
-  Rows: 8
-  Columns: 1
-  AnimationMode: 3
 --- !u!120 &868746107
 LineRenderer:
   serializedVersion: 3
@@ -2277,9 +2247,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ab8f23d66dab114c9d0880b5f9097ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightningIntervalController
-  minInterval: 1.5
-  maxInterval: 5
-  strikeDuration: 0.2633186
 --- !u!1 &910503000
 GameObject:
   m_ObjectHideFlags: 0
@@ -3135,17 +3102,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 946c0a34555a28e438f5da3cf715cd1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StartObject: {fileID: 1498444646}
-  StartPosition: {x: 90, y: 0.1, z: 0}
-  EndObject: {fileID: 1534574486}
-  EndPosition: {x: 0, y: 0.1, z: 90}
-  Generations: 8
-  Duration: 0.1801049
-  ChaosFactor: 0.25
-  ManualMode: 1
-  Rows: 8
-  Columns: 1
-  AnimationMode: 3
 --- !u!120 &1541898461
 LineRenderer:
   serializedVersion: 3
@@ -3275,9 +3231,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ab8f23d66dab114c9d0880b5f9097ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightningIntervalController
-  minInterval: 1.5
-  maxInterval: 5
-  strikeDuration: 0.1801049
 --- !u!1 &1577224937
 GameObject:
   m_ObjectHideFlags: 0
@@ -3326,17 +3279,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 946c0a34555a28e438f5da3cf715cd1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StartObject: {fileID: 2068695376}
-  StartPosition: {x: -90, y: 0.1, z: 0}
-  EndObject: {fileID: 1414440075}
-  EndPosition: {x: 90, y: 0.1, z: 0}
-  Generations: 8
-  Duration: 0.2785953
-  ChaosFactor: 0.25
-  ManualMode: 1
-  Rows: 8
-  Columns: 1
-  AnimationMode: 3
 --- !u!120 &1577224940
 LineRenderer:
   serializedVersion: 3
@@ -3466,9 +3408,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ab8f23d66dab114c9d0880b5f9097ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LightningIntervalController
-  minInterval: 1.5
-  maxInterval: 5
-  strikeDuration: 0.2785953
 --- !u!1 &1618798417
 GameObject:
   m_ObjectHideFlags: 0
