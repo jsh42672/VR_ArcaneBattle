@@ -58,7 +58,10 @@ namespace ArcaneVR.Combat
 
         private void HandleDodgeFail()
         {
-            combatManager?.ApplyPlayerHit(failedDodgeDamage);
+            if (combatManager == null)
+                return;
+
+            combatManager.ApplyPlayerHit(combatManager.FailedDodgeDamage, "DodgeFail");
         }
     }
 }

@@ -4418,6 +4418,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: GameSystems
       objectReference: {fileID: 0}
+    - target: {fileID: 7022665556077210759, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: maxHP
+      value: 1000
+      objectReference: {fileID: 0}
+    - target: {fileID: 7022665556077210759, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: currentHP
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 7022665556077210759, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: deathSceneReloadDelay
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 8028382763193974252, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

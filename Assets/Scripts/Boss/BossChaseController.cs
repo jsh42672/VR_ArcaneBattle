@@ -252,6 +252,15 @@ namespace ArcaneVR.Boss
                 return;
             }
 
+            if (IsPlayerDead())
+            {
+                LastChaseStatus = "Chase: player dead";
+                DistanceToTarget = -1f;
+                wasMoving = false;
+                UpdateAnimator(false, 0f);
+                return;
+            }
+
             if (target == null)
                 target = ArcanePlayerRigResolver.FindHeadTransform() ?? ArcanePlayerRigResolver.FindPlayerRigTransform();
 
@@ -320,6 +329,7 @@ namespace ArcaneVR.Boss
         public bool TryStartMeleeAttack(float distance)
         {
             if (!attackWhenInRange ||
+                IsPlayerDead() ||
                 distance > attackRange ||
                 Time.time < nextMeleeAttackTime ||
                 !CanStartAttackNow())
@@ -387,11 +397,15 @@ namespace ArcaneVR.Boss
 
         private void TryApplyGenericMeleeDamage()
         {
-            if (!applyGenericMeleeDamage || genericMeleeDamage <= 0f)
+            if (!applyGenericMeleeDamage)
                 return;
 
             ResolveReferences();
-            if (combatManager == null || target == null)
+            if (combatManager == null || target == null || IsPlayerDead())
+                return;
+
+            var damage = combatManager.GenericMeleeDamage;
+            if (damage <= 0f)
                 return;
 
             var root = movementRoot != null ? movementRoot : transform;
@@ -400,7 +414,7 @@ namespace ArcaneVR.Boss
             if (toTarget.magnitude > Mathf.Max(0.1f, meleeHitRange))
                 return;
 
-            combatManager.ApplyPlayerHit(genericMeleeDamage);
+            combatManager.ApplyPlayerHit(damage, "BossMelee");
         }
 
         private IEnumerator MoveAttackPhase(Vector3 from, Vector3 to, float duration)
@@ -428,6 +442,9 @@ namespace ArcaneVR.Boss
 
         private bool CanStartAttackNow()
         {
+            if (IsPlayerDead())
+                return false;
+
             if (Time.time < chasePausedUntilTime)
                 return false;
 
@@ -457,6 +474,12 @@ namespace ArcaneVR.Boss
 
         private bool CanMoveNow()
         {
+            if (IsPlayerDead())
+            {
+                LastChaseStatus = "Chase: player dead";
+                return false;
+            }
+
             if (Time.time < chasePausedUntilTime)
                 return false;
 
@@ -479,6 +502,14 @@ namespace ArcaneVR.Boss
                 default:
                     return true;
             }
+        }
+
+        private bool IsPlayerDead()
+        {
+            if (combatManager == null)
+                combatManager = FindAnyObjectByType<CombatManager>();
+
+            return combatManager != null && combatManager.IsPlayerDead;
         }
 
         private void FaceTarget(Vector3 direction)
