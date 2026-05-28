@@ -1,4 +1,5 @@
 using UnityEngine;
+using Oculus.Interaction;
 
 namespace ArcaneVR.Input
 {
@@ -20,6 +21,12 @@ namespace ArcaneVR.Input
         [SerializeField] private GestureEventRouter router;
         [SerializeField] private bool routerOverridesOvrPrototype = true;
         [SerializeField] private bool logEvents;
+        [SerializeField] private bool autoApplyRecordedPoseConditions = true;
+        [SerializeField] private float bothForwardMinDistance = 0.32f;
+        [SerializeField] private float palmTogetherMaxDistance = 0.14f;
+
+        private ActiveStateGroup activeStateGroup;
+        private bool selectionForwardedToRouter;
 
         public void Configure(Handedness targetHand, PoseType targetPose, bool overrideOvrPrototype = true)
         {
@@ -31,13 +38,28 @@ namespace ArcaneVR.Input
         private void Awake()
         {
             ResolveRouter();
+            ResolveActiveStateGroup();
             ApplyRouterPriority();
         }
 
         private void OnEnable()
         {
             ResolveRouter();
+            ResolveActiveStateGroup();
             ApplyRouterPriority();
+        }
+
+        private void OnDisable()
+        {
+            ClearSelectionFromRouter();
+        }
+
+        private void Update()
+        {
+            if (!UsesRuntimeGate())
+                return;
+
+            SyncConditionalSelection();
         }
 
         public void HandleSelected()
@@ -48,13 +70,13 @@ namespace ArcaneVR.Input
 
             ApplyRouterPriority();
 
-            if (hand == Handedness.Right)
-                SelectRightPose();
-            else
-                SelectLeftPose();
+            if (UsesRuntimeGate())
+            {
+                SyncConditionalSelection();
+                return;
+            }
 
-            if (logEvents)
-                Debug.Log($"[MetaHandPoseGestureBridge] Selected {hand} {pose}", this);
+            ForwardSelectionToRouter();
         }
 
         public void HandleUnselected()
@@ -63,19 +85,109 @@ namespace ArcaneVR.Input
             if (router == null)
                 return;
 
-            if (hand == Handedness.Right)
-                ClearRightPose();
-            else
-                ClearLeftPose();
+            if (UsesRuntimeGate())
+            {
+                SyncConditionalSelection();
+                return;
+            }
 
-            if (logEvents)
-                Debug.Log($"[MetaHandPoseGestureBridge] Unselected {hand} {pose}", this);
+            ClearSelectionFromRouter();
         }
 
         private void ResolveRouter()
         {
             if (router == null)
                 router = FindAnyObjectByType<GestureEventRouter>();
+        }
+
+        private void ResolveActiveStateGroup()
+        {
+            if (activeStateGroup == null)
+                activeStateGroup = GetComponentInChildren<ActiveStateGroup>(true);
+        }
+
+        private bool UsesRuntimeGate()
+        {
+            if (!autoApplyRecordedPoseConditions)
+                return false;
+
+            return RecordedPoseConditionUtility.GetConditionKind(name) != RecordedPoseConditionKind.None ||
+                   IsSingleRightOpenPalmCandidate();
+        }
+
+        private void SyncConditionalSelection()
+        {
+            ResolveRouter();
+            ResolveActiveStateGroup();
+            if (router == null || activeStateGroup == null)
+                return;
+
+            var shouldForward = activeStateGroup.Active && CanForwardSelection();
+            if (shouldForward && !selectionForwardedToRouter)
+                ForwardSelectionToRouter();
+            else if (!shouldForward && selectionForwardedToRouter)
+                ClearSelectionFromRouter();
+        }
+
+        private bool CanForwardSelection()
+        {
+            var conditionKind = RecordedPoseConditionUtility.GetConditionKind(name);
+            if (!RecordedPoseConditionUtility.IsConditionSatisfied(
+                    conditionKind,
+                    bothForwardMinDistance,
+                    palmTogetherMaxDistance))
+            {
+                return false;
+            }
+
+            var bothHandsForward = RecordedPoseConditionUtility.AreBothHandsForwardNow(bothForwardMinDistance);
+            return !RecordedPoseConditionUtility.ShouldBlockSingleRightOpenPalm(name, hand, pose, bothHandsForward);
+        }
+
+        private bool IsSingleRightOpenPalmCandidate()
+        {
+            return hand == Handedness.Right &&
+                   pose == PoseType.OpenPalm &&
+                   RecordedPoseConditionUtility.GetConditionKind(name) == RecordedPoseConditionKind.None;
+        }
+
+        private void ForwardSelectionToRouter()
+        {
+            if (selectionForwardedToRouter)
+                return;
+
+            if (hand == Handedness.Right)
+                SelectRightPose();
+            else
+                SelectLeftPose();
+
+            selectionForwardedToRouter = true;
+
+            if (logEvents)
+                Debug.Log($"[MetaHandPoseGestureBridge] Selected {hand} {pose}", this);
+        }
+
+        private void ClearSelectionFromRouter()
+        {
+            if (!selectionForwardedToRouter)
+                return;
+
+            ResolveRouter();
+            if (router == null)
+            {
+                selectionForwardedToRouter = false;
+                return;
+            }
+
+            if (hand == Handedness.Right)
+                ClearRightPose();
+            else
+                ClearLeftPose();
+
+            selectionForwardedToRouter = false;
+
+            if (logEvents)
+                Debug.Log($"[MetaHandPoseGestureBridge] Unselected {hand} {pose}", this);
         }
 
         private void ApplyRouterPriority()
