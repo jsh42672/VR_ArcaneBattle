@@ -302,7 +302,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1897d76be5dec140a49c5b8d5d86e48, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MagicCircleSpawn
-  appearTime: 0.5
+  appearTime: 0.2
   targetScale: 1
 --- !u!1 &6751129155131377806
 GameObject:
@@ -5367,7 +5367,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CoreChargeUp
   startDelay: 0.2
-  chargeTime: 1
+  chargeTime: 0.5
   targetScale: 100
   pulseAmount: 0.1
   pulseSpeed: 3

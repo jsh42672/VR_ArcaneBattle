@@ -22,7 +22,7 @@ public class EnergyCore : MonoBehaviour
     private bool isLaunched = false;
     private float timer = 0f;
 
-    // 추가: 발사되는 순간의 방향을 기억할 변수
+    // 발사되는 순간의 방향을 기억할 변수
     private Vector3 launchDirection;
 
     void OnEnable()
@@ -30,6 +30,10 @@ public class EnergyCore : MonoBehaviour
         timer = 0f;
         isLaunched = false;
         transform.localScale = Vector3.zero;
+
+        // [핵심 수정 부분]
+        // 구체가 생성되자마자, Update에서 회전하기 '직전'에 올바른 정면 방향을 미리 저장합니다!
+        launchDirection = transform.forward;
     }
 
     void Update()
@@ -44,7 +48,7 @@ public class EnergyCore : MonoBehaviour
 
         if (isLaunched)
         {
-            // 수정됨: 발사 순간 저장해둔 방향(launchDirection)으로만 직진합니다.
+            // 발사 순간 저장해둔 방향(launchDirection)으로만 직진합니다.
             // 구체가 아무리 회전해도 비행 궤적이 휘지 않습니다.
             transform.position += launchDirection * flightSpeed * Time.deltaTime;
         }
@@ -71,8 +75,9 @@ public class EnergyCore : MonoBehaviour
     {
         isLaunched = true;
 
-        // 추가: 발사되는 딱 그 순간, 스포너가 잡아준 정면 방향을 저장합니다.
-        launchDirection = transform.forward;
+        // [핵심 수정 부분] 
+        // 여기서 방향을 저장하면 안 됩니다. (이미 구체가 돌아가서 방향이 망가졌기 때문입니다.)
+        // 따라서 이 부분에 있던 launchDirection = transform.forward; 코드를 삭제했습니다.
 
         transform.localScale = Vector3.one * targetScale;
     }

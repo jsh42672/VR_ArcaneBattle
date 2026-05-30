@@ -55,7 +55,7 @@ ModelImporter:
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
       events:
-      - time: 0.92718446
+      - time: 0.58538306
         functionName: SpawnMagic
         data: 
         objectReferenceParameter: {fileID: 4456024065111024724, guid: b4d52c5bc0c1ff04bb39fffe0c30b81e, type: 3}
