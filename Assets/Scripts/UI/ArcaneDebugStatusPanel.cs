@@ -142,6 +142,7 @@ namespace ArcaneVR.UI
             if (showGestureModeLine)
                 AppendModeStatus();
             AppendGuardStatus();
+            AppendPlayerStatus();
             AppendGolemStatus();
             AppendTestDriverStatus();
 
@@ -291,6 +292,24 @@ namespace ArcaneVR.UI
             builder.Append(golemTarget.CurrentHealth.ToString("0"));
             builder.Append("/");
             builder.AppendLine(golemTarget.MaxHealth.ToString("0"));
+        }
+
+        private void AppendPlayerStatus()
+        {
+            builder.Append("PLAYER ");
+            if (combatManager == null)
+            {
+                builder.AppendLine("missing");
+                return;
+            }
+
+            builder.Append("HP ");
+            builder.Append(combatManager.CurrentHP.ToString("0"));
+            builder.Append("/");
+            builder.Append(combatManager.MaxHP.ToString("0"));
+            if (combatManager.IsPlayerDead)
+                builder.Append(" DEAD");
+            builder.AppendLine();
         }
 
         private void AppendCastStatus()

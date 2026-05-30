@@ -61,7 +61,10 @@ namespace ArcaneVR.Combat
             if (success)
                 return;
 
-            combatManager?.ApplyPlayerHit(failedBarrierDamage);
+            if (combatManager == null)
+                return;
+
+            combatManager.ApplyPlayerHit(combatManager.FailedBarrierDamage, "BarrierFail");
         }
     }
 }
