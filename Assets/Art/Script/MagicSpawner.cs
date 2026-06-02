@@ -13,9 +13,15 @@ public class MagicSpawner : MonoBehaviour
 
     [Header("충격파 생성 위치 (골렘 발밑 기준 앞쪽 거리)")]
     public float shockwaveForwardOffset = 1.5f;
+    public float shockwaveRaycastHeight = 8f;
+    public float shockwaveRaycastDistance = 30f;
+    public float shockwaveHeightOffset = 0.02f;
+    public float shockwaveScaleMultiplier = 1f;
+    public LayerMask shockwaveGroundMask = ~0;
 
     [Header("슬래시 프리팹 (휘두르기 공격)")]
     public GameObject slashPrefab;
+    public Transform slashSpawnPoint;
 
     [Header("슬래시 생성 위치 설정")]
     public float slashForwardOffset = 1.5f; // 골렘 앞쪽 거리
@@ -41,11 +47,22 @@ public class MagicSpawner : MonoBehaviour
         if (shockwavePrefab == null) return;
 
         Vector3 groundPos = transform.position + transform.forward * shockwaveForwardOffset;
-        groundPos.y = 0f;
+        Vector3 rayOrigin = groundPos + Vector3.up * shockwaveRaycastHeight;
+        float rayDistance = shockwaveRaycastHeight + shockwaveRaycastDistance;
+
+        if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, rayDistance, shockwaveGroundMask, QueryTriggerInteraction.Ignore))
+        {
+            groundPos = hit.point + Vector3.up * shockwaveHeightOffset;
+        }
+        else
+        {
+            groundPos.y = transform.position.y + shockwaveHeightOffset;
+        }
 
         Quaternion groundRotation = Quaternion.Euler(0f, transform.eulerAngles.y - 70f, 0f);
 
         GameObject shockwave = Instantiate(shockwavePrefab, groundPos, groundRotation);
+        shockwave.transform.localScale *= shockwaveScaleMultiplier;
         Destroy(shockwave, destroyAfter);
     }
 
@@ -55,7 +72,9 @@ public class MagicSpawner : MonoBehaviour
         if (slashPrefab == null) return;
 
         // 1. 위치: 골렘 본체 위치 + 정면으로 조금 앞 + 위로 가슴 높이만큼
-        Vector3 slashPos = transform.position
+        Transform origin = slashSpawnPoint != null ? slashSpawnPoint : transform;
+
+        Vector3 slashPos = origin.position
             + transform.forward * slashForwardOffset
             + Vector3.up * slashHeightOffset;
 
