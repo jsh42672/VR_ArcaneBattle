@@ -1,0 +1,12 @@
+{
+    "asset": "316a2b3dc4849f14e93868fd20b29475",
+    "fileName": "019e029b-efe7-7252-b8b8-1ef36db7d9fb_Preview.jpg",
+    "prompt": "A stylized fantasy RPG fire texture, magical fireball core, glowing orange and yellow gradients, circular energy pattern, high contrast, seamless, hand-painted look.",
+    "negativePrompt": "",
+    "model": "hand-painted-textures-2-0",
+    "modelName": "Hand Painted Textures 2.0",
+    "customSeed": 1450673213,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation"
+}

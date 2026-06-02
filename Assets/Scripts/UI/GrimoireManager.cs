@@ -52,6 +52,7 @@ namespace ArcaneVR.UI
         public event Action OnGrimoireClose;
 
         public bool IsOpen { get; private set; }
+        public bool IsExternallySuppressed { get; private set; }
         public string LastGrimoireStatus { get; private set; } = "Grimoire: idle";
 
         private OVRHand leftOvrHand;
@@ -125,6 +126,12 @@ namespace ArcaneVR.UI
 
         public void ToggleGrimoire()
         {
+            if (IsSuppressed())
+            {
+                LastGrimoireStatus = "Grimoire: suppressed";
+                return;
+            }
+
             if (IsOpen)
                 Close();
             else
@@ -161,7 +168,7 @@ namespace ArcaneVR.UI
 
         public void Open()
         {
-            if (IsOpen)
+            if (IsOpen || IsSuppressed())
                 return;
 
             ResolveReferences();
@@ -173,6 +180,26 @@ namespace ArcaneVR.UI
 
             LastGrimoireStatus = "Grimoire: open";
             OnGrimoireOpen?.Invoke();
+        }
+
+        public void SetExternalSuppressed(bool suppressed, string source)
+        {
+            IsExternallySuppressed = suppressed;
+            if (suppressed)
+            {
+                if (IsOpen)
+                    Close();
+
+                ResetGestureTimers();
+                DisableSceneGrimoireCanvases();
+                LastGrimoireStatus = string.IsNullOrWhiteSpace(source)
+                    ? "Grimoire: suppressed"
+                    : $"Grimoire: suppressed by {source}";
+            }
+            else
+            {
+                LastGrimoireStatus = "Grimoire: idle";
+            }
         }
 
         public void Close()
@@ -192,6 +219,9 @@ namespace ArcaneVR.UI
 
         private void OnTogglePressed(InputAction.CallbackContext context)
         {
+            if (IsSuppressed())
+                return;
+
             ToggleGrimoire();
         }
 
@@ -315,7 +345,7 @@ namespace ArcaneVR.UI
 
         private void HandleLegacyGrimoireTrigger()
         {
-            if (!enableGestureControl || IsOpen || Time.time - lastToggleTime < toggleCooldown)
+            if (!enableGestureControl || IsOpen || Time.unscaledTime - lastToggleTime < toggleCooldown)
                 return;
 
             if (IsLeftPalmFacingPlayer())
@@ -324,7 +354,7 @@ namespace ArcaneVR.UI
 
         private void HandleLeftFistStarted()
         {
-            if (!enableGestureControl || !IsOpen || Time.time - lastToggleTime < toggleCooldown)
+            if (!enableGestureControl || !IsOpen || Time.unscaledTime - lastToggleTime < toggleCooldown)
                 return;
 
             CloseFromGesture("left fist");
@@ -332,7 +362,7 @@ namespace ArcaneVR.UI
 
         private void UpdateGestureControl()
         {
-            if (!enableGestureControl)
+            if (!enableGestureControl || IsSuppressed())
                 return;
 
             if (IsOpen)
@@ -352,9 +382,9 @@ namespace ArcaneVR.UI
                 return;
             }
 
-            leftOpenHoldTimer += Time.deltaTime;
+            leftOpenHoldTimer += Time.unscaledDeltaTime;
             LastGrimoireStatus = $"Grimoire: open hold {Mathf.Clamp01(leftOpenHoldTimer / Mathf.Max(0.01f, openPalmHoldDuration)):0.0}";
-            if (leftOpenHoldTimer < openPalmHoldDuration || Time.time - lastToggleTime < toggleCooldown)
+            if (leftOpenHoldTimer < openPalmHoldDuration || Time.unscaledTime - lastToggleTime < toggleCooldown)
                 return;
 
             OpenFromGesture("left palm facing player");
@@ -368,9 +398,9 @@ namespace ArcaneVR.UI
                 return;
             }
 
-            leftFistHoldTimer += Time.deltaTime;
+            leftFistHoldTimer += Time.unscaledDeltaTime;
             LastGrimoireStatus = $"Grimoire: close hold {Mathf.Clamp01(leftFistHoldTimer / Mathf.Max(0.01f, closeFistHoldDuration)):0.0}";
-            if (leftFistHoldTimer < closeFistHoldDuration || Time.time - lastToggleTime < toggleCooldown)
+            if (leftFistHoldTimer < closeFistHoldDuration || Time.unscaledTime - lastToggleTime < toggleCooldown)
                 return;
 
             CloseFromGesture("left fist");
@@ -378,7 +408,10 @@ namespace ArcaneVR.UI
 
         private void OpenFromGesture(string source)
         {
-            lastToggleTime = Time.time;
+            if (IsSuppressed())
+                return;
+
+            lastToggleTime = Time.unscaledTime;
             ResetGestureTimers();
             Open();
             LastGrimoireStatus = $"Grimoire: opened by {source}";
@@ -386,14 +419,19 @@ namespace ArcaneVR.UI
 
         private void CloseFromGesture(string source)
         {
-            lastToggleTime = Time.time;
+            lastToggleTime = Time.unscaledTime;
             Close();
             LastGrimoireStatus = $"Grimoire: closed by {source}";
         }
 
+        private bool IsSuppressed()
+        {
+            return IsExternallySuppressed;
+        }
+
         private void UpdatePageSwipe()
         {
-            if (!enableRightHandPageSwipe || Time.time - lastPageTurnTime < pageSwipeCooldown)
+            if (!enableRightHandPageSwipe || Time.unscaledTime - lastPageTurnTime < pageSwipeCooldown)
                 return;
 
             if (!IsRightPageSwipePose() || !TryGetHandLocalPosition(false, out var localPosition))
@@ -412,11 +450,11 @@ namespace ArcaneVR.UI
             {
                 pageSwipeActive = true;
                 pageSwipeStartLocal = localPosition;
-                pageSwipeStartTime = Time.time;
+                pageSwipeStartTime = Time.unscaledTime;
                 return;
             }
 
-            if (Time.time - pageSwipeStartTime > pageSwipeMaxDuration)
+            if (Time.unscaledTime - pageSwipeStartTime > pageSwipeMaxDuration)
             {
                 pageSwipeActive = false;
                 return;
@@ -437,7 +475,7 @@ namespace ArcaneVR.UI
             else
                 PreviousPage();
 
-            lastPageTurnTime = Time.time;
+            lastPageTurnTime = Time.unscaledTime;
             pageSwipeActive = false;
         }
 
@@ -556,11 +594,11 @@ namespace ArcaneVR.UI
             if (!suppressMagicWhileOpen)
                 suppress = false;
 
-            if (magicSuppressionApplied == suppress && Time.time < nextMagicSuppressionRefreshTime)
+            if (magicSuppressionApplied == suppress && Time.unscaledTime < nextMagicSuppressionRefreshTime)
                 return;
 
             magicSuppressionApplied = suppress;
-            nextMagicSuppressionRefreshTime = Time.time + (suppress ? 1f : 0.25f);
+            nextMagicSuppressionRefreshTime = Time.unscaledTime + (suppress ? 1f : 0.25f);
 
             foreach (var caster in FindObjectsByType<SpellCaster>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 caster.SetCastingSuppressed(suppress, "Grimoire");

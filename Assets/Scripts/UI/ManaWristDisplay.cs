@@ -7,7 +7,7 @@ namespace ArcaneVR.UI
     public class ManaWristDisplay : MonoBehaviour
     {
         [SerializeField] private CombatManager combatManager;
-        [SerializeField] private OVRHand rightHand;
+        [SerializeField] private Transform wristAnchor;
         [SerializeField] private Camera playerCamera;
         [SerializeField] private Vector3 wristLocalOffset = new Vector3(0f, -0.075f, 0f);
         [SerializeField] private float wristTowardPlayerOffset = 0.065f;
@@ -73,14 +73,8 @@ namespace ArcaneVR.UI
             if (combatManager == null)
                 combatManager = FindAnyObjectByType<CombatManager>();
 
-            if (rightHand == null ||
-                rightHand.GetHand() != OVRPlugin.Hand.HandRight ||
-                !rightHand.gameObject.activeInHierarchy ||
-                !rightHand.enabled ||
-                !rightHand.IsTracked)
-            {
-                rightHand = FindRightHand();
-            }
+            if (wristAnchor == null || !wristAnchor.gameObject.activeInHierarchy)
+                wristAnchor = FindRightWristAnchor();
 
             if (playerCamera == null)
                 playerCamera = Camera.main;
@@ -230,65 +224,7 @@ namespace ArcaneVR.UI
 
         private Transform ResolveAnchorTransform()
         {
-            if (rightHand != null && rightHand.gameObject.activeInHierarchy && rightHand.enabled && rightHand.IsTracked)
-            {
-                var wrist = ResolveWristBone(rightHand);
-                if (wrist != null)
-                    return wrist;
-
-                return rightHand.transform;
-            }
-
-            return null;
-        }
-
-        private static Transform ResolveWristBone(OVRHand hand)
-        {
-            if (hand == null)
-                return null;
-
-            foreach (var skeleton in hand.GetComponentsInChildren<OVRSkeleton>(true))
-            {
-                var wrist = FindWristBoneTransform(skeleton);
-                if (wrist != null)
-                    return wrist;
-            }
-
-            var expectedHand = hand.GetHand();
-            foreach (var skeleton in FindObjectsByType<OVRSkeleton>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (skeleton == null ||
-                    skeleton.GetComponentInParent<OVRHand>()?.GetHand() != expectedHand)
-                {
-                    continue;
-                }
-
-                var wrist = FindWristBoneTransform(skeleton);
-                if (wrist != null)
-                    return wrist;
-            }
-
-            return null;
-        }
-
-        private static Transform FindWristBoneTransform(OVRSkeleton skeleton)
-        {
-            if (skeleton == null || skeleton.Bones == null)
-                return null;
-
-            foreach (var bone in skeleton.Bones)
-            {
-                if (bone == null || bone.Transform == null)
-                    continue;
-
-                if (bone.Id == OVRSkeleton.BoneId.XRHand_Wrist ||
-                    bone.Id == OVRSkeleton.BoneId.Hand_WristRoot)
-                {
-                    return bone.Transform;
-                }
-            }
-
-            return null;
+            return wristAnchor != null && wristAnchor.gameObject.activeInHierarchy ? wristAnchor : null;
         }
 
         private void RefreshMana()
@@ -335,33 +271,14 @@ namespace ArcaneVR.UI
             }
         }
 
-        private static OVRHand FindRightHand()
+        private static Transform FindRightWristAnchor()
         {
-            OVRHand best = null;
-            var bestScore = int.MinValue;
-            foreach (var hand in FindObjectsByType<OVRHand>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (hand == null || hand.GetHand() != OVRPlugin.Hand.HandRight)
-                    continue;
+            var rightWrist = GameObject.Find("R_Wrist");
+            if (rightWrist != null)
+                return rightWrist.transform;
 
-                var score = 0;
-                if (hand.gameObject.activeInHierarchy)
-                    score += 20;
-                if (hand.enabled)
-                    score += 20;
-                if (hand.IsTracked)
-                    score += 40;
-                if (hand.IsPointerPoseValid)
-                    score += 10;
-
-                if (score <= bestScore)
-                    continue;
-
-                best = hand;
-                bestScore = score;
-            }
-
-            return best;
+            var rightHandTracking = GameObject.Find("Right Hand Tracking");
+            return rightHandTracking != null ? rightHandTracking.transform : null;
         }
 
         private static Material CreateRuntimeMaterial(Color color)

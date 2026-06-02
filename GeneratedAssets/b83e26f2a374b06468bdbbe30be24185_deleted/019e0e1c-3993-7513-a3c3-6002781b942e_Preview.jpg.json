@@ -1,0 +1,12 @@
+{
+    "asset": "b83e26f2a374b06468bdbbe30be24185",
+    "fileName": "019e0e1c-3993-7513-a3c3-6002781b942e_Preview.jpg",
+    "prompt": "Top-down view of stylized dark jagged rock texture with glowing cyan energy cracks, electric blue light leaking through sharp stone veins, high contrast emissive map, angular geometric cracks, magical energy effect, game environment asset style, seamless, tileable. Avoid: Blurry, soft edges, realistic photography, human faces, text, watermark, messy textures, organic curves, low resolution.",
+    "negativePrompt": "",
+    "model": "hand-painted-textures-2-0",
+    "modelName": "Hand Painted Textures 2.0",
+    "customSeed": 1261942498,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation"
+}

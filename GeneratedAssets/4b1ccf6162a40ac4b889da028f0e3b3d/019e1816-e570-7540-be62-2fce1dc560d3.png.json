@@ -1,0 +1,28 @@
+{
+    "asset": "4b1ccf6162a40ac4b889da028f0e3b3d",
+    "fileName": "019e1816-e570-7540-be62-2fce1dc560d3.png",
+    "prompt": "A stylized glowing magical sparkle, top-down view, white magical energy, radiating light particles, elegant and magical, high contrast, on a solid black background.",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

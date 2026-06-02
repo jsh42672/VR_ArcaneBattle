@@ -28,6 +28,7 @@ namespace ArcaneVR.Spell
         [SerializeField] private float voiceBoostDuration = 4f;
         [SerializeField] private float voiceBoostDamageMultiplier = 1.25f;
         [SerializeField] private float voiceBoostStatusMagnitudeMultiplier = 1.15f;
+        [SerializeField] private bool ignoreVoiceDuringCombinationFocus = true;
 
         [Header("Gesture Spell Prototype")]
         [SerializeField] private bool enableGesturePrototype;
@@ -58,6 +59,10 @@ namespace ArcaneVR.Spell
         [SerializeField] private float prototypeVoiceFeedbackVolume = 0.9f;
         [SerializeField] private float prototypeArmFeedbackVolume = 0.45f;
         [SerializeField] private float prototypeCastFeedbackVolume = 0.85f;
+        [SerializeField] private bool showCombinationAura = true;
+        [SerializeField] private float combinationReadyAuraScale = 0.18f;
+        [SerializeField] private float combinationCompleteAuraScale = 0.42f;
+        [SerializeField] private float combinationCompleteAuraHoldSeconds = 3f;
         [SerializeField] private GameObject spellPrefabOpenPalm;
         [SerializeField] private GameObject spellPrefabFist;
         [SerializeField] private GameObject spellPrefabThumbsUp;
@@ -88,6 +93,17 @@ namespace ArcaneVR.Spell
         private Light prototypeAuraLight;
         private Material prototypeAuraMaterial;
         private AudioSource prototypeAuraAudioSource;
+        private GameObject combinationAuraRoot;
+        private ParticleSystem combinationAuraParticles;
+        private ParticleSystem combinationAuraBurstParticles;
+        private ParticleSystemRenderer combinationAuraRenderer;
+        private Light combinationAuraLight;
+        private Material combinationAuraMaterial;
+        private SpellId currentCombinationAuraSpell = SpellId.None;
+        private bool combinationAuraCompleted;
+        private float combinationAuraUntilTime = -999f;
+        private float combinationAuraPulseStartTime = -999f;
+        private float combinationAuraPulseEndTime = -999f;
         private float prototypeAuraPulseStartTime = -999f;
         private float prototypeAuraPulseEndTime = -999f;
         private float lastPrototypeArmSfxTime = -999f;
@@ -182,6 +198,7 @@ namespace ArcaneVR.Spell
             {
                 combinationChecker.OnCombinationSuccess += HandleCombinationSuccess;
                 combinationChecker.OnComboReadyChanged += HandleComboReadyChanged;
+                combinationChecker.OnCombinationFail += HandleCombinationFail;
             }
 
             EnsureVoiceSubscription();
@@ -196,6 +213,7 @@ namespace ArcaneVR.Spell
             {
                 combinationChecker.OnCombinationSuccess -= HandleCombinationSuccess;
                 combinationChecker.OnComboReadyChanged -= HandleComboReadyChanged;
+                combinationChecker.OnCombinationFail -= HandleCombinationFail;
             }
 
             UnsubscribeVoiceEvents();
@@ -207,7 +225,9 @@ namespace ArcaneVR.Spell
         private void Update()
         {
             EnsureVoiceSubscription();
-            ProcessLatestVoiceRecognitionIfNeeded();
+            if (!IsVoiceInputSuppressedForCombinationFocus())
+                ProcessLatestVoiceRecognitionIfNeeded();
+            UpdateCombinationAuraFeedback();
             UpdateGesturePrototypeCasting();
         }
 
@@ -222,9 +242,21 @@ namespace ArcaneVR.Spell
             Cast(spellId);
         }
 
+        private void HandleCombinationFail()
+        {
+            StopCombinationAuraFeedback();
+        }
+
         private void HandleComboReadyChanged(SpellId spellId, bool ready)
         {
-            if (!ready || !SpellHitData.IsComboSpellId(spellId))
+            if (!ready)
+            {
+                if (!combinationAuraCompleted)
+                    StopCombinationAuraFeedback();
+                return;
+            }
+
+            if (!SpellHitData.IsComboSpellId(spellId))
                 return;
 
             if (lastComboReadySfxSpell == spellId && Time.time - lastComboReadySfxTime < 0.35f)
@@ -233,6 +265,7 @@ namespace ArcaneVR.Spell
             lastComboReadySfxSpell = spellId;
             lastComboReadySfxTime = Time.time;
             lastCastStatus = $"Combo ready: {SpellHitData.GetDisplayName(spellId)}";
+            StartCombinationAuraFeedback(spellId, false);
             ArcaneSpellSfx.PlayCombo(
                 EnsurePrototypeFeedbackAudioSource(),
                 spellId,
@@ -270,6 +303,12 @@ namespace ArcaneVR.Spell
 
         private void HandleVoiceCommand(ElementType spokenElement)
         {
+            if (IsVoiceInputSuppressedForCombinationFocus())
+            {
+                lastVoiceBoostStatus = "VoiceLink: blocked by combo focus";
+                return;
+            }
+
             if (spokenElement == ElementType.None)
                 return;
 
@@ -302,6 +341,7 @@ namespace ArcaneVR.Spell
         private void ProcessLatestVoiceRecognitionIfNeeded()
         {
             if (voiceRecognizer == null ||
+                IsVoiceInputSuppressedForCombinationFocus() ||
                 voiceRecognizer.LastRecognizedElement == ElementType.None ||
                 voiceRecognizer.LastRecognizedTime <= lastProcessedVoiceRecognitionTime + 0.001f)
             {
@@ -322,6 +362,16 @@ namespace ArcaneVR.Spell
             }
 
             lastProcessedVoiceRecognitionTime = Time.time;
+        }
+
+        private bool IsVoiceInputSuppressedForCombinationFocus()
+        {
+            if (focusModeController == null)
+                focusModeController = FindAnyObjectByType<CombinationFocusModeController>();
+
+            return ignoreVoiceDuringCombinationFocus &&
+                   focusModeController != null &&
+                   focusModeController.IsFocusActive;
         }
 
         public void ConfigureGesturePrototype(GestureDetector detector, OVRHand hand, Transform spawnPoint, Transform spawnRoot)
@@ -634,6 +684,186 @@ namespace ArcaneVR.Spell
                 return prototypeHand.transform;
 
             return rightHandSpawnPoint != null ? rightHandSpawnPoint : leftHandSpawnPoint;
+        }
+
+        private void StartCombinationAuraFeedback(SpellId spellId, bool completed)
+        {
+            if (!showCombinationAura || !SpellHitData.IsComboSpellId(spellId))
+                return;
+
+            EnsureCombinationAura();
+            if (combinationAuraRoot == null)
+                return;
+
+            currentCombinationAuraSpell = spellId;
+            combinationAuraCompleted = completed;
+            combinationAuraUntilTime = completed
+                ? Time.time + Mathf.Max(0.1f, combinationCompleteAuraHoldSeconds)
+                : float.PositiveInfinity;
+            combinationAuraPulseStartTime = Time.time;
+            combinationAuraPulseEndTime = Time.time + (completed ? 0.65f : 0.35f);
+            combinationAuraRoot.SetActive(true);
+            UpdateCombinationAuraFeedback();
+
+            var burstCount = completed ? 160 : 48;
+            combinationAuraParticles?.Emit(completed ? 80 : 24);
+            combinationAuraBurstParticles?.Emit(burstCount);
+        }
+
+        private void UpdateCombinationAuraFeedback()
+        {
+            if (combinationAuraRoot == null || currentCombinationAuraSpell == SpellId.None)
+                return;
+
+            if (combinationAuraCompleted && Time.time >= combinationAuraUntilTime)
+            {
+                StopCombinationAuraFeedback();
+                return;
+            }
+
+            var position = ResolveCombinationAuraPosition();
+            combinationAuraRoot.transform.position = position;
+            combinationAuraRoot.transform.rotation = Quaternion.identity;
+
+            var pulse = GetCombinationAuraPulse01();
+            var baseScale = combinationAuraCompleted ? combinationCompleteAuraScale : combinationReadyAuraScale;
+            combinationAuraRoot.transform.localScale = Vector3.one * Mathf.Max(0.05f, baseScale) * Mathf.Lerp(1f, 1.45f, pulse);
+
+            if (!combinationAuraRoot.activeSelf)
+                combinationAuraRoot.SetActive(true);
+
+            var color = GetComboAuraColor(currentCombinationAuraSpell);
+            ApplyCombinationAuraColor(color, combinationAuraCompleted, pulse);
+            if (combinationAuraParticles != null && !combinationAuraParticles.isPlaying)
+                combinationAuraParticles.Play(true);
+        }
+
+        private void EnsureCombinationAura()
+        {
+            if (combinationAuraRoot != null)
+                return;
+
+            combinationAuraRoot = new GameObject("ArcaneCombinationAura")
+            {
+                hideFlags = HideFlags.DontSave
+            };
+            combinationAuraRoot.transform.position = ResolveCombinationAuraPosition();
+            combinationAuraRoot.transform.rotation = Quaternion.identity;
+            combinationAuraRoot.transform.localScale = Vector3.one;
+
+            combinationAuraParticles = combinationAuraRoot.AddComponent<ParticleSystem>();
+            combinationAuraParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ConfigurePrototypeAuraParticles(combinationAuraParticles);
+
+            combinationAuraRenderer = combinationAuraRoot.GetComponent<ParticleSystemRenderer>();
+            combinationAuraMaterial = CreateAuraMaterial(new Color(1f, 1f, 1f, 0.74f));
+            if (combinationAuraRenderer != null && combinationAuraMaterial != null)
+            {
+                combinationAuraRenderer.material = combinationAuraMaterial;
+                combinationAuraRenderer.renderMode = ParticleSystemRenderMode.Billboard;
+                combinationAuraRenderer.sortingFudge = 3f;
+                combinationAuraRenderer.maxParticleSize = 0.28f;
+            }
+
+            combinationAuraBurstParticles = CreatePrototypeAuraBurstParticles(combinationAuraRoot.transform, combinationAuraMaterial);
+
+            combinationAuraLight = combinationAuraRoot.AddComponent<Light>();
+            combinationAuraLight.type = LightType.Point;
+            combinationAuraLight.range = 1.15f;
+            combinationAuraLight.intensity = 1.1f;
+
+            combinationAuraRoot.SetActive(false);
+        }
+
+        private void StopCombinationAuraFeedback()
+        {
+            currentCombinationAuraSpell = SpellId.None;
+            combinationAuraCompleted = false;
+            combinationAuraUntilTime = -999f;
+
+            if (combinationAuraRoot == null)
+                return;
+
+            combinationAuraParticles?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            combinationAuraBurstParticles?.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            combinationAuraRoot.SetActive(false);
+        }
+
+        private Vector3 ResolveCombinationAuraPosition()
+        {
+            if (leftHandSpawnPoint != null && rightHandSpawnPoint != null)
+                return (leftHandSpawnPoint.position + rightHandSpawnPoint.position) * 0.5f;
+
+            var spawnPoint = ResolvePrototypeSpawnPoint();
+            if (spawnPoint != null)
+                return spawnPoint.position;
+
+            return transform.position;
+        }
+
+        private void ApplyCombinationAuraColor(Color color, bool completed, float pulse)
+        {
+            var auraColor = Color.Lerp(color, Color.white, completed ? 0.18f + pulse * 0.32f : pulse * 0.22f);
+            auraColor.a = completed ? 0.86f : 0.62f;
+
+            if (combinationAuraParticles != null)
+            {
+                var main = combinationAuraParticles.main;
+                main.startColor = auraColor;
+                main.startSize = Mathf.Lerp(0.08f, 0.18f, completed ? 1f : 0f) + pulse * 0.12f;
+                main.startSpeed = Mathf.Lerp(0.05f, 0.18f, completed ? 1f : 0f) + pulse * 0.1f;
+
+                var emission = combinationAuraParticles.emission;
+                emission.rateOverTime = Mathf.Lerp(72f, 180f, completed ? 1f : 0f) + pulse * 280f;
+
+                var shape = combinationAuraParticles.shape;
+                shape.radius = Mathf.Lerp(0.11f, 0.28f, completed ? 1f : 0f) + pulse * 0.12f;
+            }
+
+            if (combinationAuraBurstParticles != null)
+            {
+                var main = combinationAuraBurstParticles.main;
+                main.startColor = auraColor;
+            }
+
+            if (combinationAuraMaterial != null)
+            {
+                if (combinationAuraMaterial.HasProperty("_BaseColor"))
+                    combinationAuraMaterial.SetColor("_BaseColor", auraColor);
+                if (combinationAuraMaterial.HasProperty("_Color"))
+                    combinationAuraMaterial.SetColor("_Color", auraColor);
+            }
+
+            if (combinationAuraRenderer != null)
+                combinationAuraRenderer.enabled = combinationAuraMaterial != null;
+
+            if (combinationAuraLight != null)
+            {
+                combinationAuraLight.color = color;
+                combinationAuraLight.range = Mathf.Lerp(0.85f, 1.65f, completed ? 1f : 0f) + pulse * 0.45f;
+                combinationAuraLight.intensity = Mathf.Lerp(1.2f, 3.1f, completed ? 1f : 0f) + pulse * 2.2f;
+            }
+        }
+
+        private float GetCombinationAuraPulse01()
+        {
+            if (Time.time >= combinationAuraPulseEndTime)
+                return 0f;
+
+            var duration = Mathf.Max(0.01f, combinationAuraPulseEndTime - combinationAuraPulseStartTime);
+            var normalized = Mathf.Clamp01((Time.time - combinationAuraPulseStartTime) / duration);
+            return 1f - Mathf.SmoothStep(0f, 1f, normalized);
+        }
+
+        private static Color GetComboAuraColor(SpellId spellId)
+        {
+            return spellId switch
+            {
+                SpellId.Combo_FireIce => new Color(1f, 0.28f, 0.92f, 1f),
+                SpellId.Combo_IceThunder => new Color(0.15f, 1f, 0.78f, 1f),
+                SpellId.Combo_ThunderFire => new Color(1f, 0.12f, 0.72f, 1f),
+                _ => new Color(0.8f, 0.9f, 1f, 1f)
+            };
         }
 
         private void UpdatePrototypeAura(Transform spawnPoint)
@@ -1761,6 +1991,7 @@ namespace ArcaneVR.Spell
                 prototypeAuraPulseStartTime = Time.time;
                 prototypeAuraPulseEndTime = Time.time + 0.35f;
                 prototypeAuraBurstParticles?.Emit(120);
+                StartCombinationAuraFeedback(spellId, true);
                 return;
             }
 

@@ -6,6 +6,17 @@ using UnityEngine;
 
 namespace ArcaneVR.Input
 {
+    public enum CombinationState
+    {
+        Idle,
+        CombinationFocus,
+        ElementDeclared,
+        ComboReady,
+        ComboCompleted,
+        ComboFailed,
+        ComboExpired
+    }
+
     /// <summary>
     /// Receives two Pose IDs from GestureDetector and validates two-hand combination within a 0.5s window. Fires OnCombinationSuccess or OnCombinationFail events.
     /// </summary>
@@ -22,11 +33,13 @@ namespace ArcaneVR.Input
         [SerializeField] private HandPullMovementController handPullMovement;
         [SerializeField] private ArcaneActionModeController actionModeController;
         [SerializeField] private CombinationFocusModeController focusModeController;
+        [SerializeField] private float failureFeedbackSeconds = 0.5f;
 
         public event Action<SpellId> OnCombinationSuccess;
         public event Action OnCombinationFail;
         public event Action<SpellId, bool> OnComboReadyChanged;
 
+        public CombinationState State { get; private set; } = CombinationState.Idle;
         public ElementType CurrentElement { get; private set; } = ElementType.None;
         public PoseId CurrentAttackPose { get; private set; } = PoseId.None;
         public ElementType LeftDeclaredElement { get; private set; } = ElementType.None;
@@ -37,6 +50,7 @@ namespace ArcaneVR.Input
         public bool IsLeftDeclarationSuppressedByMode { get; private set; }
         public string DeclarationHand { get; private set; } = "-";
         public string LastComboStatus { get; private set; } = "Combo: idle";
+        public float FailureFeedbackSeconds => failureFeedbackSeconds;
 
         private PoseId lastLeftPose = PoseId.None;
         private PoseId lastRightPose = PoseId.None;
@@ -47,6 +61,7 @@ namespace ArcaneVR.Input
         private bool isGrimoireOpen;
         private float lastLeftDeclarationTime = -999f;
         private float lastRightDeclarationTime = -999f;
+        private float inputLockedUntilTime = -999f;
 
         private void Awake()
         {
@@ -103,7 +118,29 @@ namespace ArcaneVR.Input
 
         private void Update()
         {
-            RefreshComboCandidate(Time.time);
+            Tick(Time.time);
+        }
+
+        public void TickForTest(float now)
+        {
+            Tick(now);
+        }
+
+        private void Tick(float now)
+        {
+            if (IsInputLocked(now))
+                return;
+
+            if (State == CombinationState.ComboFailed ||
+                State == CombinationState.ComboExpired ||
+                State == CombinationState.ComboCompleted)
+            {
+                ClearComboDeclarations("Combo: idle");
+                State = IsCombinationFocusActive() ? CombinationState.CombinationFocus : CombinationState.Idle;
+                return;
+            }
+
+            RefreshComboCandidate(now);
         }
 
         private void HandlePoseDetected(PoseId left, PoseId right)
@@ -184,6 +221,26 @@ namespace ArcaneVR.Input
             return ReportCombinePushInternal(true);
         }
 
+        public bool ReportFocusExpired()
+        {
+            if (IsInputLocked(Time.time))
+                return false;
+
+            State = CombinationState.ComboExpired;
+            inputLockedUntilTime = Time.time + Mathf.Max(0f, failureFeedbackSeconds);
+            SetComboCandidate(false, SpellId.None, "-", "Combo: expired");
+            if (emitFailEvents)
+                OnCombinationFail?.Invoke();
+            return true;
+        }
+
+        public void ReleaseFocusLock(string status = "Combo: focus exit")
+        {
+            inputLockedUntilTime = -999f;
+            ClearComboDeclarations(status);
+            State = CombinationState.Idle;
+        }
+
         private bool ReportCombinePushInternal(bool ignoreCastMode)
         {
             var now = Time.time;
@@ -204,7 +261,8 @@ namespace ArcaneVR.Input
             var spellId = CurrentComboCandidate;
             if (TryEmitSuccess(spellId, now) && IsComboSpell(spellId))
             {
-                ClearComboDeclarations();
+                State = CombinationState.ComboCompleted;
+                ClearComboDeclarations("Combo: completed");
                 return true;
             }
 
@@ -297,11 +355,17 @@ namespace ArcaneVR.Input
                 return false;
 
             var now = Time.time;
+            if (IsInputLocked(now))
+                return false;
+
             CurrentElement = element;
             RefreshActionModeReference();
 
             if (isLeft)
             {
+                if (LeftDeclaredElement != ElementType.None)
+                    return LeftDeclaredElement == element && State != CombinationState.ComboFailed;
+
                 IsLeftDeclarationSuppressedByPull = !ignoreLeftPull && IsLeftPullActive();
                 IsLeftDeclarationSuppressedByMode = !ignoreCastMode && !IsCombinationFocusActive();
                 if (IsLeftDeclarationSuppressedByPull || IsLeftDeclarationSuppressedByMode)
@@ -319,39 +383,51 @@ namespace ArcaneVR.Input
             }
             else
             {
+                if (RightDeclaredElement != ElementType.None)
+                    return RightDeclaredElement == element && State != CombinationState.ComboFailed;
+
                 RightDeclaredElement = element;
                 lastRightDeclarationTime = now;
                 LastComboStatus = $"Combo: R {element}";
             }
 
-            RefreshComboCandidate(now, ignoreLeftPull, ignoreCastMode);
-            return true;
+            return RefreshComboCandidate(now, ignoreLeftPull, ignoreCastMode);
         }
 
-        private void RefreshComboCandidate(float now, bool ignoreLeftPull = false, bool ignoreCastMode = false)
+        private bool RefreshComboCandidate(float now, bool ignoreLeftPull = false, bool ignoreCastMode = false)
         {
+            if (IsInputLocked(now))
+                return false;
+
             IsLeftDeclarationSuppressedByPull = !ignoreLeftPull && IsLeftPullActive();
             IsLeftDeclarationSuppressedByMode = !ignoreCastMode && !IsCombinationFocusActive();
             var modeActive = ignoreCastMode || IsCombinationFocusActive();
 
             var leftValid = LeftDeclaredElement != ElementType.None &&
                             !IsLeftDeclarationSuppressedByPull &&
-                            !IsLeftDeclarationSuppressedByMode &&
-                            now - lastLeftDeclarationTime <= comboDeclarationWindow;
+                            !IsLeftDeclarationSuppressedByMode;
             var rightValid = RightDeclaredElement != ElementType.None &&
-                             modeActive &&
-                             now - lastRightDeclarationTime <= comboDeclarationWindow;
+                             modeActive;
 
-            if (!leftValid || !rightValid || LeftDeclaredElement == RightDeclaredElement)
+            if (leftValid && rightValid && LeftDeclaredElement == RightDeclaredElement)
+            {
+                EmitFail("Combo: same element");
+                return false;
+            }
+
+            if (!leftValid || !rightValid)
             {
                 var hand = BuildDeclarationHand(leftValid, rightValid);
                 var status = !modeActive && (LeftDeclaredElement != ElementType.None || RightDeclaredElement != ElementType.None)
                     ? "Combo: focus required"
-                    : LeftDeclaredElement == RightDeclaredElement && leftValid && rightValid
-                    ? "Combo: same element"
                     : "Combo: waiting";
                 SetComboCandidate(false, SpellId.None, hand, status);
-                return;
+                State = leftValid || rightValid
+                    ? CombinationState.ElementDeclared
+                    : modeActive
+                    ? CombinationState.CombinationFocus
+                    : CombinationState.Idle;
+                return true;
             }
 
             var candidate = ResolveComboSpell(LeftDeclaredElement, RightDeclaredElement);
@@ -362,6 +438,8 @@ namespace ArcaneVR.Input
                 candidate != SpellId.None
                     ? $"Combo ready: {SpellHitData.GetDisplayName(candidate)}"
                     : "Combo: invalid pair");
+            State = candidate != SpellId.None ? CombinationState.ComboReady : CombinationState.ElementDeclared;
+            return candidate != SpellId.None;
         }
 
         private static SpellId ResolveComboSpell(ElementType left, ElementType right)
@@ -468,20 +546,32 @@ namespace ArcaneVR.Input
             return true;
         }
 
-        private void ClearComboDeclarations()
+        private void ClearComboDeclarations(string status)
         {
             LeftDeclaredElement = ElementType.None;
             RightDeclaredElement = ElementType.None;
             lastLeftDeclarationTime = -999f;
             lastRightDeclarationTime = -999f;
-            SetComboCandidate(false, SpellId.None, "-", "Combo: cleared");
+            SetComboCandidate(false, SpellId.None, "-", status);
         }
 
         private void EmitFail()
         {
-            LastComboStatus = "Combo: failed";
+            EmitFail("Combo: failed");
+        }
+
+        private void EmitFail(string status)
+        {
+            State = CombinationState.ComboFailed;
+            inputLockedUntilTime = Time.time + Mathf.Max(0f, failureFeedbackSeconds);
+            SetComboCandidate(false, SpellId.None, "-", status);
             if (emitFailEvents)
                 OnCombinationFail?.Invoke();
+        }
+
+        private bool IsInputLocked(float now)
+        {
+            return now < inputLockedUntilTime;
         }
 
         private void SetComboCandidate(bool ready, SpellId candidate, string declarationHand, string status)
