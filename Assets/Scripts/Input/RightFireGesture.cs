@@ -240,7 +240,6 @@ namespace ArcaneVR.Input
             if (go.TryGetComponent<ArcaneVR.Spell.SpellProjectile>(out var proj))
             {
                 proj.InitializePrototype(
-                    ArcaneVR.Input.PoseType.OpenPalm,
                     projectileSpeed,
                     direction,
                     ArcaneVR.Spell.ElementType.Fire,

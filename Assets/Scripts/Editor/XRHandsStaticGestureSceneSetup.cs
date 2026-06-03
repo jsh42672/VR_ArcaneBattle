@@ -58,14 +58,9 @@ namespace ArcaneVR.Editor
             if (router == null)
                 router = Undo.AddComponent<GestureEventRouter>(inputManager);
 
-            detector.BindGestureEventRouter(router);
-            SetSerializedBool(detector, "useXrHandsStaticGestureRouter", true);
-            SetSerializedBool(detector, "openPalmDetectionEnabled", true);
-            SetSerializedBool(detector, "showBoneAngleDebug", false);
-            SetSerializedObjectReference(detector, "gestureEventRouter", router);
-
             var rightEvents = SetupHandTrackingEvents(inputManager.transform, "XRHandTrackingEvents_Right", Handedness.Right);
             var leftEvents = SetupHandTrackingEvents(inputManager.transform, "XRHandTrackingEvents_Left", Handedness.Left);
+            ConfigureDetectorReferences(detector, leftEvents, rightEvents, openPalm, fist, thumbsUp);
 
             ConfigureGesture(
                 inputManager.transform,
@@ -285,6 +280,35 @@ namespace ArcaneVR.Editor
                 SetSerializedObjectReference(movementController, "gestureDetector", detector);
                 SetSerializedObjectReference(movementController, "gestureRouter", router);
             }
+        }
+
+        private static void ConfigureDetectorReferences(
+            GestureDetector detector,
+            XRHandTrackingEvents leftEvents,
+            XRHandTrackingEvents rightEvents,
+            XRHandShape openPalm,
+            XRHandShape fist,
+            XRHandShape thumbsUp)
+        {
+            SetSerializedObjectReference(detector, "leftHandTrackingEvents", leftEvents);
+            SetSerializedObjectReference(detector, "rightHandTrackingEvents", rightEvents);
+
+            SetSerializedObjectReference(detector, "rightFireGesture", openPalm);
+            SetSerializedObjectReference(detector, "rightIceGesture", fist);
+            SetSerializedObjectReference(detector, "rightThunderGesture", thumbsUp);
+            SetSerializedObjectReference(detector, "rightThunderShootGesture", fist);
+            SetSerializedObjectReference(detector, "rightPageTurnGesture", openPalm);
+            SetSerializedObjectReference(detector, "rightCombine", thumbsUp);
+            SetSerializedObjectReference(detector, "rightCombineShoot", fist);
+            SetSerializedObjectReference(detector, "rightBarrier", fist);
+
+            SetSerializedObjectReference(detector, "leftGrimoireGesture", openPalm);
+            SetSerializedObjectReference(detector, "leftFire", openPalm);
+            SetSerializedObjectReference(detector, "leftIce", fist);
+            SetSerializedObjectReference(detector, "leftThunder", thumbsUp);
+            SetSerializedObjectReference(detector, "leftCombine", thumbsUp);
+            SetSerializedObjectReference(detector, "leftCombineShoot", fist);
+            SetSerializedObjectReference(detector, "leftBarrier", fist);
         }
 
         private static Image GetOrCreateImage(Transform parent, string name)

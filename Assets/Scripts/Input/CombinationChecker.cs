@@ -62,6 +62,7 @@ namespace ArcaneVR.Input
         private float lastLeftDeclarationTime = -999f;
         private float lastRightDeclarationTime = -999f;
         private float inputLockedUntilTime = -999f;
+        private float comboShootWindowUntilTime = -999f;
 
         private void Awake()
         {
@@ -237,8 +238,17 @@ namespace ArcaneVR.Input
         public void ReleaseFocusLock(string status = "Combo: focus exit")
         {
             inputLockedUntilTime = -999f;
+            comboShootWindowUntilTime = -999f;
             ClearComboDeclarations(status);
             State = CombinationState.Idle;
+        }
+
+        public void ArmComboShootWindow(float seconds)
+        {
+            if (!IsComboReady || CurrentComboCandidate == SpellId.None)
+                return;
+
+            comboShootWindowUntilTime = Time.time + Mathf.Max(0.05f, seconds);
         }
 
         private bool ReportCombinePushInternal(bool ignoreCastMode)
@@ -494,7 +504,11 @@ namespace ArcaneVR.Input
             if (focusModeController == null)
                 focusModeController = FindAnyObjectByType<CombinationFocusModeController>();
 
-            return focusModeController != null && focusModeController.IsFocusActive;
+            var focusActive = focusModeController != null && focusModeController.IsFocusActive;
+            var shootWindowActive = IsComboReady &&
+                                    CurrentComboCandidate != SpellId.None &&
+                                    Time.time <= comboShootWindowUntilTime;
+            return focusActive || shootWindowActive;
         }
 
         private void RefreshActionModeReference()

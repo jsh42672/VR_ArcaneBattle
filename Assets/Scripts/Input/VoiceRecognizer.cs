@@ -219,6 +219,8 @@ namespace ArcaneVR.Input
         {
             LastRecognizedPhrase = phrase ?? string.Empty;
             LastRecognizedTime = Time.time;
+            Debug.Log($"[VoiceRecognizer] SubmitVoiceCommand: '{LastRecognizedPhrase}'");
+
             if (IsModeToggleCommand(LastRecognizedPhrase))
             {
                 SetStatus($"Voice: mode toggle from '{LastRecognizedPhrase}'", "Mode", successDiagnosticText);
@@ -230,10 +232,12 @@ namespace ArcaneVR.Input
 
             if (LastRecognizedElement == ElementType.None)
             {
+                Debug.Log($"[VoiceRecognizer] Ignored: no element keyword found in '{LastRecognizedPhrase}'");
                 SetStatus($"Voice: ignored '{LastRecognizedPhrase}'", "Ignored", "Phrase did not contain FIRE / ICE / THUNDER");
                 return;
             }
 
+            Debug.Log($"[VoiceRecognizer] Firing OnVoiceCommand({LastRecognizedElement}) — subscribers: {OnVoiceCommand?.GetInvocationList()?.Length ?? 0}");
             SetStatus($"Voice: {LastRecognizedElement} from '{LastRecognizedPhrase}'", LastRecognizedElement.ToString(), successDiagnosticText);
             OnVoiceCommand?.Invoke(LastRecognizedElement);
         }
@@ -252,9 +256,18 @@ namespace ArcaneVR.Input
                 .Replace("!", string.Empty)
                 .Replace("?", string.Empty);
 
-            if (normalized.Contains("THUNDER"))
+            if (normalized.Contains("THUNDER") ||
+                normalized.Contains("SUNDAY")  ||   // th→s, -er→ay misrecognition
+                normalized.Contains("SOMEDAY") ||   // th→s, -nder→meday
+                normalized.Contains("WONDER")  ||   // w-onder ~ th-under
+                normalized.Contains("WANDER")  ||
+                normalized.Contains("BLUNDER") ||
+                normalized.Contains("UNDER")   ||   // suffix match
+                normalized.Contains("THUN"))        // partial: "thun" prefix
                 return ElementType.Thunder;
-            if (normalized.Contains("FIRE"))
+            if (normalized.Contains("FIRE") ||
+                normalized.Contains("HIGHER") ||    // f→h misrecognition
+                normalized.Contains("FLYER"))
                 return ElementType.Fire;
             if (normalized.Contains("FREEZE") ||
                 normalized.Contains("FROST") ||

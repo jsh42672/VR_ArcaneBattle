@@ -112,11 +112,74 @@ namespace ArcaneVR.EditorTests
         }
 
         [Test]
+        public void ElementAuraDummy_ProvidesSharedColoredTimeFocusExemptAura()
+        {
+            var auraType = Type.GetType("ArcaneVR.Spell.ElementAuraDummy, Assembly-CSharp");
+            var casterType = Type.GetType("ArcaneVR.Spell.SpellCaster, Assembly-CSharp");
+
+            Assert.IsNotNull(auraType);
+            Assert.IsNotNull(auraType.GetMethod("Create"));
+            Assert.IsNotNull(auraType.GetMethod("Configure"));
+            Assert.IsNotNull(auraType.GetMethod("ApplyLayerRecursively"));
+            Assert.IsNotNull(casterType);
+            Assert.IsNotNull(casterType.GetField("useCommonDummyAuras", InstanceFields));
+            Assert.IsNotNull(casterType.GetField("auraTimeFocusExemptLayerName", InstanceFields));
+            Assert.IsNotNull(casterType.GetField("rightIceAuraInstance", InstanceFields));
+            Assert.IsNotNull(casterType.GetMethod("ShowRightElementAura", BindingFlags.Instance | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void SpellCaster_UsesXrGestureDetectorAndOwnsDummyAttackPrefabs()
+        {
+            var type = Type.GetType("ArcaneVR.Spell.SpellCaster, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetField("gestureDetector", InstanceFields));
+            Assert.IsNotNull(type.GetField("rightFireballPrefab", InstanceFields));
+            Assert.IsNotNull(type.GetField("rightIceProjectilePrefab", InstanceFields));
+            Assert.IsNotNull(type.GetField("rightThunderAuraPrefab", InstanceFields));
+            Assert.IsNotNull(type.GetField("rightThunderRangeMeters", InstanceFields));
+            Assert.IsNotNull(type.GetField("rightThunderChargeGraceSeconds", InstanceFields));
+            Assert.IsNotNull(type.GetField("rightThunderShootPoseGraceSeconds", InstanceFields));
+            Assert.IsNull(type.GetField("prototypeHand", InstanceFields));
+        }
+
+        [Test]
+        public void GestureDetector_SeparatesThunderChargeAndShootGestures()
+        {
+            var type = Type.GetType("ArcaneVR.Input.GestureDetector, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetField("rightThunderGesture", InstanceFields));
+            Assert.IsNotNull(type.GetField("rightThunderShootGesture", InstanceFields));
+            Assert.IsNotNull(type.GetField("rightThunderShootArmWindowSeconds", InstanceFields));
+            Assert.IsNotNull(type.GetField("rightThunderShootArmedUntilTime", InstanceFields));
+        }
+
+        [Test]
+        public void TimeStopSystems_CentralizesGrimoireAndCombinationLocks()
+        {
+            var type = Type.GetType("ArcaneVR.Input.TimeStopSystems, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetField("timeFocusController", InstanceFields));
+            Assert.IsNotNull(type.GetField("leftGrimoireGesture", InstanceFields));
+            Assert.IsNotNull(type.GetField("rightPageTurnGesture", InstanceFields));
+            Assert.IsNotNull(type.GetField("combinationFocusController", InstanceFields));
+            Assert.IsNotNull(type.GetField("combinationChecker", InstanceFields));
+            Assert.IsNotNull(type.GetField("handPullMovement", InstanceFields));
+            Assert.IsNotNull(type.GetField("spellCaster", InstanceFields));
+            Assert.IsNotNull(type.GetProperty("IsGrimoireTimeStopActive"));
+            Assert.IsNotNull(type.GetProperty("IsCombinationTimeStopActive"));
+        }
+
+        [Test]
         public void GrimoireManager_CanBeSuppressedByCombinationFocus()
         {
             var type = Type.GetType("ArcaneVR.UI.GrimoireManager, Assembly-CSharp");
 
             Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetField("leftHandBookAnchor", InstanceFields));
             Assert.IsNotNull(type.GetProperty("IsExternallySuppressed"));
             Assert.IsNotNull(type.GetMethod("SetExternalSuppressed"));
             Assert.IsNotNull(type.GetMethod("IsSuppressed", BindingFlags.Instance | BindingFlags.NonPublic));

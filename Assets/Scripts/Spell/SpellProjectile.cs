@@ -1,7 +1,6 @@
 using ArcaneVR.Boss;
 using ArcaneVR.Combat;
 using ArcaneVR.Core;
-using ArcaneVR.Input;
 using UnityEngine;
 
 namespace ArcaneVR.Spell
@@ -19,8 +18,6 @@ namespace ArcaneVR.Spell
         public float statusDuration;
         public float statusMagnitude = 1f;
         public float statusTickInterval = 0.5f;
-        public PoseType prototypePose;
-
         private Vector3 direction = Vector3.forward;
         private CombatManager combatManager;
         private bool hasHit;
@@ -50,13 +47,7 @@ namespace ArcaneVR.Spell
             combatManager = newCombatManager;
         }
 
-        public void InitializePrototype(PoseType pose, float newSpeed, Vector3 newDirection)
-        {
-            InitializePrototype(pose, newSpeed, newDirection, ElementType.None, StatusEffect.None, 0f, 0f);
-        }
-
         public void InitializePrototype(
-            PoseType pose,
             float newSpeed,
             Vector3 newDirection,
             ElementType newElement,
@@ -66,7 +57,6 @@ namespace ArcaneVR.Spell
             float newStatusMagnitude = 1f,
             float newStatusTickInterval = 0.5f)
         {
-            prototypePose = pose;
             spellId = SpellId.None;
             element = newElement;
             damage = newDamage;

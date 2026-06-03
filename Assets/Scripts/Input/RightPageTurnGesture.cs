@@ -142,12 +142,14 @@ namespace ArcaneVR.Input
                 if (delta.x < 0f)
                 {
                     // 손이 왼쪽으로 → 이전 페이지
+                    leftGrimoireGesture?.PreviousPage();
                     onPreviousPage?.Invoke();
                     if (debugLog) Debug.Log($"[페이지] 이전 페이지 (스와이프 거리={delta.x:F2}m)", this);
                 }
                 else
                 {
                     // 손이 오른쪽으로 → 다음 페이지
+                    leftGrimoireGesture?.NextPage();
                     onNextPage?.Invoke();
                     if (debugLog) Debug.Log($"[페이지] 다음 페이지 (스와이프 거리={delta.x:F2}m)", this);
                 }

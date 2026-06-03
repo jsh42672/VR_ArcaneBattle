@@ -1190,6 +1190,59 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 106721371}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &106934119
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 106934120}
+  - component: {fileID: 106934121}
+  m_Layer: 0
+  m_Name: TimeStopSystems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &106934120
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 106934119}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1030191333}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &106934121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 106934119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdcdb0b9a984ba94daf7aadd46e2c331, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.TimeStopSystems
+  timeFocusController: {fileID: 1153104597}
+  comboShootWindowSeconds: 6
+  leftGrimoireGesture: {fileID: 453387468}
+  rightPageTurnGesture: {fileID: 1339708614}
+  grimoireManager: {fileID: 0}
+  combinationFocusController: {fileID: 316886274}
+  combinationChecker: {fileID: 1428252387}
+  handPullMovement: {fileID: 1016462461}
+  spellCaster: {fileID: 522477930}
 --- !u!21 &119937958
 Material:
   serializedVersion: 8
@@ -3312,6 +3365,7 @@ MonoBehaviour:
   handTrackingEvents: {fileID: 453387467}
   grimoireShape: {fileID: 11400000, guid: 6c4acf4e830f130418267b136dfb3d47, type: 2}
   wristTransform: {fileID: 1888764782}
+  gestureDetector: {fileID: 522477927}
   grimoirePrefab: {fileID: 3525381110756386426, guid: 303ff02cc82d59644aa9d5fd1ab194ae, type: 3}
   positionOffset: {x: 0, y: -0.1, z: 0.1}
   rotationOffset: {x: 180, y: 0, z: 0}
@@ -3458,6 +3512,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1025119505}
     m_Modifications:
+    - target: {fileID: 3238618968309880432, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: gestureDetector
+      value: 
+      objectReference: {fileID: 522477927}
     - target: {fileID: 3830583405897179545, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: rightHand
       value: 
@@ -3487,21 +3545,89 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: leftIce
+      value: 
+      objectReference: {fileID: 11400000, guid: 17551065c8457334590e46e64a60a468, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: leftFire
+      value: 
+      objectReference: {fileID: 11400000, guid: 2964163fa2815c54db8d0606a2e510cc, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: leftBarrier
+      value: 
+      objectReference: {fileID: 11400000, guid: 38a71a19ff6f8964293aa3aba4f0eca1, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: leftCombine
+      value: 
+      objectReference: {fileID: 11400000, guid: d1e6e41e39b30e3448269b1c1bfe862c, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: leftOvrHand
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: leftThunder
+      value: 
+      objectReference: {fileID: 11400000, guid: 5c9e50234a8d9474183c66e65bf9d69c, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightBarrier
+      value: 
+      objectReference: {fileID: 11400000, guid: 29801e08c3939ec408ba61b76553ee29, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightCombine
+      value: 
+      objectReference: {fileID: 11400000, guid: 74f763f5d9a4dad47850581a1e03543a, type: 2}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: rightOvrHand
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightIceGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 844c60db6e0395f45a39f6ba58521e36, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: handPullMovement
       value: 
       objectReference: {fileID: 1016462461}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: leftCombineShoot
+      value: 
+      objectReference: {fileID: 11400000, guid: 51932134eea09454c881e47a07b42847, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightFireGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: f82675f516dbf3a4c8b89549414b42aa, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightCombineShoot
+      value: 
+      objectReference: {fileID: 11400000, guid: df632af86a1aeba408d4242706f6ad1e, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: gestureEventRouter
       value: 
       objectReference: {fileID: 522477926}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: leftGrimoireGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 6c4acf4e830f130418267b136dfb3d47, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightThunderGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 3ecf20e8b9e7ff940bba3120fc3ef2bb, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightPageTurnGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 29801e08c3939ec408ba61b76553ee29, type: 2}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: leftHandTrackingEvents
+      value: 
+      objectReference: {fileID: 453387467}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightHandTrackingEvents
+      value: 
+      objectReference: {fileID: 1339708613}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightThunderShootGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: f56abda03f495f041874ee1fc40fa6cf, type: 2}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: showPlayModeDebugOverlay
       value: 1
@@ -3547,9 +3673,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 522477929}
     - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightIceOrbPrefab
+      value: 
+      objectReference: {fileID: 963729409512917249, guid: 674e9c56be5e01540b37f2d2ae2a9b36, type: 3}
+    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: combinationChecker
       value: 
       objectReference: {fileID: 1428252387}
+    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: elementAuraManager
+      value: 
+      objectReference: {fileID: 1032187177}
+    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: leftHandSpawnPoint
+      value: 
+      objectReference: {fileID: 1888764782}
     - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: focusModeController
       value: 
@@ -3559,6 +3697,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 220932870}
     - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightFireAuraPrefab
+      value: 
+      objectReference: {fileID: 1781949194303238870, guid: 4e35892e4c5444340a0e2189311808e5, type: 3}
+    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightFireballPrefab
+      value: 
+      objectReference: {fileID: 4953716472387594226, guid: d8390420f07acce4583584b98d4b616a, type: 3}
+    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: rightHandSpawnPoint
       value: 
       objectReference: {fileID: 220932870}
@@ -3567,9 +3713,25 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightThunderAuraPrefab
+      value: 
+      objectReference: {fileID: 81519522541933398, guid: 2f401279b33e70e4aa8e7d49eaa08b69, type: 3}
+    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: prototypeSpellSpawnRoot
       value: 
       objectReference: {fileID: 1559322502}
+    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightFireExplosionPrefab
+      value: 
+      objectReference: {fileID: 4973633160514221696, guid: fe409c9a94780ae4891ef6549b173ab0, type: 3}
+    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightIceProjectilePrefab
+      value: 
+      objectReference: {fileID: 2512901619461213800, guid: 583f1c24395258d4c84e8e57b8e31f6d, type: 3}
+    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightThunderAuraAudioClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 4ad1c77def643fc4391a0b5ddebd63ad, type: 3}
     - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: allowCombinationSpellCasts
       value: 1
@@ -3577,6 +3739,14 @@ PrefabInstance:
     - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: prototypeTrackingSpaceRoot
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6476485908721041430, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: rightFireExplosionMaterialOverride
+      value: 
+      objectReference: {fileID: 2100000, guid: 11330edf7d0804b41b995fb1c66d755b, type: 2}
+    - target: {fileID: 7677195893269296369, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8028382763193974252, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3668,7 +3838,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 8028382763193974252, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 106934120}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
 --- !u!114 &522477926 stripped
@@ -5734,6 +5907,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1032187176}
+  - component: {fileID: 1032187177}
   m_Layer: 0
   m_Name: 03_Feedback
   m_TagString: Untagged
@@ -5757,6 +5931,23 @@ Transform:
   - {fileID: 1908345891}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1032187177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032187175}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaae116e69d5ddb4886d2140aebb4936, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.ElementAuraManager
+  auraParticles: {fileID: 1908345890}
+  timeFocusExemptLayerName: TimeFocusExempt
+  fireColor: {r: 1, g: 0.45, b: 0.05, a: 1}
+  iceColor: {r: 0.05, g: 0.8, b: 1, a: 1}
+  thunderColor: {r: 1, g: 0.88, b: 0.15, a: 1}
 --- !u!1 &1051556533
 GameObject:
   m_ObjectHideFlags: 0
@@ -7122,6 +7313,85 @@ Material:
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+--- !u!21 &1326323195
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: AuraParticle_Fire (Instance)
+  m_Shader: {fileID: 4800000, guid: 0406db5a14f94604a8c57ccfbc9f3b46, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _ALPHAMODULATE_ON
+  - _SURFACE_TYPE_TRANSPARENT
+  m_InvalidKeywords:
+  - _FLIPBOOKBLENDING_OFF
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3000
+  stringTagMap:
+    RenderType: Transparent
+  disabledShaderPasses:
+  - DepthOnly
+  - SHADOWCASTER
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
+    - _Blend: 3
+    - _BlendOp: 0
+    - _CameraFadingEnabled: 0
+    - _CameraFarFadeDistance: 2
+    - _CameraNearFadeDistance: 1
+    - _ColorMode: 0
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _DistortionBlend: 0.5
+    - _DistortionEnabled: 0
+    - _DistortionStrength: 1
+    - _DistortionStrengthScaled: 0.1
+    - _DstBlend: 0
+    - _DstBlendAlpha: 1
+    - _FlipbookBlending: 0
+    - _FlipbookMode: 0
+    - _Mode: 0
+    - _QueueOffset: 0
+    - _SoftParticlesEnabled: 0
+    - _SoftParticlesFarFadeDistance: 1
+    - _SoftParticlesNearFadeDistance: 0
+    - _SrcBlend: 2
+    - _SrcBlendAlpha: 0
+    - _Surface: 1
+    - _ZWrite: 0
+    m_Colors:
+    - _BaseColor: {r: 1, g: 0.55, b: 0.1, a: 1}
+    - _BaseColorAddSubDiff: {r: 0, g: 0, b: 0, a: 0}
+    - _CameraFadeParams: {r: 0, g: Infinity, b: 0, a: 0}
+    - _Color: {r: 1, g: 0.54999995, b: 0.09999997, a: 1}
+    - _EmissionColor: {r: 2, g: 0.8, b: 0.1, a: 2}
+    - _SoftParticleFadeParams: {r: 0, g: 0, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &1339708609
 GameObject:
   m_ObjectHideFlags: 0
@@ -7165,7 +7435,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1339708609}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a56a8f8ed99c98d4ca449e0ec2ec4728, type: 3}
   m_Name: 
@@ -7209,7 +7479,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1339708609}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eddf06b0618c18c4da95f8c0191b5e50, type: 3}
   m_Name: 
@@ -7277,7 +7547,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1339708609}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6d833cf2b8d70d447989c2d205dafdf8, type: 3}
   m_Name: 
@@ -7327,7 +7597,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1339708609}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 32b701a3cb3a84145a9c9af5b9598f23, type: 3}
   m_Name: 
@@ -7496,7 +7766,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 522477925}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 96de2d0be47f45b58e1efb28fd8ef8ad, type: 3}
   m_Name: 
@@ -11008,7 +11278,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 20744f4ffef1475458387c9d44fa6359, type: 2}
+  - {fileID: 1326323195}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

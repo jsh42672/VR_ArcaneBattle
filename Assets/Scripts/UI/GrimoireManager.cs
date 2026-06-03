@@ -15,6 +15,7 @@ namespace ArcaneVR.UI
         [SerializeField] private GameObject grimoireCanvas;
         [SerializeField] private GrimoireUI grimoireUI;
         [SerializeField] private Transform playerCamera;
+        [SerializeField] private Transform leftHandBookAnchor;
         [SerializeField] private GestureDetector gestureDetector;
         [SerializeField] private GestureEventRouter gestureRouter;
 
@@ -304,8 +305,8 @@ namespace ArcaneVR.UI
             if (gestureDetector == null)
                 gestureDetector = FindAnyObjectByType<GestureDetector>();
 
-            if (gestureRouter == null)
-                gestureRouter = FindAnyObjectByType<GestureEventRouter>();
+            if (leftHandBookAnchor == null)
+                leftHandBookAnchor = GameObject.Find("L_Wrist")?.transform;
 
             if (leftOvrHand == null)
                 leftOvrHand = FindBestOvrHand(true);
@@ -320,15 +321,12 @@ namespace ArcaneVR.UI
             {
                 gestureDetector.OnGrimTrigger -= HandleLegacyGrimoireTrigger;
                 gestureDetector.OnGrimTrigger += HandleLegacyGrimoireTrigger;
+                gestureDetector.OnGestureCleared -= HandleGestureCleared;
+                gestureDetector.OnGestureCleared += HandleGestureCleared;
                 gestureDetector.OnLeftFistStart -= HandleLeftFistStarted;
                 gestureDetector.OnLeftFistStart += HandleLeftFistStarted;
             }
 
-            if (gestureRouter != null)
-            {
-                gestureRouter.OnLeftFistStart -= HandleLeftFistStarted;
-                gestureRouter.OnLeftFistStart += HandleLeftFistStarted;
-            }
         }
 
         private void UnsubscribeGestureEvents()
@@ -336,11 +334,10 @@ namespace ArcaneVR.UI
             if (gestureDetector != null)
             {
                 gestureDetector.OnGrimTrigger -= HandleLegacyGrimoireTrigger;
+                gestureDetector.OnGestureCleared -= HandleGestureCleared;
                 gestureDetector.OnLeftFistStart -= HandleLeftFistStarted;
             }
 
-            if (gestureRouter != null)
-                gestureRouter.OnLeftFistStart -= HandleLeftFistStarted;
         }
 
         private void HandleLegacyGrimoireTrigger()
@@ -348,8 +345,12 @@ namespace ArcaneVR.UI
             if (!enableGestureControl || IsOpen || Time.unscaledTime - lastToggleTime < toggleCooldown)
                 return;
 
-            if (IsLeftPalmFacingPlayer())
-                OpenFromGesture("legacy open palm");
+            if (!requireLeftPalmFacingPlayer ||
+                IsLeftPalmFacingPlayer() ||
+                gestureDetector.CurrentLeftPrototypePose == PoseType.OpenPalm)
+            {
+                OpenFromGesture("left grimoire");
+            }
         }
 
         private void HandleLeftFistStarted()
@@ -358,6 +359,14 @@ namespace ArcaneVR.UI
                 return;
 
             CloseFromGesture("left fist");
+        }
+
+        private void HandleGestureCleared(bool isLeft, string gestureName)
+        {
+            if (!enableGestureControl || !IsOpen || !isLeft || gestureName != "Grimoire")
+                return;
+
+            CloseFromGesture("left grimoire released");
         }
 
         private void UpdateGestureControl()
@@ -376,7 +385,7 @@ namespace ArcaneVR.UI
 
         private void UpdateOpenGesture()
         {
-            if (!IsLeftOpenPalm() || !IsLeftPalmFacingPlayer())
+            if (!IsLeftOpenPalm())
             {
                 leftOpenHoldTimer = 0f;
                 return;
@@ -387,7 +396,7 @@ namespace ArcaneVR.UI
             if (leftOpenHoldTimer < openPalmHoldDuration || Time.unscaledTime - lastToggleTime < toggleCooldown)
                 return;
 
-            OpenFromGesture("left palm facing player");
+            OpenFromGesture("left palm open");
         }
 
         private void UpdateCloseGesture()
@@ -484,8 +493,7 @@ namespace ArcaneVR.UI
             var detectorOpen = gestureDetector != null &&
                                (gestureDetector.CurrentLeftPrototypePose == PoseType.OpenPalm ||
                                 gestureDetector.CurrentLeftPose == PoseId.OpenPalm);
-            var routerOpen = gestureRouter != null && gestureRouter.CurrentLeftPose == PoseType.OpenPalm;
-            return detectorOpen || routerOpen || IsOvrHandOpen(leftOvrHand);
+            return detectorOpen || IsOvrHandOpen(leftOvrHand);
         }
 
         private bool IsLeftFist()
@@ -494,9 +502,7 @@ namespace ArcaneVR.UI
                                (gestureDetector.CurrentLeftPrototypePose == PoseType.Fist ||
                                 gestureDetector.CurrentLeftPose == PoseId.Fist ||
                                 gestureDetector.CurrentLeftPose == PoseId.FistPush);
-            var routerFist = gestureRouter != null &&
-                             (gestureRouter.LeftFistActive || gestureRouter.CurrentLeftPose == PoseType.Fist);
-            return detectorFist || routerFist;
+            return detectorFist;
         }
 
         private bool IsRightPageSwipePose()
@@ -507,8 +513,7 @@ namespace ArcaneVR.UI
             var detectorOpen = gestureDetector != null &&
                                (gestureDetector.CurrentRightPrototypePose == PoseType.OpenPalm ||
                                 gestureDetector.CurrentRightPose == PoseId.OpenPalm);
-            var routerOpen = gestureRouter != null && gestureRouter.CurrentRightPose == PoseType.OpenPalm;
-            return detectorOpen || routerOpen;
+            return detectorOpen;
         }
 
         private bool IsLeftPalmFacingPlayer()
@@ -519,15 +524,10 @@ namespace ArcaneVR.UI
             if (playerCamera == null)
                 return false;
 
-            if (leftOvrHand == null)
-                leftOvrHand = FindBestOvrHand(true);
-
-            if (leftOvrHand == null || !leftOvrHand.IsTracked)
+            var handPose = ResolveLeftHandBookAnchor();
+            if (handPose == null)
                 return false;
 
-            var handPose = leftOvrHand.PointerPose != null && leftOvrHand.IsPointerPoseValid
-                ? leftOvrHand.PointerPose
-                : leftOvrHand.transform;
             var toHead = playerCamera.position - handPose.position;
             if (toHead.sqrMagnitude <= 0.0001f)
                 return false;
@@ -644,6 +644,9 @@ namespace ArcaneVR.UI
 
         private Transform ResolveLeftHandBookAnchor()
         {
+            if (leftHandBookAnchor != null)
+                return leftHandBookAnchor;
+
             if (leftOvrHand == null || !leftOvrHand.IsTracked)
                 leftOvrHand = FindBestOvrHand(true);
 

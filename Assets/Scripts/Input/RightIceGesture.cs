@@ -226,7 +226,6 @@ namespace ArcaneVR.Input
                 if (proj.TryGetComponent<ArcaneVR.Spell.SpellProjectile>(out var sp))
                 {
                     sp.InitializePrototype(
-                        PoseType.Fist,
                         useArcTrajectory ? 0f : projectileSpeed,
                         direction,
                         ArcaneVR.Spell.ElementType.Ice,

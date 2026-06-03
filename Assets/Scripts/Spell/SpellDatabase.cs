@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ArcaneVR.Input;
 using UnityEngine;
 
 namespace ArcaneVR.Spell
@@ -24,27 +23,15 @@ namespace ArcaneVR.Spell
             public float statusDuration = 3f;
             public float statusMagnitude = 1f;
             public float statusTickInterval = 0.5f;
-        }
-
-        [Serializable]
-        public class PoseSpellData
-        {
-            public PoseType pose;
-            public ElementType element;
-            public StatusEffect statusEffect;
-            public float damage = 10f;
-            public float statusDuration = 3f;
-            public float statusMagnitude = 1f;
-            public float statusTickInterval = 0.5f;
-            public float projectileSpeed = 10f;
-            public GameObject prefab;
+            [Tooltip("Beam spell only: continuous fire duration in seconds. 0 = single shot.")]
+            public float continuousFireSeconds = 0f;
+            [Tooltip("Beam spell only: maximum range in meters.")]
+            public float rangeMeters = 0f;
         }
 
         public List<SpellData> spells = new List<SpellData>();
-        public List<PoseSpellData> poseSpells = new List<PoseSpellData>();
 
         public IReadOnlyList<SpellData> Spells => spells;
-        public IReadOnlyList<PoseSpellData> PoseSpells => poseSpells;
 
         public SpellData Get(SpellId id)
         {
@@ -58,21 +45,6 @@ namespace ArcaneVR.Spell
         public bool TryGet(SpellId id, out SpellData data)
         {
             data = Get(id);
-            return data != null;
-        }
-
-        public PoseSpellData Get(PoseType pose)
-        {
-            var data = poseSpells != null ? poseSpells.Find(spell => spell.pose == pose) : null;
-            if (data != null)
-                ApplyMissingRuntimeDefaults(data);
-
-            return data;
-        }
-
-        public bool TryGet(PoseType pose, out PoseSpellData data)
-        {
-            data = Get(pose);
             return data != null;
         }
 
@@ -104,11 +76,13 @@ namespace ArcaneVR.Spell
             EnsureDefaultSpell(CreateDefaultSpell(
                 SpellId.Single_Strike,
                 ElementType.Thunder,
-                14f,
+                16f,
                 1,
                 20f,
                 StatusEffect.Stagger,
-                1f),
+                2.5f,
+                continuousFireSeconds: 5f,
+                rangeMeters: 20f),
                 overwriteExistingValues);
 
             EnsureDefaultSpell(CreateDefaultSpell(
@@ -148,13 +122,11 @@ namespace ArcaneVR.Spell
                 overwriteExistingValues);
 
             RemoveDuplicateEntries();
-            EnsureDefaultPoseSpells(overwriteExistingValues);
         }
 
         private void Reset()
         {
             spells = new List<SpellData>();
-            poseSpells = new List<PoseSpellData>();
             EnsureDefaultSpells(true);
         }
 
@@ -197,75 +169,6 @@ namespace ArcaneVR.Spell
             }
         }
 
-        private void EnsureDefaultPoseSpells(bool overwriteExistingValues)
-        {
-            if (poseSpells == null)
-                poseSpells = new List<PoseSpellData>();
-
-            EnsureDefaultPoseSpell(CreateDefaultPoseSpell(
-                PoseType.OpenPalm,
-                ElementType.Fire,
-                StatusEffect.Burn,
-                10f,
-                3f,
-                10f),
-                overwriteExistingValues);
-
-            EnsureDefaultPoseSpell(CreateDefaultPoseSpell(
-                PoseType.Fist,
-                ElementType.Ice,
-                StatusEffect.Slow,
-                8f,
-                3f,
-                10f),
-                overwriteExistingValues);
-
-            EnsureDefaultPoseSpell(CreateDefaultPoseSpell(
-                PoseType.ThumbsUp,
-                ElementType.Thunder,
-                StatusEffect.Stagger,
-                12f,
-                1f,
-                12f),
-                overwriteExistingValues);
-
-            RemoveDuplicatePoseEntries();
-        }
-
-        private void EnsureDefaultPoseSpell(PoseSpellData defaultData, bool overwriteExistingValues)
-        {
-            var existing = Get(defaultData.pose);
-            if (existing == null)
-            {
-                poseSpells.Add(defaultData);
-                return;
-            }
-
-            if (!overwriteExistingValues)
-                return;
-
-            var prefab = existing.prefab;
-            CopyPoseValues(defaultData, existing);
-            existing.prefab = prefab;
-        }
-
-        private void RemoveDuplicatePoseEntries()
-        {
-            var seen = new HashSet<PoseType>();
-            for (var i = 0; i < poseSpells.Count; i++)
-            {
-                var spell = poseSpells[i];
-                if (spell == null || spell.pose == PoseType.None)
-                    continue;
-
-                if (!seen.Add(spell.pose))
-                {
-                    poseSpells.RemoveAt(i);
-                    i--;
-                }
-            }
-        }
-
         private static SpellData CreateDefaultSpell(
             SpellId spellId,
             ElementType element,
@@ -275,7 +178,9 @@ namespace ArcaneVR.Spell
             StatusEffect statusEffect,
             float statusDuration,
             float statusMagnitude = -1f,
-            float statusTickInterval = -1f)
+            float statusTickInterval = -1f,
+            float continuousFireSeconds = 0f,
+            float rangeMeters = 0f)
         {
             return new SpellData
             {
@@ -287,7 +192,9 @@ namespace ArcaneVR.Spell
                 statusEffect = statusEffect,
                 statusDuration = statusDuration,
                 statusMagnitude = statusMagnitude >= 0f ? statusMagnitude : ResolveDefaultMagnitude(statusEffect),
-                statusTickInterval = statusTickInterval >= 0f ? statusTickInterval : ResolveDefaultTickInterval(statusEffect)
+                statusTickInterval = statusTickInterval >= 0f ? statusTickInterval : ResolveDefaultTickInterval(statusEffect),
+                continuousFireSeconds = continuousFireSeconds,
+                rangeMeters = rangeMeters
             };
         }
 
@@ -302,56 +209,11 @@ namespace ArcaneVR.Spell
             destination.statusDuration = source.statusDuration;
             destination.statusMagnitude = source.statusMagnitude;
             destination.statusTickInterval = source.statusTickInterval;
-        }
-
-        private static PoseSpellData CreateDefaultPoseSpell(
-            PoseType pose,
-            ElementType element,
-            StatusEffect statusEffect,
-            float damage,
-            float statusDuration,
-            float projectileSpeed,
-            float statusMagnitude = -1f,
-            float statusTickInterval = -1f)
-        {
-            return new PoseSpellData
-            {
-                pose = pose,
-                element = element,
-                statusEffect = statusEffect,
-                damage = damage,
-                statusDuration = statusDuration,
-                statusMagnitude = statusMagnitude >= 0f ? statusMagnitude : ResolveDefaultMagnitude(statusEffect),
-                statusTickInterval = statusTickInterval >= 0f ? statusTickInterval : ResolveDefaultTickInterval(statusEffect),
-                projectileSpeed = projectileSpeed
-            };
-        }
-
-        private static void CopyPoseValues(PoseSpellData source, PoseSpellData destination)
-        {
-            destination.pose = source.pose;
-            destination.element = source.element;
-            destination.statusEffect = source.statusEffect;
-            destination.damage = source.damage;
-            destination.statusDuration = source.statusDuration;
-            destination.statusMagnitude = source.statusMagnitude;
-            destination.statusTickInterval = source.statusTickInterval;
-            destination.projectileSpeed = source.projectileSpeed;
+            destination.continuousFireSeconds = source.continuousFireSeconds;
+            destination.rangeMeters = source.rangeMeters;
         }
 
         private static void ApplyMissingRuntimeDefaults(SpellData data)
-        {
-            if (data.statusMagnitude <= 0f)
-                data.statusMagnitude = ResolveDefaultMagnitude(data.statusEffect);
-
-            if (data.statusTickInterval < 0f)
-                data.statusTickInterval = 0f;
-
-            if (data.statusTickInterval <= 0f && data.statusEffect == StatusEffect.Burn)
-                data.statusTickInterval = ResolveDefaultTickInterval(data.statusEffect);
-        }
-
-        private static void ApplyMissingRuntimeDefaults(PoseSpellData data)
         {
             if (data.statusMagnitude <= 0f)
                 data.statusMagnitude = ResolveDefaultMagnitude(data.statusEffect);

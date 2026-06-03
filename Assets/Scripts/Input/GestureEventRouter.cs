@@ -4,18 +4,25 @@ using UnityEngine;
 namespace ArcaneVR.Input
 {
     /// <summary>
-    /// Receives Unity XR Hands StaticHandGesture UnityEvents and exposes the same
-    /// prototype gesture events used by the ArcaneVR input pipeline.
+    /// Debug observer for GestureDetector events. This component does not drive
+    /// gameplay; it keeps a compact log/status view of detected gestures.
     /// </summary>
     public class GestureEventRouter : MonoBehaviour
     {
+        [SerializeField] private GestureDetector gestureDetector;
         [SerializeField] private bool showDebugLog;
 
+        [Obsolete("GestureEventRouter is log-only. Subscribe to GestureDetector instead.")]
         public event Action<PoseType> OnRightPoseConfirmed;
+        [Obsolete("GestureEventRouter is log-only. Subscribe to GestureDetector instead.")]
         public event Action OnRightPoseCleared;
+        [Obsolete("GestureEventRouter is log-only. Subscribe to GestureDetector instead.")]
         public event Action<PoseType> OnLeftPoseConfirmed;
+        [Obsolete("GestureEventRouter is log-only. Subscribe to GestureDetector instead.")]
         public event Action OnLeftPoseCleared;
+        [Obsolete("GestureEventRouter is log-only. Subscribe to GestureDetector instead.")]
         public event Action OnLeftFistStart;
+        [Obsolete("GestureEventRouter is log-only. Subscribe to GestureDetector instead.")]
         public event Action OnLeftFistEnd;
 
         private PoseType currentRightPose = PoseType.None;
@@ -30,6 +37,24 @@ namespace ArcaneVR.Input
         public bool IsAnyGestureActive => currentRightPose != PoseType.None || currentLeftPose != PoseType.None || leftFistActive;
         public int ReceivedEventCount => receivedEventCount;
         public string DebugStatus { get; private set; } = "XR Gesture Router: waiting";
+
+        private bool subscribed;
+
+        private void Awake()
+        {
+            ResolveDetector();
+        }
+
+        private void OnEnable()
+        {
+            ResolveDetector();
+            SubscribeDetector();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeDetector();
+        }
 
         public void OnOpenPalmStart()
         {
@@ -64,7 +89,6 @@ namespace ArcaneVR.Input
 
             leftFistActive = true;
             DebugStatus = "XR Gesture Router: Left Fist start";
-            OnLeftFistStart?.Invoke();
             LogDebug("[GESTURE] Left Fist start");
         }
 
@@ -137,7 +161,6 @@ namespace ArcaneVR.Input
 
             leftFistActive = false;
             DebugStatus = "XR Gesture Router: Left Fist end";
-            OnLeftFistEnd?.Invoke();
             LogDebug("[GESTURE] Left Fist end");
         }
 
@@ -153,7 +176,6 @@ namespace ArcaneVR.Input
 
             currentRightPose = pose;
             DebugStatus = $"XR Gesture Router: Right {pose}";
-            OnRightPoseConfirmed?.Invoke(pose);
             LogDebug($"[GESTURE] Right pose: {pose}");
         }
 
@@ -164,7 +186,6 @@ namespace ArcaneVR.Input
 
             currentLeftPose = pose;
             DebugStatus = $"XR Gesture Router: Left {pose}";
-            OnLeftPoseConfirmed?.Invoke(pose);
             LogDebug($"[GESTURE] Left pose: {pose}");
         }
 
@@ -175,7 +196,6 @@ namespace ArcaneVR.Input
 
             currentRightPose = PoseType.None;
             DebugStatus = $"XR Gesture Router: Right cleared {pose}";
-            OnRightPoseCleared?.Invoke();
             LogDebug($"[GESTURE] Right pose cleared: {pose}");
         }
 
@@ -186,8 +206,81 @@ namespace ArcaneVR.Input
 
             currentLeftPose = PoseType.None;
             DebugStatus = $"XR Gesture Router: Left cleared {pose}";
-            OnLeftPoseCleared?.Invoke();
             LogDebug($"[GESTURE] Left pose cleared: {pose}");
+        }
+
+        private void ResolveDetector()
+        {
+            if (gestureDetector == null)
+                gestureDetector = FindAnyObjectByType<GestureDetector>();
+        }
+
+        private void SubscribeDetector()
+        {
+            if (subscribed || gestureDetector == null)
+                return;
+
+            gestureDetector.OnGestureConfirmed += HandleDetectorGestureConfirmed;
+            gestureDetector.OnGestureCleared += HandleDetectorGestureCleared;
+            gestureDetector.OnLeftFistStart += HandleDetectorLeftFistStart;
+            gestureDetector.OnLeftFistEnd += HandleDetectorLeftFistEnd;
+            subscribed = true;
+        }
+
+        private void UnsubscribeDetector()
+        {
+            if (!subscribed || gestureDetector == null)
+                return;
+
+            gestureDetector.OnGestureConfirmed -= HandleDetectorGestureConfirmed;
+            gestureDetector.OnGestureCleared -= HandleDetectorGestureCleared;
+            gestureDetector.OnLeftFistStart -= HandleDetectorLeftFistStart;
+            gestureDetector.OnLeftFistEnd -= HandleDetectorLeftFistEnd;
+            subscribed = false;
+        }
+
+        private void HandleDetectorGestureConfirmed(bool isLeft, string gestureName, PoseType pose)
+        {
+            MarkEvent();
+            if (isLeft)
+                SetLeftPose(pose);
+            else
+                SetRightPose(pose);
+
+            DebugStatus = $"XR Gesture Router: {(isLeft ? "Left" : "Right")} {gestureName}";
+            LogDebug($"[GESTURE] {(isLeft ? "Left" : "Right")} gesture: {gestureName} ({pose})");
+        }
+
+        private void HandleDetectorGestureCleared(bool isLeft, string gestureName)
+        {
+            MarkEvent();
+            if (isLeft)
+            {
+                var pose = currentLeftPose;
+                currentLeftPose = PoseType.None;
+                DebugStatus = $"XR Gesture Router: Left cleared {gestureName}";
+                LogDebug($"[GESTURE] Left gesture cleared: {gestureName} ({pose})");
+                return;
+            }
+
+            var rightPose = currentRightPose;
+            currentRightPose = PoseType.None;
+            DebugStatus = $"XR Gesture Router: Right cleared {gestureName}";
+            LogDebug($"[GESTURE] Right gesture cleared: {gestureName} ({rightPose})");
+        }
+
+        private void HandleDetectorLeftFistStart()
+        {
+            leftFistActive = true;
+            DebugStatus = "XR Gesture Router: Left Fist start";
+            LogDebug("[GESTURE] Left Fist start");
+        }
+
+        private void HandleDetectorLeftFistEnd()
+        {
+            leftFistActive = false;
+            DebugStatus = "XR Gesture Router: Left Fist end";
+            LogDebug("[GESTURE] Left Fist end");
         }
 
         private void LogDebug(string message)

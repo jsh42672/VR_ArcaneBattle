@@ -17,6 +17,8 @@ namespace ArcaneVR.Input
         [SerializeField] private XRHandShape grimoireShape;
         [Tooltip("Left Hand Tracking > L_Wrist Transform")]
         [SerializeField] private Transform wristTransform;
+        [Tooltip("When assigned, GestureDetector owns recognition and this component only spawns/tracks the book.")]
+        [SerializeField] private GestureDetector gestureDetector;
 
         [Header("Grimoire")]
         [SerializeField] private GameObject grimoirePrefab;
@@ -70,6 +72,16 @@ namespace ArcaneVR.Input
 
         private void OnEnable()
         {
+            ResolveGestureDetector();
+            if (gestureDetector != null)
+            {
+                gestureDetector.OnGestureConfirmed -= HandleGestureConfirmed;
+                gestureDetector.OnGestureConfirmed += HandleGestureConfirmed;
+                gestureDetector.OnGestureCleared -= HandleGestureCleared;
+                gestureDetector.OnGestureCleared += HandleGestureCleared;
+                return;
+            }
+
             if (handTrackingEvents != null)
                 handTrackingEvents.jointsUpdated.AddListener(OnJointsUpdated);
             StartCoroutine(ReconnectSubsystem());
@@ -77,9 +89,48 @@ namespace ArcaneVR.Input
 
         private void OnDisable()
         {
+            if (gestureDetector != null)
+            {
+                gestureDetector.OnGestureConfirmed -= HandleGestureConfirmed;
+                gestureDetector.OnGestureCleared -= HandleGestureCleared;
+            }
+
             if (handTrackingEvents != null)
                 handTrackingEvents.jointsUpdated.RemoveListener(OnJointsUpdated);
             HideGrimoire();
+        }
+
+        private void ResolveGestureDetector()
+        {
+            if (gestureDetector == null)
+                gestureDetector = FindAnyObjectByType<GestureDetector>();
+        }
+
+        private void HandleGestureConfirmed(bool isLeft, string gestureName, PoseType pose)
+        {
+            if (!isLeft || gestureName != "Grimoire" || IsExternallySuppressed)
+                return;
+
+            _poseActive = true;
+            _poseLostTime = -1f;
+            _poseHoldTimer = poseHoldDuration;
+            ShowGrimoire();
+            onGrimoireAppear?.Invoke();
+            if (debugLog)
+                Debug.Log("[Grimoire] Spawned from GestureDetector.", this);
+        }
+
+        private void HandleGestureCleared(bool isLeft, string gestureName)
+        {
+            if (!isLeft || gestureName != "Grimoire")
+                return;
+
+            _poseActive = false;
+            _poseLostTime = -1f;
+            HideGrimoire();
+            onGrimoireDisappear?.Invoke();
+            if (debugLog)
+                Debug.Log("[Grimoire] Hidden after GestureDetector clear.", this);
         }
 
         private System.Collections.IEnumerator ReconnectSubsystem()
