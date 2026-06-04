@@ -117,17 +117,12 @@ namespace ArcaneVR.Boss
 
         public void TriggerAttackNow(BossAttackType attackType)
         {
-            if (!runPatternsAutomatically)
-            {
-                LastPatternStatus = "BossSM: attack patterns disabled";
-                return;
-            }
-
             ResolveReferences();
             bossAI?.ChangeState(BossState.Idle);
             patternBridge?.BeginAttackResponseWindow(attackType, responseWindowDuration);
             LastPatternStatus = $"BossSM: attack {attackType}";
-            ScheduleNextAttack();
+            if (runPatternsAutomatically)
+                ScheduleNextAttack();
         }
 
         private void CheckHpPhaseTriggers()
@@ -249,10 +244,14 @@ namespace ArcaneVR.Boss
             if (golemTarget != null)
                 chaseController = BossChaseController.EnsureForTarget(golemTarget);
 
-            if (runPatternsAutomatically && patternBridge == null)
+            if (patternBridge == null)
+            {
                 patternBridge = GetComponent<BossPatternCombatBridge>() ??
-                                FindAnyObjectByType<BossPatternCombatBridge>() ??
-                                gameObject.AddComponent<BossPatternCombatBridge>();
+                                FindAnyObjectByType<BossPatternCombatBridge>();
+
+                if (patternBridge == null && runPatternsAutomatically)
+                    patternBridge = gameObject.AddComponent<BossPatternCombatBridge>();
+            }
 
             if (runPatternsAutomatically && createResponsePatternHelpers)
                 EnsureBattleHelpers();

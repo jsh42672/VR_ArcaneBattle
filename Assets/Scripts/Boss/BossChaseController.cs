@@ -107,7 +107,7 @@ namespace ArcaneVR.Boss
             runAnimationSpeedMultiplier = 0.45f;
             attackRange = Mathf.Max(attackRange, 9.3f);
             meleeHitRange = Mathf.Max(meleeHitRange, attackRange + 0.5f);
-            enableAttackResponsePatterns = false;
+            enableAttackResponsePatterns = true;
             meleeAttackCooldown = Mathf.Min(meleeAttackCooldown, 2.75f);
             attackPauseDuration = Mathf.Min(attackPauseDuration, 1.35f);
         }
@@ -354,7 +354,9 @@ namespace ArcaneVR.Boss
                     patternBridge?.BeginAttackResponseWindow(attackType);
             }
 
-            LastChaseStatus = "Chase: generic melee";
+            LastChaseStatus = enableAttackResponsePatterns
+                ? $"Chase: {attackType} melee"
+                : "Chase: generic melee";
             return true;
         }
 
@@ -397,6 +399,9 @@ namespace ArcaneVR.Boss
 
         private void TryApplyGenericMeleeDamage()
         {
+            if (enableAttackResponsePatterns)
+                return;
+
             if (!applyGenericMeleeDamage)
                 return;
 
