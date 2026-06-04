@@ -53,6 +53,7 @@ namespace ArcaneVR.Spell
         [SerializeField] private Material rightFireExplosionMaterialOverride;
         [SerializeField] private Color rightFireAuraColor = new Color(1f, 0.35f, 0.05f, 1f);
         [SerializeField] private float rightFireSpawnForwardOffset = 0.15f;
+        [SerializeField] private float rightFireDownAngleDegrees = 0f;
         [SerializeField] private float rightFireProjectileScale = 0.01f;
         [SerializeField] private float rightFireProjectileSpeed = 13f;
         [SerializeField] private float rightFireRecoilVelocityThreshold = 0.5f;
@@ -91,6 +92,8 @@ namespace ArcaneVR.Spell
         [SerializeField] private float rightThunderShootPoseGraceSeconds = 0.2f;
         [SerializeField] private float rightThunderHitTickInterval = 0.25f;
         [SerializeField] private float rightThunderLaserWidth = 0.035f;
+        [SerializeField] private float rightThunderLaserSpawnForwardOffset = 0f;
+        [SerializeField] private float rightThunderLaserYawAngleDegrees = 0f;
         [SerializeField] private float rightThunderLaserDownAngleDegrees = 8f;
         [SerializeField] private LayerMask rightThunderHitMask = ~0;
         [SerializeField] private Color rightThunderLaserColor = new Color(1f, 0.88f, 0.15f, 1f);
@@ -477,7 +480,9 @@ namespace ArcaneVR.Spell
         private void FireRightFireProjectile(Transform spawnPoint)
         {
             var direction = ResolveAimDirection(spawnPoint.position);
+            direction = ApplyDownAngle(direction, rightFireDownAngleDegrees);
             var origin = spawnPoint.position + direction * rightFireSpawnForwardOffset;
+            var fireData = GetSpellData(SpellId.Single_Pointer);
             var projectile = rightFireballPrefab != null
                 ? Instantiate(rightFireballPrefab, origin, Quaternion.LookRotation(direction))
                 : CreatePrototypeProjectileObject(ElementType.Fire, origin, Quaternion.LookRotation(direction));
@@ -491,19 +496,27 @@ namespace ArcaneVR.Spell
                     rightFireExplosionScale,
                     rightFireExplosionLifetime,
                     rightFireExplosionMaterialOverride);
+                fireball.ConfigureHitData(
+                    SpellId.Single_Pointer,
+                    fireData?.damage ?? 10f,
+                    fireData?.statusEffect ?? StatusEffect.Burn,
+                    fireData?.statusDuration ?? 3f,
+                    fireData?.statusMagnitude ?? 2f,
+                    fireData?.statusTickInterval ?? 1f);
             }
-
-            var fireData = GetSpellData(SpellId.Single_Pointer);
-            var speed = fireData?.projectileSpeed > 0f ? fireData.projectileSpeed : rightFireProjectileSpeed;
-            InitializePrototypeProjectile(
-                projectile,
-                SpellId.Single_Pointer,
-                ElementType.Fire,
-                fireData?.statusEffect ?? StatusEffect.Burn,
-                fireData?.damage ?? 10f,
-                fireData?.statusDuration ?? 3f,
-                speed,
-                direction);
+            else
+            {
+                var speed = fireData?.projectileSpeed > 0f ? fireData.projectileSpeed : rightFireProjectileSpeed;
+                InitializePrototypeProjectile(
+                    projectile,
+                    SpellId.Single_Pointer,
+                    ElementType.Fire,
+                    fireData?.statusEffect ?? StatusEffect.Burn,
+                    fireData?.damage ?? 10f,
+                    fireData?.statusDuration ?? 3f,
+                    speed,
+                    direction);
+            }
 
             lastCastStatus = "Cast: Fire dummy";
             RememberCast(ElementType.Fire, SpellId.Single_Pointer, 0f, "Cost: dummy");
@@ -813,15 +826,14 @@ namespace ArcaneVR.Spell
                 return;
             }
 
-            var origin = spawnPoint.position + spawnPoint.rotation * rightThunderAuraOffset;
             var direction = spawnPoint.forward.sqrMagnitude > 0.001f
                 ? spawnPoint.forward.normalized
                 : (headTransform != null ? headTransform.forward : transform.forward).normalized;
-            direction = Vector3.RotateTowards(
-                direction,
-                Vector3.down,
-                Mathf.Max(0f, rightThunderLaserDownAngleDegrees) * Mathf.Deg2Rad,
-                0f).normalized;
+            direction = ApplyYawAngle(direction, rightThunderLaserYawAngleDegrees);
+            direction = ApplyDownAngle(direction, rightThunderLaserDownAngleDegrees);
+            var origin = spawnPoint.position
+                         + spawnPoint.rotation * rightThunderAuraOffset
+                         + direction * Mathf.Max(0f, rightThunderLaserSpawnForwardOffset);
 
             var hitPoint = origin + direction * rightThunderRangeMeters;
             Collider hitCollider = null;
@@ -1044,6 +1056,33 @@ namespace ArcaneVR.Spell
         {
             var direction = headTransform != null ? headTransform.forward : transform.forward;
             return direction.sqrMagnitude > 0.001f ? direction.normalized : Vector3.forward;
+        }
+
+        private static Vector3 ApplyDownAngle(Vector3 direction, float downAngleDegrees)
+        {
+            if (direction.sqrMagnitude <= 0.001f)
+                direction = Vector3.forward;
+
+            var angle = Mathf.Max(0f, downAngleDegrees);
+            if (angle <= 0.001f)
+                return direction.normalized;
+
+            return Vector3.RotateTowards(
+                direction.normalized,
+                Vector3.down,
+                angle * Mathf.Deg2Rad,
+                0f).normalized;
+        }
+
+        private static Vector3 ApplyYawAngle(Vector3 direction, float yawAngleDegrees)
+        {
+            if (direction.sqrMagnitude <= 0.001f)
+                direction = Vector3.forward;
+
+            if (Mathf.Abs(yawAngleDegrees) <= 0.001f)
+                return direction.normalized;
+
+            return (Quaternion.AngleAxis(yawAngleDegrees, Vector3.up) * direction.normalized).normalized;
         }
 
         private Vector3 ResolveTrackingPosition(Vector3 worldPosition)

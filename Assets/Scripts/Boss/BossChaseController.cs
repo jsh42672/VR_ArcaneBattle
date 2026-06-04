@@ -103,7 +103,7 @@ namespace ArcaneVR.Boss
             resumeDistance = Mathf.Max(resumeDistance, stoppingDistance + 1.0f);
             maxChaseDistance = Mathf.Max(maxChaseDistance, 250f);
             rotationSpeed = Mathf.Max(rotationSpeed, 720f);
-            visualYawOffsetDegrees = 180f;
+            visualYawOffsetDegrees = 0f;
             runAnimationSpeedMultiplier = 0.45f;
             attackRange = Mathf.Max(attackRange, 9.3f);
             meleeHitRange = Mathf.Max(meleeHitRange, attackRange + 0.5f);
@@ -637,12 +637,47 @@ namespace ArcaneVR.Boss
 
         private void EnsureRunControllerIfNeeded()
         {
-            if (bossAnimator == null || runController == null || bossAnimator.runtimeAnimatorController != null)
+            if (bossAnimator == null || runController == null)
+                return;
+
+            if (bossAnimator.runtimeAnimatorController == runController)
+            {
+                usingRunController = true;
+                return;
+            }
+
+            if (CanPlayRunState())
                 return;
 
             controllerBeforeRun = bossAnimator.runtimeAnimatorController;
             usingRunController = true;
             bossAnimator.runtimeAnimatorController = runController;
+        }
+
+        private bool CanPlayRunState()
+        {
+            return HasAnimatorState(runStateName) ||
+                   HasAnimatorState(fallbackRunStateName) ||
+                   HasAnimatorState("Walk");
+        }
+
+        private bool HasAnimatorState(string stateName)
+        {
+            if (string.IsNullOrEmpty(stateName) ||
+                bossAnimator == null ||
+                bossAnimator.runtimeAnimatorController == null)
+            {
+                return false;
+            }
+
+            var stateHash = Animator.StringToHash(stateName);
+            for (var layer = 0; layer < bossAnimator.layerCount; layer++)
+            {
+                if (bossAnimator.HasState(layer, stateHash))
+                    return true;
+            }
+
+            return false;
         }
 
         private bool TryCrossFade(string stateName)
