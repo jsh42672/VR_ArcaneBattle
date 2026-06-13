@@ -732,6 +732,11 @@ MonoBehaviour:
   m_EnableLegacyTarget: 0
   m_HudRefreshInterval: 0.1
   m_SubsystemRefreshInterval: 0.5
+--- !u!4 &11435022 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
 --- !u!21 &44783810
 Material:
   serializedVersion: 8
@@ -848,8 +853,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.63, b: 0.02, a: 1}
-    - _Color: {r: 1, g: 0.63, b: 0.02, a: 1}
+    - _BaseColor: {r: 0.42, g: 0.42, b: 0.42, a: 1}
+    - _Color: {r: 0.41999996, g: 0.41999996, b: 0.41999996, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -1359,8 +1364,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -1865,8 +1870,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -1987,8 +1992,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0.015, g: 0.018, b: 0.02, a: 1}
-    - _Color: {r: 0.015, g: 0.018, b: 0.02, a: 1}
+    - _BaseColor: {r: 0.34, g: 0.34, b: 0.34, a: 1}
+    - _Color: {r: 0.33999997, g: 0.33999997, b: 0.33999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -2443,6 +2448,52 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &287572826
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 287572828}
+  - component: {fileID: 287572827}
+  m_Layer: 0
+  m_Name: _Disposable_SpellDiagnostics
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &287572827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 287572826}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65b6170fad15e28408079067f2601492, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Diagnostics.SpellPrototypeDiagnostics
+  logState: 1
+  logInterval: 0.5
+--- !u!4 &287572828
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 287572826}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &292867131
 GameObject:
   m_ObjectHideFlags: 0
@@ -2671,8 +2722,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.75, b: 0.42, a: 1}
-    - _Color: {r: 0, g: 0.75, b: 0.41999996, a: 1}
+    - _BaseColor: {r: 0.55, g: 0.16, b: 0.16, a: 1}
+    - _Color: {r: 0.54999995, g: 0.15999997, b: 0.15999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -3146,8 +3197,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -3475,6 +3526,10 @@ PrefabInstance:
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: rightOvrHand
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: showDebugLog
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: rightIceGesture
@@ -3814,6 +3869,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: playerCamera
+      value: 
+      objectReference: {fileID: 2020363679}
+    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: gestureDetector
+      value: 
+      objectReference: {fileID: 562696178}
+    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftHandBookAnchor
+      value: 
+      objectReference: {fileID: 1888764782}
+    - target: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: movementRoot
+      value: 
+      objectReference: {fileID: 11435022}
+    - target: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: xrOriginRoot
+      value: 
+      objectReference: {fileID: 11435022}
     - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.56508
@@ -3867,6 +3942,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 522477931}
     - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: headTransform
+      value: 
+      objectReference: {fileID: 2020363679}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: thunderModule
       value: 
       objectReference: {fileID: 562696181}
@@ -3891,16 +3970,112 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1032187177}
     - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftHandSpawnPoint
+      value: 
+      objectReference: {fileID: 1888764782}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: focusModeController
       value: 
       objectReference: {fileID: 316886274}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightHandSpawnPoint
+      value: 
+      objectReference: {fileID: 220932870}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftIce
+      value: 
+      objectReference: {fileID: 11400000, guid: 17551065c8457334590e46e64a60a468, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftFire
+      value: 
+      objectReference: {fileID: 11400000, guid: 2964163fa2815c54db8d0606a2e510cc, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftBarrier
+      value: 
+      objectReference: {fileID: 11400000, guid: 97109207ab2388b4c83ccb932ade1df0, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftCombine
+      value: 
+      objectReference: {fileID: 11400000, guid: d1e6e41e39b30e3448269b1c1bfe862c, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftThunder
+      value: 
+      objectReference: {fileID: 11400000, guid: 5c9e50234a8d9474183c66e65bf9d69c, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightBarrier
+      value: 
+      objectReference: {fileID: 11400000, guid: d7eee17c4b496774d9c14fd427de460b, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightCombine
+      value: 
+      objectReference: {fileID: 11400000, guid: 74f763f5d9a4dad47850581a1e03543a, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: showDebugLog
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightIceGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 844c60db6e0395f45a39f6ba58521e36, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftCombineShoot
+      value: 
+      objectReference: {fileID: 11400000, guid: 51932134eea09454c881e47a07b42847, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightFireGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: f82675f516dbf3a4c8b89549414b42aa, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightCombineShoot
+      value: 
+      objectReference: {fileID: 11400000, guid: df632af86a1aeba408d4242706f6ad1e, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftGrimoireGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 6c4acf4e830f130418267b136dfb3d47, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightThunderGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 3ecf20e8b9e7ff940bba3120fc3ef2bb, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightPageTurnGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 29801e08c3939ec408ba61b76553ee29, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftHandTrackingEvents
+      value: 
+      objectReference: {fileID: 906048824}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightHandTrackingEvents
+      value: 
+      objectReference: {fileID: 1748501510}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightThunderShootGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: f56abda03f495f041874ee1fc40fa6cf, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightIcePalmUpDotThreshold
+      value: 0.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightThunderShootArmWindowSeconds
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6472235527627391572, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: m_Name
       value: ArcanePlayerRig
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 7229132849027019042, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5716984459049516542, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 755217608}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5674676024876359516, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       insertIndex: -1
@@ -4074,21 +4249,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e8556c3ee5008b4d9160f82154c22a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.ThunderSpellModule
-  auraPrefab: {fileID: 0}
+  auraPrefab: {fileID: 4156153960950938525, guid: c61dd16abc7f72f4cbcc40d13ad2a74b, type: 3}
   auraAudioClip: {fileID: 0}
   rangeMeters: 20
   damage: 16
   statusDuration: 2.5
-  continuousFireSeconds: 5
+  continuousFireSeconds: 1.5
   hitTickInterval: 0.25
-  laserWidth: 0.035
+  laserWidth: 0.08
   laserDownAngleDegrees: 8
-  laserColor: {r: 1, g: 0.88, b: 0.15, a: 1}
+  laserColor: {r: 1, g: 0.95, b: 0, a: 1}
   hitMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  chargeGraceSeconds: 0.4
-  shootPoseGraceSeconds: 0.2
+  requireChargeBeforeShoot: 0
+  chargeGraceSeconds: 2
+  shootPoseGraceSeconds: 0.8
   auraOffset: {x: 0, y: 0, z: 0.08}
   auraScale: 0.16
   timeFocusExemptLayer: TimeFocusExempt
@@ -4104,8 +4280,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dca7cdf7af8afb4aae7d1ca4aed8f36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.IceSpellModule
-  iceOrbPrefab: {fileID: 0}
-  iceProjectilePrefab: {fileID: 0}
+  iceOrbPrefab: {fileID: 1941437992822523389, guid: c461a44335507824f8a3ffff0f4cc106, type: 3}
+  iceProjectilePrefab: {fileID: 8004682883012916878, guid: 3cd8b890ee0072948b8dee010bbfa22f, type: 3}
   palmOffset: {x: 0, y: 0, z: 0.08}
   orbScale: 0.12
   projectileScale: 0.12
@@ -4134,16 +4310,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a2ce6b15895d0b41843e9708d80889e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.FireSpellModule
-  fireballPrefab: {fileID: 0}
-  explosionPrefab: {fileID: 0}
+  fireballPrefab: {fileID: 9063237886566245057, guid: 10af0ea56284fed49afe2b8e47b7f6b0, type: 3}
+  explosionPrefab: {fileID: 5535791897657902596, guid: 29a001dc43e248e43b3aa25450f03c68, type: 3}
   explosionMaterialOverride: {fileID: 0}
-  auraPrefab: {fileID: 0}
-  auraColor: {r: 1, g: 0.35, b: 0.05, a: 1}
+  auraPrefab: {fileID: 5535613235947910843, guid: f3795f8738e545649b344413c78979f5, type: 3}
+  auraColor: {r: 1, g: 0.05, b: 0, a: 1}
   spawnForwardOffset: 0.15
   projectileSpeed: 13
-  recoilVelocityThreshold: 0.5
+  recoilVelocityThreshold: 0.35
+  recoilResetThreshold: 0.15
   cooldown: 0.25
-  projectileScale: 0.01
+  projectileScale: 0.18
   explosionScale: 0.15
   explosionLifetime: 1.5
   projectileLifetime: 5
@@ -4594,7 +4771,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 820007943}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 11435022}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!21 &764380890
 Material:
@@ -4712,8 +4889,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.63, b: 0.02, a: 1}
-    - _Color: {r: 1, g: 0.63, b: 0.02, a: 1}
+    - _BaseColor: {r: 0.42, g: 0.42, b: 0.42, a: 1}
+    - _Color: {r: 0.41999996, g: 0.41999996, b: 0.41999996, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -4998,8 +5175,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -5120,8 +5297,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -5278,8 +5455,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.63, b: 0.02, a: 1}
-    - _Color: {r: 1, g: 0.63, b: 0.02, a: 1}
+    - _BaseColor: {r: 0.42, g: 0.42, b: 0.42, a: 1}
+    - _Color: {r: 0.41999996, g: 0.41999996, b: 0.41999996, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -5289,6 +5466,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 141466980049140221, guid: b3ed8a0a703ebd34a9e44ed3d9f1fcf6, type: 3}
   m_PrefabInstance: {fileID: 1677496440}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &906048824 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 639686448, guid: b3ed8a0a703ebd34a9e44ed3d9f1fcf6, type: 3}
+  m_PrefabInstance: {fileID: 1677496440}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &923607992
 GameObject:
   m_ObjectHideFlags: 0
@@ -6126,8 +6314,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -6184,9 +6372,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.ElementAuraManager
   auraParticles: {fileID: 1908345890}
   timeFocusExemptLayerName: TimeFocusExempt
-  fireColor: {r: 1, g: 0.45, b: 0.05, a: 1}
+  fireColor: {r: 1, g: 0.05, b: 0, a: 1}
   iceColor: {r: 0.05, g: 0.8, b: 1, a: 1}
-  thunderColor: {r: 1, g: 0.88, b: 0.15, a: 1}
+  thunderColor: {r: 1, g: 0.95, b: 0, a: 1}
   voiceBoostSizeMultiplier: 2.4
 --- !u!1 &1051556533
 GameObject:
@@ -6582,8 +6770,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.63, b: 0.02, a: 1}
-    - _Color: {r: 1, g: 0.63, b: 0.02, a: 1}
+    - _BaseColor: {r: 0.42, g: 0.42, b: 0.42, a: 1}
+    - _Color: {r: 0.41999996, g: 0.41999996, b: 0.41999996, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -6704,8 +6892,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -7098,8 +7286,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -7270,8 +7458,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -7392,8 +7580,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -7514,8 +7702,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -8308,8 +8496,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -8461,8 +8649,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -8616,8 +8804,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -8836,8 +9024,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -9162,8 +9350,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -9173,6 +9361,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2321527512367231968, guid: 3f7511fbc40ae7a4b89c3298a3de199d, type: 3}
   m_PrefabInstance: {fileID: 717457397}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1748501510 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 513866637, guid: 3f7511fbc40ae7a4b89c3298a3de199d, type: 3}
+  m_PrefabInstance: {fileID: 717457397}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1788265699
 GameObject:
   m_ObjectHideFlags: 0
@@ -9513,8 +9712,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -16207,11 +16406,11 @@ GameObject:
   - component: {fileID: 2020363680}
   m_Layer: 0
   m_Name: Main Camera
-  m_TagString: MainCamera
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2020363679
 Transform:
   m_ObjectHideFlags: 0
@@ -16531,8 +16730,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -16724,10 +16923,10 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 755217608}
   - {fileID: 1607760747}
   - {fileID: 1025119505}
   - {fileID: 1032187176}
   - {fileID: 279724327}
   - {fileID: 1728095645}
   - {fileID: 562696171}
+  - {fileID: 287572828}

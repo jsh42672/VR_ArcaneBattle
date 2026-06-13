@@ -143,7 +143,9 @@ namespace ArcaneVR.Spell
             projectile.transform.localScale = Vector3.one * projectileScale;
 
             var data = _database?.Get(SpellId.Single_Wave);
-            var sp   = projectile.GetComponent<SpellProjectile>() ?? projectile.AddComponent<SpellProjectile>();
+            var sp = projectile.GetComponent<SpellProjectile>();
+            if (sp == null)
+                sp = projectile.AddComponent<SpellProjectile>();
             sp.spellId = SpellId.Single_Wave;
             sp.InitializePrototype(
                 useArcTrajectory ? 0f : projectileSpeed,
@@ -153,7 +155,9 @@ namespace ArcaneVR.Spell
                 data?.damage         ?? 8f,
                 data?.statusDuration ?? 3f);
 
-            var rb = projectile.GetComponent<Rigidbody>() ?? projectile.AddComponent<Rigidbody>();
+            var rb = projectile.GetComponent<Rigidbody>();
+            if (rb == null)
+                rb = projectile.AddComponent<Rigidbody>();
             rb.isKinematic           = false;
             rb.useGravity            = useArcTrajectory;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;

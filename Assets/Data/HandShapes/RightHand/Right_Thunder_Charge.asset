@@ -13,31 +13,78 @@ MonoBehaviour:
   m_Name: Right_Thunder_Charge
   m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.Gestures.XRHandShape
   m_FingerShapeConditions:
+  - m_FingerID: 0
+    m_Targets:
+    - m_ShapeType: 0
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
+      m_Tolerance: 0
+      m_Desired: 0.5254855
+    - m_ShapeType: 4
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
+      m_Tolerance: 0
+      m_Desired: 0
   - m_FingerID: 1
     m_Targets:
     - m_ShapeType: 0
-      m_UpperTolerance: 0.35
-      m_LowerTolerance: 0.25
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
       m_Tolerance: 0
-      m_Desired: 0.045693696
+      m_Desired: 0.05302447
+    - m_ShapeType: 3
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
+      m_Tolerance: 0
+      m_Desired: 0
+    - m_ShapeType: 4
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
+      m_Tolerance: 0
+      m_Desired: 0
   - m_FingerID: 2
     m_Targets:
     - m_ShapeType: 0
-      m_UpperTolerance: 0.35
-      m_LowerTolerance: 0.25
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
       m_Tolerance: 0
-      m_Desired: 0.83185774
+      m_Desired: 0.8588195
+    - m_ShapeType: 3
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
+      m_Tolerance: 0
+      m_Desired: 0.21505368
+    - m_ShapeType: 4
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
+      m_Tolerance: 0
+      m_Desired: 0
   - m_FingerID: 3
     m_Targets:
     - m_ShapeType: 0
-      m_UpperTolerance: 0.35
-      m_LowerTolerance: 0.25
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
       m_Tolerance: 0
-      m_Desired: 0.7980829
+      m_Desired: 0.83908045
+    - m_ShapeType: 3
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
+      m_Tolerance: 0
+      m_Desired: 0
+    - m_ShapeType: 4
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
+      m_Tolerance: 0
+      m_Desired: 0
   - m_FingerID: 4
     m_Targets:
     - m_ShapeType: 0
-      m_UpperTolerance: 0.35
-      m_LowerTolerance: 0.25
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
       m_Tolerance: 0
-      m_Desired: 0.81066114
+      m_Desired: 0.86130667
+    - m_ShapeType: 3
+      m_UpperTolerance: 0.15
+      m_LowerTolerance: 0.15
+      m_Tolerance: 0
+      m_Desired: 0

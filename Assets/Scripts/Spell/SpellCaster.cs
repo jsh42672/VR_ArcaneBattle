@@ -213,7 +213,9 @@ namespace ArcaneVR.Spell
             var projectileObj = CreateProjectileObject(data, element, spawnPos, Quaternion.LookRotation(direction, Vector3.up));
             ParentToSpellRoot(projectileObj);
 
-            var projectile = projectileObj.GetComponent<SpellProjectile>() ?? projectileObj.AddComponent<SpellProjectile>();
+            var projectile = projectileObj.GetComponent<SpellProjectile>();
+            if (projectile == null)
+                projectile = projectileObj.AddComponent<SpellProjectile>();
             projectile.Initialize(spellId, element, data.damage, data.projectileSpeed,
                 data.statusEffect, data.statusDuration, direction, combatManager,
                 data.statusMagnitude, data.statusTickInterval);
@@ -304,6 +306,9 @@ namespace ArcaneVR.Spell
         private void HandleGestureCleared(bool isLeft, string gestureName)
         {
             if (isLeft || gestureName != _currentRightGesture) return;
+            if (gestureName == "ThunderShoot" && thunderModule != null && thunderModule.IsBeamActive)
+                return;
+
             DisarmAllModules();
             _currentRightGesture = string.Empty;
             _hasPrevTrackingPos  = false;
@@ -321,63 +326,70 @@ namespace ArcaneVR.Spell
 
         // ── 매 프레임 갱신 ────────────────────────────────────────────────────
 
-        private void UpdateRightGestureAttack()
+private void UpdateRightGestureAttack()
         {
             if (_isCastingSuppressed || string.IsNullOrEmpty(_currentRightGesture)) return;
 
             var spawnPoint = rightHandSpawnPoint != null ? rightHandSpawnPoint : (Transform)null;
             if (spawnPoint == null || Time.deltaTime <= 0f)
             {
-                PrototypeDebugStatus = "스폰 포인트 없음";
+                PrototypeDebugStatus = "No spawn point";
                 return;
             }
 
             var currentPos = ResolveTrackingPosition(spawnPoint.position);
             if (!_hasPrevTrackingPos)
             {
-                _prevTrackingPos    = currentPos;
+                _prevTrackingPos = currentPos;
                 _hasPrevTrackingPos = true;
                 return;
             }
 
             var localVelocity = (currentPos - _prevTrackingPos) / Time.deltaTime;
-            _prevTrackingPos  = currentPos;
+            _prevTrackingPos = currentPos;
             var worldVelocity = ToWorldVector(localVelocity);
 
             if (_currentRightGesture == "Fire")
             {
-                PrototypeDebugStatus = $"불 준비 위/아래:{Vector3.Dot(worldVelocity, Vector3.up):0.00}";
+                PrototypeDebugStatus = $"Fire ready up:{Vector3.Dot(worldVelocity, Vector3.up):0.00}";
                 if (fireModule != null && fireModule.Tick(worldVelocity))
                 {
-                    RememberCast(ElementType.Fire, SpellId.Single_Pointer, 0f, "마나: 더미");
-                    _lastCastStatus = "발동: 불 더미";
+                    RememberCast(ElementType.Fire, SpellId.Single_Pointer, 0f, "Mana: dummy");
+                    _lastCastStatus = "Cast: Fire dummy";
                 }
             }
             else if (_currentRightGesture == "Ice")
             {
-                PrototypeDebugStatus = "얼음 준비";
+                PrototypeDebugStatus = "Ice ready";
                 if (iceModule != null && iceModule.Tick(currentPos))
                 {
-                    RememberCast(ElementType.Ice, SpellId.Single_Wave, 0f, "마나: 더미");
-                    _lastCastStatus = "발동: 얼음 더미";
+                    RememberCast(ElementType.Ice, SpellId.Single_Wave, 0f, "Mana: dummy");
+                    _lastCastStatus = "Cast: Ice dummy";
                 }
             }
             else if (_currentRightGesture == "Thunder")
             {
-                PrototypeDebugStatus = "번개 충전 중";
+                PrototypeDebugStatus = "Thunder charging";
                 if (thunderModule != null && thunderModule.Tick())
                 {
-                    RememberCast(ElementType.Thunder, SpellId.Single_Strike, 0f, "마나: 더미");
-                    _lastCastStatus = "발동: 번개 더미";
+                    RememberCast(ElementType.Thunder, SpellId.Single_Strike, 0f, "Mana: dummy");
+                    _lastCastStatus = "Cast: Thunder dummy";
                 }
             }
             else if (_currentRightGesture == "ThunderShoot")
             {
-                PrototypeDebugStatus = "번개 발사 중";
+                PrototypeDebugStatus = "Thunder firing";
                 if (thunderModule != null && thunderModule.Tick())
                 {
-                    RememberCast(ElementType.Thunder, SpellId.Single_Strike, 0f, "마나: 더미");
-                    _lastCastStatus = "발동: 번개 더미";
+                    RememberCast(ElementType.Thunder, SpellId.Single_Strike, 0f, "Mana: dummy");
+                    _lastCastStatus = "Cast: Thunder dummy";
+                }
+                else if (thunderModule == null || !thunderModule.IsBeamActive)
+                {
+                    thunderModule?.Disarm();
+                    _currentRightGesture = string.Empty;
+                    _hasPrevTrackingPos = false;
+                    PrototypeDebugStatus = "Idle";
                 }
             }
         }

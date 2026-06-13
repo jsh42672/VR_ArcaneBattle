@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Hands;
 using UnityEngine.XR.Hands.Gestures;
@@ -76,6 +77,9 @@ namespace ArcaneVR.Input
         [Header("XR Hands")]
         [SerializeField] private XRHandTrackingEvents leftHandTrackingEvents;
         [SerializeField] private XRHandTrackingEvents rightHandTrackingEvents;
+        [SerializeField] private bool useSubsystemPollingFallback = true;
+        [SerializeField] private float subsystemRefreshInterval = 0.5f;
+        [SerializeField] private float eventFallbackDelay = 0.15f;
 
         [Header("Right Hand Gestures")]
         [SerializeField] private XRHandShape rightFireGesture;
@@ -99,7 +103,11 @@ namespace ArcaneVR.Input
         [Header("Pose Timing")]
         [SerializeField] private float poseHoldDuration = 0.1f;
         [SerializeField] private float poseLostGracePeriod = 0.2f;
-        [SerializeField] private float rightThunderShootArmWindowSeconds = 0.8f;
+        [SerializeField] private float rightThunderShootArmWindowSeconds = 2.0f;
+        [SerializeField] private float rightThunderShootPinkyCurlThreshold = 0.5f;
+        [SerializeField] private float rightThunderChargeCompletenessThreshold = 0.85f;
+        [SerializeField] private float rightIcePalmUpDotThreshold = 0.35f;
+        [SerializeField] private bool invertRightIcePalmDirection = true;
 
         [Header("Combine Push")]
         [SerializeField] private float combineDistance = 0.16f;
@@ -147,6 +155,11 @@ namespace ArcaneVR.Input
         private float rightThunderShootArmedUntilTime = -999f;
         private bool leftFistActive;
         private GUIStyle playModeDebugStyle;
+        private readonly List<XRHandSubsystem> handSubsystems = new List<XRHandSubsystem>();
+        private XRHandSubsystem handSubsystem;
+        private float nextSubsystemRefreshTime;
+        private float lastLeftEventTime = -999f;
+        private float lastRightEventTime = -999f;
 
         public PoseId CurrentLeftPose => leftPoseId;
         public PoseId CurrentRightPose => rightPoseId;
@@ -186,6 +199,7 @@ namespace ArcaneVR.Input
             if (UnityEngine.Input.GetKeyDown(debugOverlayToggleKey))
                 showPlayModeDebugOverlay = !showPlayModeDebugOverlay;
 #endif
+            UpdateFromSubsystemFallback();
             UpdateCombinePush();
         }
 
@@ -301,12 +315,52 @@ namespace ArcaneVR.Input
 
         private void HandleLeftJointsUpdated(XRHandJointsUpdatedEventArgs args)
         {
+            lastLeftEventTime = Time.unscaledTime;
             UpdateHand(true, args);
         }
 
         private void HandleRightJointsUpdated(XRHandJointsUpdatedEventArgs args)
         {
+            lastRightEventTime = Time.unscaledTime;
             UpdateHand(false, args);
+        }
+
+        private void UpdateFromSubsystemFallback()
+        {
+            if (!useSubsystemPollingFallback)
+                return;
+
+            RefreshHandSubsystem();
+            if (handSubsystem == null || !handSubsystem.running)
+                return;
+
+            var now = Time.unscaledTime;
+            if (now - lastLeftEventTime >= eventFallbackDelay)
+                UpdateHand(true, handSubsystem.leftHand);
+
+            if (now - lastRightEventTime >= eventFallbackDelay)
+                UpdateHand(false, handSubsystem.rightHand);
+        }
+
+        private void RefreshHandSubsystem()
+        {
+            if (handSubsystem != null && handSubsystem.running && Time.unscaledTime < nextSubsystemRefreshTime)
+                return;
+
+            nextSubsystemRefreshTime = Time.unscaledTime + Mathf.Max(0.05f, subsystemRefreshInterval);
+            handSubsystems.Clear();
+            SubsystemManager.GetSubsystems(handSubsystems);
+            handSubsystem = null;
+
+            for (var i = 0; i < handSubsystems.Count; i++)
+            {
+                var candidate = handSubsystems[i];
+                if (candidate != null && candidate.running)
+                {
+                    handSubsystem = candidate;
+                    return;
+                }
+            }
         }
 
         private void UpdateHand(bool isLeft, XRHandJointsUpdatedEventArgs args)
@@ -340,6 +394,37 @@ namespace ArcaneVR.Input
             UpdatePoseState(isLeft, detected, tracked);
         }
 
+        private void UpdateHand(bool isLeft, XRHand hand)
+        {
+            var tracked = hand.isTracked;
+            if (tracked && TryGetPalmPosition(hand, out var palm))
+            {
+                if (isLeft)
+                {
+                    leftPalmPosition = palm;
+                    hasLeftPalm = true;
+                }
+                else
+                {
+                    rightPalmPosition = palm;
+                    hasRightPalm = true;
+                }
+            }
+            else if (isLeft)
+            {
+                hasLeftPalm = false;
+            }
+            else
+            {
+                hasRightPalm = false;
+            }
+
+            SetFingerDebug(isLeft, BuildFingerDebug(hand));
+
+            var detected = tracked ? DetectGesture(isLeft, hand) : GestureKind.None;
+            UpdatePoseState(isLeft, detected, tracked);
+        }
+
         private GestureKind DetectGesture(bool isLeft, XRHandJointsUpdatedEventArgs args)
         {
             if (isLeft)
@@ -348,8 +433,19 @@ namespace ArcaneVR.Input
             return DetectRightGesture(args);
         }
 
+        private GestureKind DetectGesture(bool isLeft, XRHand hand)
+        {
+            if (isLeft)
+                return DetectLeftGesture(hand);
+
+            return DetectRightGesture(hand);
+        }
+
         private GestureKind DetectRightGesture(XRHandJointsUpdatedEventArgs args)
         {
+            if (IsRightThunderShootTransition(args.hand))
+                return GestureKind.ThunderShoot;
+
             if (Matches(rightBarrier, args))
                 return GestureKind.Barrier;
             if (Matches(rightCombineShoot, args))
@@ -357,16 +453,39 @@ namespace ArcaneVR.Input
             if (Matches(rightCombine, args))
                 return GestureKind.Combine;
 
-            var thunderChargeMatched = Matches(rightThunderGesture, args);
-            if (Time.unscaledTime <= rightThunderShootArmedUntilTime && Matches(rightThunderShootGesture, args))
-                return GestureKind.ThunderShoot;
+            var thunderChargeMatched = Matches(rightThunderGesture, args.hand, rightThunderChargeCompletenessThreshold);
             if (Matches(rightPageTurnGesture, args))
                 return GestureKind.PageTurn;
             if (thunderChargeMatched)
                 return GestureKind.Thunder;
-            if (Matches(rightIceGesture, args))
+            if (Matches(rightIceGesture, args) && IsRightPalmFacingUp(args.hand))
                 return GestureKind.Ice;
             if (Matches(rightFireGesture, args))
+                return GestureKind.Fire;
+
+            return GestureKind.None;
+        }
+
+        private GestureKind DetectRightGesture(XRHand hand)
+        {
+            if (IsRightThunderShootTransition(hand))
+                return GestureKind.ThunderShoot;
+
+            if (Matches(rightBarrier, hand))
+                return GestureKind.Barrier;
+            if (Matches(rightCombineShoot, hand))
+                return GestureKind.CombineShoot;
+            if (Matches(rightCombine, hand))
+                return GestureKind.Combine;
+
+            var thunderChargeMatched = Matches(rightThunderGesture, hand, rightThunderChargeCompletenessThreshold);
+            if (Matches(rightPageTurnGesture, hand))
+                return GestureKind.PageTurn;
+            if (thunderChargeMatched)
+                return GestureKind.Thunder;
+            if (Matches(rightIceGesture, hand) && IsRightPalmFacingUp(hand))
+                return GestureKind.Ice;
+            if (Matches(rightFireGesture, hand))
                 return GestureKind.Fire;
 
             return GestureKind.None;
@@ -392,9 +511,61 @@ namespace ArcaneVR.Input
             return GestureKind.None;
         }
 
+        private GestureKind DetectLeftGesture(XRHand hand)
+        {
+            if (Matches(leftBarrier, hand))
+                return GestureKind.Barrier;
+            if (Matches(leftCombineShoot, hand))
+                return GestureKind.CombineShoot;
+            if (Matches(leftCombine, hand))
+                return GestureKind.Combine;
+            if (Matches(leftThunder, hand))
+                return GestureKind.Thunder;
+            if (Matches(leftIce, hand))
+                return GestureKind.Ice;
+            if (Matches(leftFire, hand))
+                return GestureKind.Fire;
+            if (Matches(leftGrimoireGesture, hand))
+                return GestureKind.Grimoire;
+
+            return GestureKind.None;
+        }
+
         private static bool Matches(XRHandShape shape, XRHandJointsUpdatedEventArgs args)
         {
             return shape != null && shape.CheckConditions(args);
+        }
+
+        private static bool Matches(XRHandShape shape, XRHand hand)
+        {
+            return Matches(shape, hand, 0.999f);
+        }
+
+        private static bool Matches(XRHandShape shape, XRHand hand, float minimumCompleteness)
+        {
+            return XRHandShapeTuningUtility.TryCalculateCompleteness(hand, shape, out var completeness) &&
+                   completeness >= Mathf.Clamp01(minimumCompleteness);
+        }
+
+        private bool IsRightThunderShootTransition(XRHand hand)
+        {
+            if (Time.unscaledTime > rightThunderShootArmedUntilTime ||
+                GetConfirmedKind(false) != GestureKind.Thunder ||
+                !TryGetPalmPosition(hand, out var palm))
+                return false;
+
+            var pinkyCurl = EstimateCurl(hand, XRHandJointID.LittleProximal, XRHandJointID.LittleTip, palm);
+            return pinkyCurl <= rightThunderShootPinkyCurlThreshold;
+        }
+
+        private bool IsRightPalmFacingUp(XRHand hand)
+        {
+            if (!TryGetJointPose(hand, XRHandJointID.Palm, out var palmPose) &&
+                !TryGetJointPose(hand, XRHandJointID.Wrist, out palmPose))
+                return false;
+
+            var palmNormal = palmPose.rotation * (invertRightIcePalmDirection ? Vector3.down : Vector3.up);
+            return Vector3.Dot(palmNormal.normalized, Vector3.up) >= rightIcePalmUpDotThreshold;
         }
 
         private void UpdatePoseState(bool isLeft, GestureKind detected, bool tracked)
@@ -691,6 +862,16 @@ namespace ArcaneVR.Input
 
             position = pose.position;
             return true;
+        }
+
+        private static bool TryGetJointPose(XRHand hand, XRHandJointID jointId, out Pose pose)
+        {
+            pose = default;
+            if (!hand.isTracked)
+                return false;
+
+            var joint = hand.GetJoint(jointId);
+            return joint.TryGetPose(out pose);
         }
 
         private static PoseId ToPoseId(PoseType pose)

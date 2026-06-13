@@ -18,16 +18,17 @@ namespace ArcaneVR.Spell
         [SerializeField] private float rangeMeters = 20f;
         [SerializeField] private float damage = 16f;
         [SerializeField] private float statusDuration = 2.5f;
-        [SerializeField] private float continuousFireSeconds = 5f;
+        [SerializeField] private float continuousFireSeconds = 1.5f;
         [SerializeField] private float hitTickInterval = 0.25f;
-        [SerializeField] private float laserWidth = 0.035f;
+        [SerializeField] private float laserWidth = 0.08f;
         [SerializeField] private float laserDownAngleDegrees = 8f;
         [SerializeField] private Color laserColor = new Color(1f, 0.88f, 0.15f, 1f);
         [SerializeField] private LayerMask hitMask = ~0;
 
         [Header("── 충전 / 유예 시간 ──")]
-        [SerializeField] private float chargeGraceSeconds = 0.4f;
-        [SerializeField] private float shootPoseGraceSeconds = 0.2f;
+        [SerializeField] private bool requireChargeBeforeShoot;
+        [SerializeField] private float chargeGraceSeconds = 2.0f;
+        [SerializeField] private float shootPoseGraceSeconds = 0.6f;
 
         [Header("── 오라 위치 설정 ──")]
         [SerializeField] private Vector3 auraOffset = new Vector3(0f, 0f, 0.08f);
@@ -57,6 +58,7 @@ namespace ArcaneVR.Spell
         private bool _isShootMode;
 
         public bool IsArmed => _armed;
+        public bool IsBeamActive => _beamLine != null && Time.time <= _beamEndTime;
 
         // ── 초기화 ────────────────────────────────────────────────────────────
 
@@ -88,8 +90,9 @@ namespace ArcaneVR.Spell
                 _lastChargeTime = Time.time;
                 ShowAura();
             }
-            else if (IsChargeAvailable())
+            else if (!requireChargeBeforeShoot || IsChargeAvailable())
             {
+                _charged = true;
                 ShowAura();
                 _lastShootTime = Time.time;
                 StartBeam();
@@ -145,7 +148,7 @@ namespace ArcaneVR.Spell
 
         private bool TickShoot()
         {
-            if (!IsChargeAvailable())
+            if (requireChargeBeforeShoot && !IsChargeAvailable())
             {
                 StopBeam();
                 return false;
@@ -159,7 +162,7 @@ namespace ArcaneVR.Spell
         private void StartBeam()
         {
             var data = _database?.Get(SpellId.Single_Strike);
-            var dur  = data?.continuousFireSeconds > 0f ? data.continuousFireSeconds : continuousFireSeconds;
+            var dur  = continuousFireSeconds > 0f ? continuousFireSeconds : data?.continuousFireSeconds ?? 0f;
             _beamEndTime  = Time.time + Mathf.Max(0f, dur);
             _nextHitTime  = -999f;
         }

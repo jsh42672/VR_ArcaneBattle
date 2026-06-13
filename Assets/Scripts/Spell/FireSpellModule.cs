@@ -21,8 +21,9 @@ namespace ArcaneVR.Spell
         [SerializeField] private float spawnForwardOffset = 0.15f;
         [SerializeField] private float projectileSpeed = 13f;
         [SerializeField] private float recoilVelocityThreshold = 0.5f;
+        [SerializeField] private float recoilResetThreshold = 0.15f;
         [SerializeField] private float cooldown = 0.25f;
-        [SerializeField] private float projectileScale = 0.01f;
+        [SerializeField] private float projectileScale = 0.18f;
         [SerializeField] private float explosionScale = 0.15f;
         [SerializeField] private float explosionLifetime = 1.5f;
         [SerializeField] private float projectileLifetime = 5f;
@@ -42,6 +43,7 @@ namespace ArcaneVR.Spell
         private GameObject _auraInstance;
         private float _lastShotTime = -999f;
         private bool _armed;
+        private bool _recoilLatched;
 
         public bool IsArmed => _armed;
 
@@ -66,12 +68,14 @@ namespace ArcaneVR.Spell
         public void Arm()
         {
             _armed = true;
+            _recoilLatched = false;
             ShowAura();
         }
 
         public void Disarm()
         {
             _armed = false;
+            _recoilLatched = false;
             HideAura();
         }
 
@@ -85,9 +89,17 @@ namespace ArcaneVR.Spell
             UpdateAuraTransform();
 
             var upSpeed = Vector3.Dot(worldTrackingVelocity, Vector3.up);
+            if (_recoilLatched)
+            {
+                if (upSpeed <= recoilResetThreshold)
+                    _recoilLatched = false;
+                return false;
+            }
+
             if (upSpeed < recoilVelocityThreshold || Time.time - _lastShotTime <= cooldown)
                 return false;
 
+            _recoilLatched = true;
             _lastShotTime = Time.time;
             FireProjectile();
             return true;
@@ -113,7 +125,9 @@ namespace ArcaneVR.Spell
             }
 
             var data = _database?.Get(SpellId.Single_Pointer);
-            var sp   = projectile.GetComponent<SpellProjectile>() ?? projectile.AddComponent<SpellProjectile>();
+            var sp = projectile.GetComponent<SpellProjectile>();
+            if (sp == null)
+                sp = projectile.AddComponent<SpellProjectile>();
             sp.spellId = SpellId.Single_Pointer;
             sp.InitializePrototype(
                 data?.projectileSpeed > 0f ? data.projectileSpeed : projectileSpeed,
