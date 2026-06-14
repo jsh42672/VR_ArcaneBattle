@@ -13,18 +13,6 @@ MonoBehaviour:
   m_Name: Left_Ice
   m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.Gestures.XRHandShape
   m_FingerShapeConditions:
-  - m_FingerID: 0
-    m_Targets:
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0.043049216
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0.52117306
   - m_FingerID: 1
     m_Targets:
     - m_ShapeType: 0
@@ -32,16 +20,6 @@ MonoBehaviour:
       m_LowerTolerance: 0.18
       m_Tolerance: 0
       m_Desired: 0.2856896
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0.82799375
   - m_FingerID: 2
     m_Targets:
     - m_ShapeType: 0
@@ -49,16 +27,6 @@ MonoBehaviour:
       m_LowerTolerance: 0.18
       m_Tolerance: 0
       m_Desired: 0.25831825
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0.44495925
   - m_FingerID: 3
     m_Targets:
     - m_ShapeType: 0
@@ -66,16 +34,6 @@ MonoBehaviour:
       m_LowerTolerance: 0.18
       m_Tolerance: 0
       m_Desired: 0.23578864
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0.7564299
   - m_FingerID: 4
     m_Targets:
     - m_ShapeType: 0
@@ -83,8 +41,3 @@ MonoBehaviour:
       m_LowerTolerance: 0.18
       m_Tolerance: 0
       m_Desired: 0.22284842
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0

@@ -44,6 +44,11 @@ namespace ArcaneVR.Spell
         [SerializeField] private float combinationReadyAuraScale = 0.18f;
         [SerializeField] private float combinationCompleteAuraScale = 0.42f;
         [SerializeField] private float combinationCompleteAuraHoldSeconds = 3f;
+        [SerializeField] private bool enableComboDebugLogs = true;
+        [SerializeField] private bool showLeftDebugAura = true;
+        [SerializeField] private float leftDebugAuraScale = 0.12f;
+        [SerializeField] private Vector3 leftDebugAuraOffset = new Vector3(0f, 0.04f, 0.08f);
+        [SerializeField] private float leftDebugAuraHoldSeconds = 3f;
 
         [Header("── 음성 부스트 ──")]
         [SerializeField] private AudioClip voiceBoostClip;
@@ -56,11 +61,16 @@ namespace ArcaneVR.Spell
         // ── 내부 상태 ─────────────────────────────────────────────────────────
 
         private string _currentRightGesture = string.Empty;
+        private string _currentLeftGesture = string.Empty;
         private Vector3 _prevTrackingPos;
         private bool _hasPrevTrackingPos;
 
         // 조합 오라 피드백
         private GameObject _combinationAuraRoot;
+        private GameObject _leftDebugAuraRoot;
+        private Renderer _leftDebugAuraRenderer;
+        private Light _leftDebugAuraLight;
+        private float _leftDebugAuraVisibleUntilTime = -999f;
         private SpellId _combinationAuraSpell = SpellId.None;
         private bool _combinationAuraCompleted;
         private float _combinationAuraUntilTime = -999f;
@@ -106,14 +116,7 @@ namespace ArcaneVR.Spell
             ? $"준비 {PrototypeArmedElement} 제스처:{_currentRightGesture}"
             : _lastCastStatus;
 
-        public ElementType PrototypeArmedElement => _currentRightGesture switch
-        {
-            "Fire"        => ElementType.Fire,
-            "Ice"         => ElementType.Ice,
-            "Thunder"     => ElementType.Thunder,
-            "ThunderShoot"=> ElementType.Thunder,
-            _             => ElementType.None
-        };
+        public ElementType PrototypeArmedElement => GestureNameToElement(_currentRightGesture);
 
         // ── Unity 콜백 ────────────────────────────────────────────────────────
 
@@ -153,12 +156,14 @@ namespace ArcaneVR.Spell
                 voiceRecognizer.OnVoiceCommand -= HandleVoiceCommand;
 
             DisarmAllModules();
+            HideLeftDebugAura(true);
             StopCombinationAuraFeedback();
         }
 
         private void Update()
         {
             UpdateRightGestureAttack();
+            UpdateLeftDebugAura();
             UpdateCombinationAuraFeedback();
             UpdateTimeFocusVisibility();
             UpdateVoiceBoost();
@@ -202,13 +207,16 @@ namespace ArcaneVR.Spell
                 return false;
             }
 
-            var spawnPos  = ResolveSpawnPoint(spellId)?.position ?? transform.position;
+            var spawnPos  = ResolveCastOrigin(spellId);
             var direction = ResolveAimDirection(spawnPos);
             spawnPos += direction * 0.25f;
 
             var element = data.element;
             if (combinationChecker != null && IsSingleSpell(spellId) && combinationChecker.CurrentElement != ElementType.None)
                 element = combinationChecker.CurrentElement;
+
+            if (SpellHitData.IsComboSpellId(spellId))
+                LogCombo($"Casting {spellId}: origin={spawnPos}, direction={direction}, damage={data.damage:0.##}.");
 
             var projectileObj = CreateProjectileObject(data, element, spawnPos, Quaternion.LookRotation(direction, Vector3.up));
             ParentToSpellRoot(projectileObj);
@@ -280,11 +288,18 @@ namespace ArcaneVR.Spell
 
         private void HandleGestureConfirmed(bool isLeft, string gestureName, PoseType _)
         {
-            if (isLeft) return;
-
             if (gestureName != "Fire" && gestureName != "Ice" &&
                 gestureName != "Thunder" && gestureName != "ThunderShoot")
                 return;
+
+            if (isLeft)
+            {
+                _currentLeftGesture = gestureName;
+                PrototypeDebugStatus = $"Left ready {gestureName}";
+                ShowLeftDebugAura(gestureName);
+                LogCombo($"Left gesture confirmed: {gestureName}, aura={(leftHandSpawnPoint != null ? "shown" : "missing left spawn")}.");
+                return;
+            }
 
             _currentRightGesture = gestureName;
             _hasPrevTrackingPos  = false;
@@ -305,7 +320,20 @@ namespace ArcaneVR.Spell
 
         private void HandleGestureCleared(bool isLeft, string gestureName)
         {
-            if (isLeft || gestureName != _currentRightGesture) return;
+            if (isLeft)
+            {
+                if (gestureName == _currentLeftGesture)
+                {
+                    _currentLeftGesture = string.Empty;
+                    HideLeftDebugAura();
+
+                    LogCombo($"Left gesture cleared: {gestureName}.");
+                }
+
+                return;
+            }
+
+            if (gestureName != _currentRightGesture) return;
             if (gestureName == "ThunderShoot" && thunderModule != null && thunderModule.IsBeamActive)
                 return;
 
@@ -322,6 +350,176 @@ namespace ArcaneVR.Spell
             fireModule?.Disarm();
             iceModule?.Disarm();
             thunderModule?.Disarm();
+        }
+
+        private void ShowLeftDebugAura(string gestureName)
+        {
+            var element = GestureNameToElement(gestureName);
+            if (!showLeftDebugAura)
+            {
+                LogCombo($"Left debug aura skipped: disabled, gesture={gestureName}.");
+                return;
+            }
+
+            if (element == ElementType.None)
+            {
+                LogCombo($"Left debug aura skipped: non-element gesture={gestureName}.");
+                return;
+            }
+
+            if (leftHandSpawnPoint == null)
+            {
+                LogCombo($"Left debug aura skipped: missing left hand spawn point, gesture={gestureName}.");
+                return;
+            }
+
+            EnsureLeftDebugAura();
+            if (_leftDebugAuraRoot == null)
+            {
+                LogCombo($"Left debug aura skipped: failed to create aura, gesture={gestureName}.");
+                return;
+            }
+
+            _leftDebugAuraRoot.SetActive(true);
+            _leftDebugAuraVisibleUntilTime = Time.unscaledTime + Mathf.Max(0.05f, leftDebugAuraHoldSeconds);
+            UpdateLeftDebugAuraTransform();
+
+            ApplyLeftDebugAuraColor(GetElementAuraColor(element));
+
+            LogCombo($"Left debug aura shown: element={element}, gesture={gestureName}, target={leftHandSpawnPoint.name}.");
+        }
+
+        private void HideLeftDebugAura(bool immediate = false)
+        {
+            if (_leftDebugAuraRoot == null)
+                return;
+
+            if (immediate)
+            {
+                _leftDebugAuraRoot.SetActive(false);
+                _leftDebugAuraVisibleUntilTime = -999f;
+                return;
+            }
+
+            _leftDebugAuraVisibleUntilTime = Mathf.Max(
+                _leftDebugAuraVisibleUntilTime,
+                Time.unscaledTime + Mathf.Max(0.05f, leftDebugAuraHoldSeconds));
+        }
+
+        private void UpdateLeftDebugAura()
+        {
+            if (_leftDebugAuraRoot == null || !_leftDebugAuraRoot.activeSelf)
+                return;
+
+            UpdateLeftDebugAuraTransform();
+
+            if (string.IsNullOrEmpty(_currentLeftGesture) &&
+                Time.unscaledTime > _leftDebugAuraVisibleUntilTime)
+            {
+                _leftDebugAuraRoot.SetActive(false);
+            }
+        }
+
+        private void UpdateLeftDebugAuraTransform()
+        {
+            if (_leftDebugAuraRoot == null || leftHandSpawnPoint == null)
+                return;
+
+            _leftDebugAuraRoot.transform.position = leftHandSpawnPoint.TransformPoint(ResolveLeftDebugAuraOffset());
+            _leftDebugAuraRoot.transform.rotation = leftHandSpawnPoint.rotation;
+            _leftDebugAuraRoot.transform.localScale = Vector3.one * ResolveLeftDebugAuraScale();
+        }
+
+        private void EnsureLeftDebugAura()
+        {
+            if (_leftDebugAuraRoot != null)
+                return;
+
+            _leftDebugAuraRoot = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            _leftDebugAuraRoot.name = "LeftHandDebugAura_Dummy";
+            _leftDebugAuraRoot.hideFlags = HideFlags.DontSave;
+
+            var collider = _leftDebugAuraRoot.GetComponent<Collider>();
+            if (collider != null)
+                Destroy(collider);
+
+            _leftDebugAuraRenderer = _leftDebugAuraRoot.GetComponent<Renderer>();
+            if (_leftDebugAuraRenderer != null)
+                _leftDebugAuraRenderer.sharedMaterial = CreateLeftDebugAuraMaterial(Color.white);
+
+            _leftDebugAuraLight = _leftDebugAuraRoot.AddComponent<Light>();
+            _leftDebugAuraLight.type = LightType.Point;
+            _leftDebugAuraLight.range = 0.45f;
+            _leftDebugAuraLight.intensity = 1.6f;
+
+            ApplyLayerRecursively(_leftDebugAuraRoot, auraTimeFocusExemptLayerName);
+            _leftDebugAuraRoot.SetActive(false);
+        }
+
+        private float ResolveLeftDebugAuraScale()
+        {
+            return Mathf.Clamp(leftDebugAuraScale, 0.08f, 0.12f);
+        }
+
+        private Vector3 ResolveLeftDebugAuraOffset()
+        {
+            var offset = leftDebugAuraOffset;
+            if (offset.sqrMagnitude < 0.0001f)
+                offset = new Vector3(0f, 0f, 0.14f);
+            else if (offset.z < 0.12f)
+                offset.z = 0.12f;
+            return offset;
+        }
+
+        private void ApplyLeftDebugAuraColor(Color color)
+        {
+            if (_leftDebugAuraRenderer != null)
+            {
+                if (_leftDebugAuraRenderer.sharedMaterial == null)
+                    _leftDebugAuraRenderer.sharedMaterial = CreateLeftDebugAuraMaterial(color);
+
+                ApplyMaterialColor(_leftDebugAuraRenderer.sharedMaterial, color);
+            }
+
+            if (_leftDebugAuraLight != null)
+                _leftDebugAuraLight.color = color;
+        }
+
+        private static Material CreateLeftDebugAuraMaterial(Color color)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Unlit") ??
+                         Shader.Find("Unlit/Color") ??
+                         Shader.Find("Standard");
+            var material = new Material(shader)
+            {
+                color = color
+            };
+            ApplyMaterialColor(material, color);
+            return material;
+        }
+
+        private static void ApplyMaterialColor(Material material, Color color)
+        {
+            if (material == null) return;
+            if (material.HasProperty("_BaseColor"))
+                material.SetColor("_BaseColor", color);
+            if (material.HasProperty("_Color"))
+                material.SetColor("_Color", color);
+            if (material.HasProperty("_EmissionColor"))
+            {
+                material.EnableKeyword("_EMISSION");
+                material.SetColor("_EmissionColor", color * 2.5f);
+            }
+        }
+
+        private static void ApplyLayerRecursively(GameObject root, string layerName)
+        {
+            var layer = LayerMask.NameToLayer(layerName);
+            if (root == null || layer < 0)
+                return;
+
+            foreach (var child in root.GetComponentsInChildren<Transform>(true))
+                child.gameObject.layer = layer;
         }
 
         // ── 매 프레임 갱신 ────────────────────────────────────────────────────
@@ -407,7 +605,14 @@ private void UpdateRightGestureAttack()
 
         private void HandleCombinationSuccess(SpellId spellId)
         {
-            if (IsCombinationCastAllowed(spellId)) Cast(spellId);
+            if (!IsCombinationCastAllowed(spellId))
+            {
+                LogCombo($"Combination success ignored: cast not allowed for {spellId}.");
+                return;
+            }
+
+            LogCombo($"Combination success received: {spellId}.");
+            Cast(spellId);
         }
 
         private void HandleCombinationFail()
@@ -571,6 +776,14 @@ private void UpdateRightGestureAttack()
             return leftHandSpawnPoint != null ? leftHandSpawnPoint : rightHandSpawnPoint;
         }
 
+        private Vector3 ResolveCastOrigin(SpellId spellId)
+        {
+            if (SpellHitData.IsComboSpellId(spellId) && leftHandSpawnPoint != null && rightHandSpawnPoint != null)
+                return (leftHandSpawnPoint.position + rightHandSpawnPoint.position) * 0.5f;
+
+            return ResolveSpawnPoint(spellId)?.position ?? transform.position;
+        }
+
         private Vector3 ResolveAimDirection(Vector3 _)
         {
             var dir = headTransform != null ? headTransform.forward : transform.forward;
@@ -627,6 +840,15 @@ private void UpdateRightGestureAttack()
         private static bool IsSingleSpell(SpellId spellId) =>
             spellId is SpellId.Single_Pointer or SpellId.Single_Wave or SpellId.Single_Strike;
 
+        private static ElementType GestureNameToElement(string gestureName) => gestureName switch
+        {
+            "Fire" => ElementType.Fire,
+            "Ice" => ElementType.Ice,
+            "Thunder" => ElementType.Thunder,
+            "ThunderShoot" => ElementType.Thunder,
+            _ => ElementType.None
+        };
+
         private GameObject CreateProjectileObject(SpellDatabase.SpellData data, ElementType element, Vector3 position, Quaternion rotation)
         {
             if (!useDebugPrimitiveProjectiles && data.prefab != null)
@@ -650,5 +872,19 @@ private void UpdateRightGestureAttack()
             SpellId.Combo_ThunderFire => new Color(1f, 0.55f, 0.1f,  1f),
             _                         => Color.white
         };
+
+        private static Color GetElementAuraColor(ElementType element) => element switch
+        {
+            ElementType.Fire    => new Color(1f, 0.05f, 0f, 1f),
+            ElementType.Ice     => new Color(0.45f, 0.85f, 1f, 1f),
+            ElementType.Thunder => new Color(1f, 0.95f, 0f, 1f),
+            _                   => Color.white
+        };
+
+        private void LogCombo(string message)
+        {
+            if (enableComboDebugLogs)
+                Debug.Log($"[ComboMagicTest] {message}", this);
+        }
     }
 }

@@ -22,6 +22,7 @@ namespace ArcaneVR.Input
         [Header("Combination Mode")]
         [SerializeField] private CombinationFocusModeController combinationFocusController;
         [SerializeField] private CombinationChecker combinationChecker;
+        [SerializeField] private bool enableComboDebugLogs = true;
 
         [Header("Locked Actions")]
         [SerializeField] private HandPullMovementController handPullMovement;
@@ -133,11 +134,13 @@ namespace ArcaneVR.Input
                 IsCombinationTimeStopActive = true;
                 IsCombinationShootPending = false;
                 timeFocusController?.RequestFocus(CombinationReason);
+                LogCombo("Combination focus entered; time focus requested.");
             }
             else if (!IsCombinationShootPending)
             {
                 IsCombinationTimeStopActive = false;
                 timeFocusController?.ReleaseFocus(CombinationReason);
+                LogCombo("Combination focus exited; time focus released.");
             }
 
             RefreshLocks();
@@ -153,6 +156,7 @@ namespace ArcaneVR.Input
             combinationChecker?.ArmComboShootWindow(comboShootWindowSeconds);
             timeFocusController?.ReleaseFocus(CombinationReason);
             timeFocusController?.ReleaseFocus(CombinationFocusReason);
+            LogCombo($"Combo ready: {spellId}. Shoot window pending for {comboShootWindowSeconds:0.00}s.");
             RefreshLocks();
         }
 
@@ -165,6 +169,7 @@ namespace ArcaneVR.Input
             IsCombinationShootPending = false;
             timeFocusController?.ReleaseFocus(CombinationReason);
             timeFocusController?.ReleaseFocus(CombinationFocusReason);
+            LogCombo($"Combo success: {spellId}. Locks released.");
             RefreshLocks();
         }
 
@@ -174,6 +179,7 @@ namespace ArcaneVR.Input
             IsCombinationShootPending = false;
             timeFocusController?.ReleaseFocus(CombinationReason);
             timeFocusController?.ReleaseFocus(CombinationFocusReason);
+            LogCombo("Combo failed. Locks released.");
             RefreshLocks();
         }
 
@@ -212,6 +218,12 @@ namespace ArcaneVR.Input
                 spellCaster = FindAnyObjectByType<SpellCaster>();
 
             spellCaster?.SetCastingSuppressed(suppressed, reason);
+        }
+
+        private void LogCombo(string message)
+        {
+            if (enableComboDebugLogs)
+                Debug.Log($"[ComboMagicTest] {message}", this);
         }
 
         private void SetPullSuppressed(bool suppressed, string reason)

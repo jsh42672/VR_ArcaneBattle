@@ -13,18 +13,6 @@ MonoBehaviour:
   m_Name: Left_Thunder
   m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.Gestures.XRHandShape
   m_FingerShapeConditions:
-  - m_FingerID: 0
-    m_Targets:
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0.652656
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0
   - m_FingerID: 1
     m_Targets:
     - m_ShapeType: 0
@@ -32,16 +20,6 @@ MonoBehaviour:
       m_LowerTolerance: 0.25
       m_Tolerance: 0
       m_Desired: 0.0473451
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0.4642425
   - m_FingerID: 2
     m_Targets:
     - m_ShapeType: 0
@@ -49,16 +27,6 @@ MonoBehaviour:
       m_LowerTolerance: 0.25
       m_Tolerance: 0
       m_Desired: 0.89509815
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0.19603163
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0
   - m_FingerID: 3
     m_Targets:
     - m_ShapeType: 0
@@ -66,16 +34,6 @@ MonoBehaviour:
       m_LowerTolerance: 0.25
       m_Tolerance: 0
       m_Desired: 0.8760395
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0
   - m_FingerID: 4
     m_Targets:
     - m_ShapeType: 0
@@ -83,8 +41,3 @@ MonoBehaviour:
       m_LowerTolerance: 0.25
       m_Tolerance: 0
       m_Desired: 0.88956076
-    - m_ShapeType: 5
-      m_UpperTolerance: 0.15
-      m_LowerTolerance: 0.15
-      m_Tolerance: 0
-      m_Desired: 0

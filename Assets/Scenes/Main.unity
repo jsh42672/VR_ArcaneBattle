@@ -859,6 +859,33 @@ Material:
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+--- !u!1 &57590038 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6389328464957222476, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &57590040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 57590038}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdcdb0b9a984ba94daf7aadd46e2c331, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.TimeStopSystems
+  timeFocusController: {fileID: 0}
+  comboShootWindowSeconds: 6
+  leftGrimoireGesture: {fileID: 0}
+  rightPageTurnGesture: {fileID: 0}
+  grimoireManager: {fileID: 0}
+  combinationFocusController: {fileID: 0}
+  combinationChecker: {fileID: 0}
+  enableComboDebugLogs: 1
+  handPullMovement: {fileID: 0}
+  spellCaster: {fileID: 0}
 --- !u!1 &94115754
 GameObject:
   m_ObjectHideFlags: 0
@@ -1246,6 +1273,7 @@ MonoBehaviour:
   grimoireManager: {fileID: 0}
   combinationFocusController: {fileID: 316886274}
   combinationChecker: {fileID: 1428252387}
+  enableComboDebugLogs: 1
   handPullMovement: {fileID: 1016462461}
   spellCaster: {fileID: 522477930}
 --- !u!21 &119937958
@@ -4086,6 +4114,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5674676024876359514, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       insertIndex: -1
       addedObject: {fileID: 562696179}
+    - targetCorrespondingSourceObject: {fileID: 6389328464957222476, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 57590040}
     - targetCorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       insertIndex: -1
       addedObject: {fileID: 562696183}
@@ -7336,8 +7367,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e96206c1ee3d664da3b1c4f0269ee9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombineGestureDetector
-  leftHandTrackingEvents: {fileID: 0}
-  rightHandTrackingEvents: {fileID: 0}
+  leftHandTrackingEvents: {fileID: 906048824}
+  rightHandTrackingEvents: {fileID: 1748501510}
   leftCombineShape: {fileID: 11400000, guid: d1e6e41e39b30e3448269b1c1bfe862c, type: 2}
   rightCombineShape: {fileID: 11400000, guid: 74f763f5d9a4dad47850581a1e03543a, type: 2}
   poseHoldDuration: 0.15

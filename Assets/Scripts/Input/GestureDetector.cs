@@ -118,6 +118,8 @@ namespace ArcaneVR.Input
         [SerializeField] private bool showDebugLog;
         [SerializeField] private bool showPlayModeDebugOverlay;
         [SerializeField] private KeyCode debugOverlayToggleKey = KeyCode.BackQuote;
+        [SerializeField] private bool showLeftGestureCandidateScores = true;
+        [SerializeField] private float leftGestureCandidateLogInterval = 0.35f;
 
         public event Action<PoseId, PoseId> OnPoseDetected;
         public event Action OnGrimTrigger;
@@ -160,6 +162,8 @@ namespace ArcaneVR.Input
         private float nextSubsystemRefreshTime;
         private float lastLeftEventTime = -999f;
         private float lastRightEventTime = -999f;
+        private GestureKind lastLeftCandidateScoreKind = GestureKind.None;
+        private float lastLeftCandidateScoreLogTime = -999f;
 
         public PoseId CurrentLeftPose => leftPoseId;
         public PoseId CurrentRightPose => rightPoseId;
@@ -391,6 +395,8 @@ namespace ArcaneVR.Input
             SetFingerDebug(isLeft, BuildFingerDebug(args.hand));
 
             var detected = tracked ? DetectGesture(isLeft, args) : GestureKind.None;
+            if (isLeft && tracked)
+                LogLeftGestureCandidateScores(args.hand, detected);
             UpdatePoseState(isLeft, detected, tracked);
         }
 
@@ -422,13 +428,15 @@ namespace ArcaneVR.Input
             SetFingerDebug(isLeft, BuildFingerDebug(hand));
 
             var detected = tracked ? DetectGesture(isLeft, hand) : GestureKind.None;
+            if (isLeft && tracked)
+                LogLeftGestureCandidateScores(hand, detected);
             UpdatePoseState(isLeft, detected, tracked);
         }
 
         private GestureKind DetectGesture(bool isLeft, XRHandJointsUpdatedEventArgs args)
         {
             if (isLeft)
-                return DetectLeftGesture(args);
+                return DetectLeftGesture(args.hand);
 
             return DetectRightGesture(args);
         }
@@ -473,9 +481,11 @@ namespace ArcaneVR.Input
 
             if (Matches(rightBarrier, hand))
                 return GestureKind.Barrier;
-            if (Matches(rightCombineShoot, hand))
+            var handsCloseForCombine = AreHandsCloseForCombineGesture();
+
+            if (handsCloseForCombine && Matches(rightCombineShoot, hand))
                 return GestureKind.CombineShoot;
-            if (Matches(rightCombine, hand))
+            if (handsCloseForCombine && Matches(rightCombine, hand))
                 return GestureKind.Combine;
 
             var thunderChargeMatched = Matches(rightThunderGesture, hand, rightThunderChargeCompletenessThreshold);
@@ -493,11 +503,13 @@ namespace ArcaneVR.Input
 
         private GestureKind DetectLeftGesture(XRHandJointsUpdatedEventArgs args)
         {
+            var handsCloseForCombine = AreHandsCloseForCombineGesture();
+
             if (Matches(leftBarrier, args))
                 return GestureKind.Barrier;
-            if (Matches(leftCombineShoot, args))
+            if (handsCloseForCombine && Matches(leftCombineShoot, args))
                 return GestureKind.CombineShoot;
-            if (Matches(leftCombine, args))
+            if (handsCloseForCombine && Matches(leftCombine, args))
                 return GestureKind.Combine;
             if (Matches(leftThunder, args))
                 return GestureKind.Thunder;
@@ -513,11 +525,13 @@ namespace ArcaneVR.Input
 
         private GestureKind DetectLeftGesture(XRHand hand)
         {
+            var handsCloseForCombine = AreHandsCloseForCombineGesture();
+
             if (Matches(leftBarrier, hand))
                 return GestureKind.Barrier;
-            if (Matches(leftCombineShoot, hand))
+            if (handsCloseForCombine && Matches(leftCombineShoot, hand))
                 return GestureKind.CombineShoot;
-            if (Matches(leftCombine, hand))
+            if (handsCloseForCombine && Matches(leftCombine, hand))
                 return GestureKind.Combine;
             if (Matches(leftThunder, hand))
                 return GestureKind.Thunder;
@@ -529,6 +543,46 @@ namespace ArcaneVR.Input
                 return GestureKind.Grimoire;
 
             return GestureKind.None;
+        }
+
+        private bool AreHandsCloseForCombineGesture()
+        {
+            return hasLeftPalm &&
+                   hasRightPalm &&
+                   Vector3.Distance(leftPalmPosition, rightPalmPosition) <= Mathf.Max(0f, combineDistance);
+        }
+
+        private void LogLeftGestureCandidateScores(in XRHand hand, GestureKind detected)
+        {
+            if (!showDebugLog || !showLeftGestureCandidateScores)
+                return;
+
+            var now = Time.unscaledTime;
+            var changed = detected != lastLeftCandidateScoreKind;
+            if (!changed && now - lastLeftCandidateScoreLogTime < Mathf.Max(0.05f, leftGestureCandidateLogInterval))
+                return;
+
+            lastLeftCandidateScoreKind = detected;
+            lastLeftCandidateScoreLogTime = now;
+            LogDebug(
+                "Left candidates " +
+                $"selected={detected} " +
+                $"Fire={BuildLeftShapeScore(hand, leftFire)} " +
+                $"Ice={BuildLeftShapeScore(hand, leftIce)} " +
+                $"Thunder={BuildLeftShapeScore(hand, leftThunder)} " +
+                $"Grimoire={BuildLeftShapeScore(hand, leftGrimoireGesture)} " +
+                $"Barrier={BuildLeftShapeScore(hand, leftBarrier)}");
+        }
+
+        private static string BuildLeftShapeScore(in XRHand hand, XRHandShape shape)
+        {
+            if (shape == null)
+                return "null";
+
+            if (!XRHandShapeTuningUtility.TryCalculateCompleteness(hand, shape, out var completeness))
+                return "n/a";
+
+            return $"{completeness:0.00}/{(Matches(shape, hand) ? "match" : "no")}";
         }
 
         private static bool Matches(XRHandShape shape, XRHandJointsUpdatedEventArgs args)
