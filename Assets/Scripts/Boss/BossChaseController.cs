@@ -26,7 +26,7 @@ namespace ArcaneVR.Boss
 
         [Header("Chase")]
         [SerializeField] private bool enableChase = true;
-        [SerializeField] private float moveSpeed = 8.4f;
+        [SerializeField] private float moveSpeed = 4.2f;
         [SerializeField] private float stoppingDistance = 8.2f;
         [SerializeField] private float resumeDistance = 9.3f;
         [SerializeField] private float maxChaseDistance = 250f;
@@ -104,7 +104,7 @@ namespace ArcaneVR.Boss
         public void ApplyPresentationDefaults()
         {
             enableChase = true;
-            moveSpeed = 8.4f;
+            moveSpeed = 4.2f;
             stoppingDistance = Mathf.Max(stoppingDistance, 8.2f);
             resumeDistance = Mathf.Max(resumeDistance, stoppingDistance + 1.0f);
             maxChaseDistance = Mathf.Max(maxChaseDistance, 250f);

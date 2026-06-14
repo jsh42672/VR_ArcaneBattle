@@ -978,6 +978,72 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
   m_PrefabInstance: {fileID: 1483082567}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &424486749
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 424486751}
+  - component: {fileID: 424486750}
+  m_Layer: 0
+  m_Name: CombinationFocusModeController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &424486750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 424486749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21e40d7a38557504f875ab2974b88b76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombinationFocusModeController
+  combinationChecker: {fileID: 591499616}
+  combineGestureDetector: {fileID: 1964649933}
+  timeFocusController: {fileID: 1156770248}
+  handPullMovement: {fileID: 1083835326}
+  grimoireManager: {fileID: 591499612}
+  leftGrimoireGesture: {fileID: 0}
+  headTransform: {fileID: 0}
+  slowTimeScale: 0.2
+  maxDuration: 10
+  autoExitAfterDuration: 1
+  enableHandsTogetherEntry: 1
+  requireCombineGestureForFocus: 1
+  handsTogetherDistance: 0.12
+  handsReleaseDistance: 0.22
+  handsTogetherHoldTime: 0.35
+  combinePushDistance: 0.18
+  combinePushVelocity: 0.45
+  combinePushCooldown: 0.7
+  suppressLegacyGesturesDuringFocus: 1
+  legacyGesturesToSuppress: []
+  allowKeyboardToggleInEditor: 1
+  keyboardToggleKey: 289
+--- !u!4 &424486751
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 424486749}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.9998911, z: -0, w: -0.014759225}
+  m_LocalPosition: {x: -11.912488, y: -24.32, z: 70.9025}
+  m_LocalScale: {x: 0.9999999, y: 1, z: 0.9999999}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1252757955}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &427515333
 GameObject:
   m_ObjectHideFlags: 0
@@ -1704,6 +1770,17 @@ MonoBehaviour:
   minInterval: 1.5
   maxInterval: 5
   strikeDuration: 0.25396723
+--- !u!114 &788957596 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4227694162533263583, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 1483082567}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.XRHandTrackingEvents
 --- !u!1 &868746104
 GameObject:
   m_ObjectHideFlags: 0
@@ -1895,6 +1972,72 @@ MonoBehaviour:
   minInterval: 1.5
   maxInterval: 5
   strikeDuration: 0.2633186
+--- !u!114 &1083835326 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 1483082567}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07327af1a52bc0843b7e008bc1500b8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.HandPullMovementController
+--- !u!1 &1156770246
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1156770247}
+  - component: {fileID: 1156770248}
+  m_Layer: 0
+  m_Name: ArcaneTimeFocusController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1156770247
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1156770246}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.9998911, z: -0, w: -0.014759225}
+  m_LocalPosition: {x: -11.912488, y: -24.32, z: 70.9025}
+  m_LocalScale: {x: 0.9999999, y: 1, z: 0.9999999}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1252757955}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1156770248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1156770246}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4a73f2c716fab4449a5ea1cd2af61fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.ArcaneTimeFocusController
+  slowTimeScale: 0.05
+  enableGrayscale: 1
+  grayscaleSaturation: -100
+  grayscaleVolumePriority: 250
+  enableExemptOverlayCamera: 1
+  exemptLayerName: TimeFocusExempt
+  baseCameraOverride: {fileID: 0}
+  enableTickSound: 1
+  tickLoopClip: {fileID: 0}
+  tickVolume: 0.85
+  tickIntervalSeconds: 0.5
 --- !u!1 &1179940077
 GameObject:
   m_ObjectHideFlags: 0
@@ -1948,6 +2091,11 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!4 &1252757955 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4443657294648019456, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 1483082567}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1264297837
 GameObject:
   m_ObjectHideFlags: 0
@@ -7184,6 +7332,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e9f1ad0b9d946348b4deef69c6658e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Boss.BossBattleRuntimeBinder
+  "\uACE8\uB818_\uC774\uB3D9_\uACF5\uACA9_\uC815\uC9C0": 1
 --- !u!1001 &1483082567
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7192,6 +7341,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 346613466061601160, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: patternBridge
+      value: 
+      objectReference: {fileID: 2145939743}
     - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: playerCamera
       value: 
@@ -7212,6 +7365,10 @@ PrefabInstance:
       propertyPath: 'spellCasters.Array.data[0]'
       value: 
       objectReference: {fileID: 1964649928}
+    - target: {fileID: 1965663315542510266, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: focusModeController
+      value: 
+      objectReference: {fileID: 424486750}
     - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: m_LocalPosition.x
       value: -14
@@ -7299,11 +7456,31 @@ PrefabInstance:
     - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: focusModeController
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 424486750}
     - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: rightHandSpawnPoint
       value: 
       objectReference: {fileID: 591499613}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: comboFireIceProjectilePrefab
+      value: 
+      objectReference: {fileID: 4382499408830527743, guid: 697582119625e654daae8ae344d8f899, type: 3}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: comboIceThunderProjectilePrefab
+      value: 
+      objectReference: {fileID: 1157306479389005453, guid: 66eee5f75a9a5df4da0738acd153c605, type: 3}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: comboThunderFireProjectilePrefab
+      value: 
+      objectReference: {fileID: 4838282869563444037, guid: 787fa1fc46f85de44ab2f6b248fe796c, type: 3}
+    - target: {fileID: 3972151438535503955, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: bossAnimator
+      value: 
+      objectReference: {fileID: 3483821603137979074}
+    - target: {fileID: 3972151438535503955, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: patternBridge
+      value: 
+      objectReference: {fileID: 2145939743}
     - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: leftIce
       value: 
@@ -7384,10 +7561,30 @@ PrefabInstance:
       propertyPath: useSubsystemPollingFallback
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4655611850213027757, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: golemTarget
+      value: 
+      objectReference: {fileID: 3483821603137979072}
+    - target: {fileID: 4655611850213027757, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: patternBridge
+      value: 
+      objectReference: {fileID: 2145939743}
     - target: {fileID: 4738014003903617534, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: gestureDetector
       value: 
       objectReference: {fileID: 1964649930}
+    - target: {fileID: 4897361036401193229, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: golemTarget
+      value: 
+      objectReference: {fileID: 3483821603137979072}
+    - target: {fileID: 5555209137438290923, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: golemTarget
+      value: 
+      objectReference: {fileID: 3483821603137979072}
+    - target: {fileID: 5555209137438290923, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: patternBridge
+      value: 
+      objectReference: {fileID: 2145939743}
     - target: {fileID: 6472235527627391572, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: m_Name
       value: ArcanePlayerRig
@@ -7404,6 +7601,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5674676024875997756, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1707517238}
+    - targetCorrespondingSourceObject: {fileID: 4443657294648019456, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1156770247}
+    - targetCorrespondingSourceObject: {fileID: 4443657294648019456, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 424486751}
     - targetCorrespondingSourceObject: {fileID: 531783025304402552, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       insertIndex: -1
       addedObject: {fileID: 357495571}
@@ -7417,6 +7620,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5674676024876359514, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1483082573}
+    - targetCorrespondingSourceObject: {fileID: 3497792176538945023, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1964649933}
     - targetCorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1964649936}
@@ -7615,6 +7821,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1541898459}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1513946842 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3497792176538945023, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 1483082567}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1534574486
 GameObject:
   m_ObjectHideFlags: 0
@@ -7837,6 +8048,37 @@ MonoBehaviour:
   minInterval: 1.5
   maxInterval: 5
   strikeDuration: 0.1801049
+--- !u!1 &1545296680
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1545296681}
+  m_Layer: 0
+  m_Name: PlayerSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1545296681
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1545296680}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -15.49, y: 14.07, z: 64.62}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1577224937
 GameObject:
   m_ObjectHideFlags: 0
@@ -8657,6 +8899,19 @@ Transform:
   - {fileID: 1647871695}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!134 &1906899038
+PhysicsMaterial:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 2
+  m_DynamicFriction: 0.6
+  m_StaticFriction: 0.6
+  m_Bounciness: 0
+  m_FrictionCombine: 0
+  m_BounceCombine: 0
 --- !u!1 &1931879239
 GameObject:
   m_ObjectHideFlags: 0
@@ -8872,12 +9127,30 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
   m_PrefabInstance: {fileID: 1483082567}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1513946842}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1b3c0ec330ef622488b5184eeed75a90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.GestureDetector
+--- !u!114 &1964649933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513946842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e96206c1ee3d664da3b1c4f0269ee9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombineGestureDetector
+  leftHandTrackingEvents: {fileID: 2105545235}
+  rightHandTrackingEvents: {fileID: 788957596}
+  leftCombineShape: {fileID: 11400000, guid: d1e6e41e39b30e3448269b1c1bfe862c, type: 2}
+  rightCombineShape: {fileID: 11400000, guid: 74f763f5d9a4dad47850581a1e03543a, type: 2}
+  poseHoldDuration: 0.15
+  poseLostGracePeriod: 0.25
 --- !u!114 &1964649934
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8890,7 +9163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e8556c3ee5008b4d9160f82154c22a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.ThunderSpellModule
-  auraPrefab: {fileID: 0}
+  auraPrefab: {fileID: 4156153960950938525, guid: c61dd16abc7f72f4cbcc40d13ad2a74b, type: 3}
   auraAudioClip: {fileID: 0}
   rangeMeters: 20
   damage: 16
@@ -8925,8 +9198,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dca7cdf7af8afb4aae7d1ca4aed8f36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.IceSpellModule
-  iceOrbPrefab: {fileID: 0}
-  iceProjectilePrefab: {fileID: 0}
+  iceOrbPrefab: {fileID: 1941437992822523389, guid: c461a44335507824f8a3ffff0f4cc106, type: 3}
+  iceProjectilePrefab: {fileID: 8004682883012916878, guid: 3cd8b890ee0072948b8dee010bbfa22f, type: 3}
   palmOffset: {x: 0, y: 0, z: 0.08}
   orbScale: 0.12
   projectileScale: 0.12
@@ -8959,10 +9232,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a2ce6b15895d0b41843e9708d80889e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.FireSpellModule
-  fireballPrefab: {fileID: 0}
-  explosionPrefab: {fileID: 0}
+  fireballPrefab: {fileID: 9063237886566245057, guid: 10af0ea56284fed49afe2b8e47b7f6b0, type: 3}
+  explosionPrefab: {fileID: 5535791897657902596, guid: 29a001dc43e248e43b3aa25450f03c68, type: 3}
   explosionMaterialOverride: {fileID: 0}
-  auraPrefab: {fileID: 0}
+  auraPrefab: {fileID: 5535613235947910843, guid: f3795f8738e545649b344413c78979f5, type: 3}
   auraColor: {r: 1, g: 0.35, b: 0.05, a: 1}
   spawnForwardOffset: 0.15
   projectileSpeed: 13
@@ -9124,11 +9397,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1577224938}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2105545235 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8365606703931719295, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 1483082567}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.XRHandTrackingEvents
 --- !u!4 &2135181386 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 531783025304402552, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
   m_PrefabInstance: {fileID: 1483082567}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2145939743 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4897361036401193229, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 1483082567}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0dc6f5a28e44151b91e56fb2337af88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossPatternCombatBridge
 --- !u!1001 &1712530287586790460
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9264,7 +9559,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7682964201224294205, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9273,6 +9568,30 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7682964201224294205, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3483821603137979072}
+    - targetCorrespondingSourceObject: {fileID: 7682964201224294205, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3483821603137979083}
+    - targetCorrespondingSourceObject: {fileID: 7682964201224294205, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3483821603137979082}
+    - targetCorrespondingSourceObject: {fileID: 7682964201224294205, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3483821603137979081}
+    - targetCorrespondingSourceObject: {fileID: 7682964201224294205, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3483821603137979080}
+    - targetCorrespondingSourceObject: {fileID: 7682964201224294205, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3483821603137979079}
+    - targetCorrespondingSourceObject: {fileID: 7682964201224294205, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3483821603137979078}
+    - targetCorrespondingSourceObject: {fileID: 7682964201224294205, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3483821603137979077}
+    - targetCorrespondingSourceObject: {fileID: 7682964201224294205, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3483821603137979076}
   m_SourcePrefab: {fileID: 100100000, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
 --- !u!4 &3483821603137979070 stripped
 Transform:
@@ -9310,6 +9629,210 @@ MonoBehaviour:
   steamBurstPushDuration: 0.35
   enableDebugLogs: 0
   enableComboDebugLogs: 1
+--- !u!95 &3483821603137979074 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 3977983884331175933, guid: 0c87a6aca84321e4d8d091b812c9c800, type: 3}
+  m_PrefabInstance: {fileID: 3483821603137979069}
+  m_PrefabAsset: {fileID: 0}
+--- !u!136 &3483821603137979076
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3483821603137979071}
+  m_Material: {fileID: 1906899038}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.8
+  m_Height: 4
+  m_Direction: 1
+  m_Center: {x: 0, y: 2, z: 0}
+--- !u!54 &3483821603137979077
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3483821603137979071}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &3483821603137979078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3483821603137979071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fee606bb0f18e344aa8f39fa73f2df0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightningAuraController
+  golemTarget: {fileID: 3483821603137979072}
+  auraLights: []
+  idleIntensity: 0
+  activeIntensity: 1.1
+  activeColor: {r: 0.45, g: 0.8, b: 1, a: 1}
+--- !u!114 &3483821603137979079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3483821603137979071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d8f40dc4c2564b4fa5fbab16f97c7e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossElementStatusVfx
+  golemTarget: {fileID: 3483821603137979072}
+  renderers: []
+  barrierColor: {r: 0.2, g: 0.55, b: 1, a: 1}
+  weakColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  chargeColor: {r: 0.8, g: 0.35, b: 1, a: 1}
+  burnColor: {r: 1, g: 0.35, b: 0.1, a: 1}
+  slowColor: {r: 0.25, g: 0.85, b: 1, a: 1}
+  staggerColor: {r: 1, g: 0.95, b: 0.3, a: 1}
+--- !u!114 &3483821603137979080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3483821603137979071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 019d2d443a0645d7ba4f8f6d4dd2b3f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossElementStatusBridge
+  combatTarget: {fileID: 3483821603137979072}
+  bossAI: {fileID: 3483821603137979083}
+  driveBossAiState: 1
+--- !u!114 &3483821603137979081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3483821603137979071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c96fe9c1d994cd5a71330f135bd48b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Boss.BossChaseController
+  debugFreeze: 0
+  golemTarget: {fileID: 3483821603137979072}
+  bossAI: {fileID: 3483821603137979083}
+  stateMachine: {fileID: 3483821603137979082}
+  patternBridge: {fileID: 2145939743}
+  target: {fileID: 0}
+  movementRoot: {fileID: 0}
+  bossAnimator: {fileID: 3483821603137979074}
+  enableChase: 1
+  moveSpeed: 4.2
+  stoppingDistance: 8.2
+  resumeDistance: 9.3
+  maxChaseDistance: 250
+  rotationSpeed: 720
+  visualYawOffsetDegrees: 180
+  keepGrounded: 1
+  groundProbeUpDistance: 4
+  groundProbeDownDistance: 20
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  attackWhenInRange: 1
+  attackRange: 9.3
+  meleeAttackCooldown: 3.1
+  attackPauseDuration: 1.75
+  enableAttackResponsePatterns: 0
+  applyGenericMeleeDamage: 1
+  genericMeleeDamage: 10
+  meleeHitRange: 9.8
+  attackWindupDistance: 0.35
+  attackLungeDistance: 1.1
+  highAttackWeight: 0.34
+  middleAttackWeight: 0.34
+  lowAttackWeight: 0.32
+  runControllerResourcePath: ArcaneVR/ThunderGolemRunController
+  attackControllerResourcePath: ArcaneVR/ThunderGolemAttackController
+  speedParameter: Speed
+  moveSpeedParameter: MoveSpeed
+  movingParameter: IsMoving
+  runStateName: Armature|Armature|Armature|Armature|running|baselayer
+  fallbackRunStateName: Run
+  genericAttackStateName: Armature|Armature|Armature|Armature|Triple_Combo_Attack|baselayer
+  animationCrossFadeDuration: 0.1
+  runAnimationSpeedMultiplier: 0.45
+  attackAnimationSpeedMultiplier: 0.72
+  attackControllerRestoreDelay: 1.15
+--- !u!114 &3483821603137979082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3483821603137979071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 510d106757fcf844aa21cb5be2bbec75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Boss.BossStateMachine
+  bossAI: {fileID: 3483821603137979083}
+  golemTarget: {fileID: 3483821603137979072}
+  patternBridge: {fileID: 2145939743}
+  debugFreeze: 0
+  runPatternsAutomatically: 0
+  createResponsePatternHelpers: 0
+  firstPatternDelay: 3
+  attackInterval: 6
+  defenseInterval: 25
+  defenseDuration: 8
+  chargeCounterDuration: 3
+  responseWindowDuration: 1.25
+  phaseOneHpRatio: 0.7
+  phaseTwoHpRatio: 0.4
+  finalPhaseHpRatio: 0.15
+--- !u!114 &3483821603137979083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3483821603137979071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 702e010a91e279242bac7aeddca56fbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Boss.BossAI
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -9329,3 +9852,4 @@ SceneRoots:
   - {fileID: 3483821603137979069}
   - {fileID: 1610837396}
   - {fileID: 1483082567}
+  - {fileID: 1545296681}
