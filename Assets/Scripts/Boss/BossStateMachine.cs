@@ -25,8 +25,9 @@ namespace ArcaneVR.Boss
         [SerializeField] private bool createResponsePatternHelpers;
         [SerializeField] private float firstPatternDelay = 3f;
         [SerializeField] private float attackInterval = 6f;
-        [SerializeField] private float defenseInterval = 25f;
-        [SerializeField] private float defenseDuration = 8f;
+        [SerializeField] private float firstBarrierDelay = 18f;
+        [SerializeField] private float defenseInterval = 22f;
+        [SerializeField] private float defenseDuration = 14f;
         [SerializeField] private float chargeCounterDuration = 3f;
         [SerializeField] private float responseWindowDuration = 1.25f;
 
@@ -330,7 +331,7 @@ namespace ArcaneVR.Boss
         private void ResetTimers()
         {
             nextAttackTime = Time.time + firstPatternDelay;
-            nextDefenseTime = Time.time + defenseInterval;
+            nextDefenseTime = Time.time + firstBarrierDelay;
             stateLockUntilTime = 0f;
         }
 

@@ -55,7 +55,7 @@ namespace ArcaneVR.Combat
         [SerializeField] private float currentHealth = 300f;
         [SerializeField, Range(0f, 1f)] private float barrierDamageMultiplier = 0.2f;
         [SerializeField] private float weakDamageMultiplier = 1.5f;
-        [SerializeField] private float weakDuration = 5f;
+        [SerializeField] private float weakDuration = 4f;
         [SerializeField] private float staggerDuration = 2.5f;
         [SerializeField] private float slowDuration = 3f;
         [SerializeField] private float burnDuration = 4f;
@@ -141,8 +141,7 @@ namespace ArcaneVR.Combat
 
             var resolvedChargeCounter = IsChargeCounterWindowOpen && hitData.IncludesElement(ElementType.Thunder);
             var brokeBarrier = IsBarrierActive &&
-                               hitData.IncludesElement(ElementType.Ice) &&
-                               hitData.IncludesElement(ElementType.Thunder);
+                               hitData.spellId == SpellId.Combo_IceThunder;
             var triggeredOverload = hitData.spellId == SpellId.Combo_ThunderFire && IsWeakExposed;
             var triggeredSteamBurst = hitData.spellId == SpellId.Combo_FireIce;
 
@@ -259,7 +258,7 @@ namespace ArcaneVR.Combat
                 damage *= weakDamageMultiplier;
 
             if (hitData.spellId == SpellId.Combo_ThunderFire && IsWeakExposed)
-                damage *= 1.35f;
+                damage *= 2.0f;
 
             return damage;
         }
