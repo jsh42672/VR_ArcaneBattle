@@ -35,6 +35,13 @@ namespace ArcaneVR.UI
         [SerializeField] private float hitPulseDuration = 0.22f;
         [SerializeField] private Color defaultHitPulseColor = Color.white;
 
+        [Header("── 차지 경고 ──")]
+        [SerializeField] private Color chargeWarningColor = new Color(1f, 0.5f, 0.1f, 1f);
+        [SerializeField] private float chargeWarningDuration = 3f;
+
+        [Header("── 취약 강조 ──")]
+        [SerializeField] private Color weaknessColor = new Color(1f, 0.85f, 0.2f, 1f);
+
         [Header("── 피격 풀스크린 이펙트 ──")]
         [SerializeField] private Material fireHitMaterial;
         [SerializeField] private Material iceHitMaterial;
@@ -56,6 +63,8 @@ namespace ArcaneVR.UI
         private Canvas hitEffectCanvas;
         private RawImage hitEffectImage;
         private float screenHitEndTime = -1f;
+        private float chargeEndTime = -1f;
+        private bool weaknessActive;
         private float healthRatio = 1f;
         private float manaRatio = 1f;
         private float hitPulseUntilTime;
@@ -201,6 +210,12 @@ namespace ArcaneVR.UI
         private void HandleBossStateChanged(BossState state)
         {
             lastBossText = $"Boss: {state}";
+            if (state == BossState.Charging)
+                chargeEndTime = Time.unscaledTime + chargeWarningDuration;
+            else
+                chargeEndTime = -1f;
+
+            weaknessActive = state == BossState.Weakness;
         }
 
         private void HandleBossStatusChanged(BossElementStatusSnapshot snapshot)
@@ -272,8 +287,18 @@ namespace ArcaneVR.UI
             if (voiceRecognizer != null)
                 lastVoiceText = voiceRecognizer.ShortStatusText;
 
+            var chargeRemaining = chargeEndTime - Time.unscaledTime;
+            var chargeActive = chargeEndTime > 0f && chargeRemaining > 0f;
+            if (chargeActive)
+                lastCueText = $"Cue: CHARGE {chargeRemaining:0.0}s";
+            else if (chargeEndTime > 0f)
+                chargeEndTime = -1f;
+
             var hpWarning = healthRatio <= 0.35f;
-            statusText.color = hpWarning ? warningTextColor : normalTextColor;
+            statusText.color = chargeActive ? chargeWarningColor
+                : weaknessActive ? weaknessColor
+                : hpWarning ? warningTextColor
+                : normalTextColor;
             statusText.text =
                 $"HP {healthRatio * 100f:0}%  MANA {manaRatio * 100f:0}%\n" +
                 $"{lastBossText}\n" +
