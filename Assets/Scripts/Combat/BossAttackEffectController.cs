@@ -1,4 +1,5 @@
 using System.Collections;
+using ArcaneVR.Input;
 using UnityEngine;
 
 namespace ArcaneVR.Combat
@@ -13,6 +14,14 @@ namespace ArcaneVR.Combat
         [SerializeField] private GolemCombatTarget golemTarget;
         [SerializeField] private Transform bossRoot;
         [SerializeField] private Transform headTransform;
+
+        [Header("── 공격 VFX 프리팹 (선택) ──")]
+        [Tooltip("High 공격 시 재생할 VFX 프리팹 (예: Lightning_MagicCircle_Slash)")]
+        [SerializeField] private GameObject highAttackVfxPrefab;
+        [Tooltip("Middle 공격 시 재생할 VFX 프리팹 (예: Lightning_MagicCircle)")]
+        [SerializeField] private GameObject midAttackVfxPrefab;
+        [Tooltip("Low 공격 시 재생할 VFX 프리팹 (예: Lightning_Crystals_front_attack)")]
+        [SerializeField] private GameObject lowAttackVfxPrefab;
 
         [Header("Attack VFX")]
         [SerializeField] private bool enableAttackEffects = true;
@@ -217,6 +226,7 @@ namespace ArcaneVR.Combat
             var color = ResolveAttackColor(attackType);
             var lifetime = duration * Mathf.Max(0.2f, effectDurationMultiplier);
             BuildAttackVisual(root.transform, attackType, color);
+            SpawnVfxPrefab(attackType, lifetime);
             LastEffectStatus = $"AttackFx: {attackType}";
 
             var started = Time.time;
@@ -232,6 +242,24 @@ namespace ArcaneVR.Combat
 
             activeAttackRoutine = null;
             LastEffectStatus = "AttackFx: idle";
+        }
+
+        private void SpawnVfxPrefab(BossAttackType attackType, float lifetime)
+        {
+            var prefab = attackType switch
+            {
+                BossAttackType.High => highAttackVfxPrefab,
+                BossAttackType.Middle => midAttackVfxPrefab,
+                BossAttackType.Low => lowAttackVfxPrefab,
+                _ => null
+            };
+
+            if (prefab == null)
+                return;
+
+            var origin = ResolveBossAttackOrigin(attackType);
+            var vfxObj = Instantiate(prefab, origin, Quaternion.identity);
+            Destroy(vfxObj, lifetime);
         }
 
         private void BuildAttackVisual(Transform root, BossAttackType attackType, Color color)

@@ -14,6 +14,7 @@ namespace ArcaneVR.Input
         public event Action OnDodgeHigh;
         public event Action OnDodgeMid;
         public event Action OnDodgeLow;
+        public event Action OnDodgeFail;
 
         [Header("── 머리 추적 ──")]
         [SerializeField] private Transform headTransform;
@@ -178,6 +179,8 @@ namespace ArcaneVR.Input
 
         public void CancelDodgeWindow()
         {
+            if (isWindowOpen)
+                OnDodgeFail?.Invoke();
             isWindowOpen = false;
             LastDebugMessage = "Dodge Cancelled";
         }

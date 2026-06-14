@@ -4,6 +4,7 @@ using ArcaneVR.Combat;
 using ArcaneVR.Input;
 using ArcaneVR.Spell;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ArcaneVR.UI
 {
@@ -34,12 +35,27 @@ namespace ArcaneVR.UI
         [SerializeField] private float hitPulseDuration = 0.22f;
         [SerializeField] private Color defaultHitPulseColor = Color.white;
 
+        [Header("── 피격 풀스크린 이펙트 ──")]
+        [SerializeField] private Material fireHitMaterial;
+        [SerializeField] private Material iceHitMaterial;
+        [SerializeField] private Material thunderHitMaterial;
+        [SerializeField] private Material noHpMaterial;
+        [Tooltip("피격 이펙트 기본 속성 (씬별 보스에 맞게 설정)")]
+        [SerializeField] private ElementType defaultBossElement = ElementType.Thunder;
+        [SerializeField] private float screenHitDuration = 0.35f;
+        [SerializeField, Range(0f, 1f)] private float noHpThreshold = 0.3f;
+        [SerializeField] private float noHpAlpha = 0.22f;
+        [SerializeField] private float screenOverlayDistance = 0.32f;
+
         private readonly Dictionary<Renderer, Color> originalRendererColors = new Dictionary<Renderer, Color>();
         private CombatManager subscribedCombatManager;
         private GolemCombatTarget subscribedGolemTarget;
         private BossAI subscribedBossAI;
         private TextMesh statusText;
         private Transform statusRoot;
+        private Canvas hitEffectCanvas;
+        private RawImage hitEffectImage;
+        private float screenHitEndTime = -1f;
         private float healthRatio = 1f;
         private float manaRatio = 1f;
         private float hitPulseUntilTime;
@@ -76,7 +92,14 @@ namespace ArcaneVR.UI
             EnsureStatusText();
             AttachStatusToView();
             UpdateBossHitPulse();
+            UpdateHitEffectOverlay();
             RefreshText();
+        }
+
+        private void OnDestroy()
+        {
+            if (hitEffectCanvas != null)
+                Destroy(hitEffectCanvas.gameObject);
         }
 
         public void OnSpellCast(SpellId spellId)
@@ -94,6 +117,7 @@ namespace ArcaneVR.UI
                 {
                     subscribedCombatManager.OnPlayerHealthChanged -= HandlePlayerHealthChanged;
                     subscribedCombatManager.OnManaChanged -= HandleManaChanged;
+                    subscribedCombatManager.OnPlayerHit -= HandlePlayerHit;
                 }
 
                 subscribedCombatManager = combatManager;
@@ -101,6 +125,7 @@ namespace ArcaneVR.UI
                 {
                     subscribedCombatManager.OnPlayerHealthChanged += HandlePlayerHealthChanged;
                     subscribedCombatManager.OnManaChanged += HandleManaChanged;
+                    subscribedCombatManager.OnPlayerHit += HandlePlayerHit;
                     HandlePlayerHealthChanged(subscribedCombatManager.CurrentHP, subscribedCombatManager.MaxHP);
                     HandleManaChanged(subscribedCombatManager.CurrentMana, subscribedCombatManager.MaxMana);
                 }
@@ -145,6 +170,7 @@ namespace ArcaneVR.UI
             {
                 subscribedCombatManager.OnPlayerHealthChanged -= HandlePlayerHealthChanged;
                 subscribedCombatManager.OnManaChanged -= HandleManaChanged;
+                subscribedCombatManager.OnPlayerHit -= HandlePlayerHit;
             }
 
             if (subscribedGolemTarget != null)
@@ -299,6 +325,83 @@ namespace ArcaneVR.UI
                 ElementType.Ice => new Color(0.35f, 0.8f, 1f, 1f),
                 ElementType.Thunder => new Color(1f, 0.9f, 0.25f, 1f),
                 _ => Color.white
+            };
+        }
+
+        private void HandlePlayerHit(float damage)
+        {
+            screenHitEndTime = Time.unscaledTime + screenHitDuration;
+            EnsureHitEffectOverlay();
+            var mat = MaterialForElement(defaultBossElement);
+            if (mat != null && hitEffectImage != null)
+                hitEffectImage.material = mat;
+        }
+
+        private void EnsureHitEffectOverlay()
+        {
+            if (hitEffectCanvas != null || playerCamera == null)
+                return;
+
+            var canvasObj = new GameObject("Hit Effect Canvas") { hideFlags = HideFlags.DontSave };
+            var canvas = canvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = playerCamera;
+            canvas.planeDistance = screenOverlayDistance;
+            canvas.sortingOrder = 99;
+            canvasObj.AddComponent<CanvasScaler>();
+
+            var imgObj = new GameObject("Overlay") { hideFlags = HideFlags.DontSave };
+            imgObj.transform.SetParent(canvasObj.transform, false);
+            var img = imgObj.AddComponent<RawImage>();
+            img.rectTransform.anchorMin = Vector2.zero;
+            img.rectTransform.anchorMax = Vector2.one;
+            img.rectTransform.sizeDelta = Vector2.zero;
+            img.color = new Color(1f, 1f, 1f, 0f);
+
+            hitEffectCanvas = canvas;
+            hitEffectImage = img;
+        }
+
+        private void UpdateHitEffectOverlay()
+        {
+            EnsureHitEffectOverlay();
+            if (hitEffectImage == null)
+                return;
+
+            var hitActive = Time.unscaledTime < screenHitEndTime;
+            var noHpActive = !hitActive && healthRatio < noHpThreshold && noHpMaterial != null;
+
+            float targetAlpha;
+            if (hitActive)
+            {
+                var t = Mathf.Clamp01((screenHitEndTime - Time.unscaledTime) / Mathf.Max(0.01f, screenHitDuration));
+                targetAlpha = t;
+            }
+            else if (noHpActive)
+            {
+                if (hitEffectImage.material != noHpMaterial)
+                    hitEffectImage.material = noHpMaterial;
+                var pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 2.5f);
+                targetAlpha = noHpAlpha * (0.6f + 0.4f * pulse);
+            }
+            else
+            {
+                targetAlpha = 0f;
+            }
+
+            var c = hitEffectImage.color;
+            c.a = Mathf.MoveTowards(c.a, targetAlpha, Time.unscaledDeltaTime * 6f);
+            hitEffectImage.color = c;
+        }
+
+        private Material MaterialForElement(ElementType element)
+        {
+            return element switch
+            {
+                ElementType.Fire => fireHitMaterial,
+                ElementType.Ice => iceHitMaterial,
+                ElementType.Thunder => thunderHitMaterial,
+                _ => thunderHitMaterial
             };
         }
     }
