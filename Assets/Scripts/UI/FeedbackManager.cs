@@ -48,11 +48,8 @@ namespace ArcaneVR.UI
         private string lastBossText = "Boss: idle";
         private string lastCueText = "Cue: idle";
         private string lastVoiceText = "Voice: idle";
-        private float nextReferenceRefreshTime;
-
         private void Awake()
         {
-            ResolveReferences();
             SubscribeToResolvedReferences();
             EnsureStatusText();
             RefreshText();
@@ -60,8 +57,13 @@ namespace ArcaneVR.UI
 
         private void OnEnable()
         {
-            ResolveReferences();
             SubscribeToResolvedReferences();
+        }
+
+        private void OnValidate()
+        {
+            if ((playerCamera == null || !playerCamera.gameObject.activeInHierarchy) && Camera.main != null)
+                playerCamera = Camera.main;
         }
 
         private void OnDisable()
@@ -71,13 +73,6 @@ namespace ArcaneVR.UI
 
         private void LateUpdate()
         {
-            if (Time.time >= nextReferenceRefreshTime)
-            {
-                nextReferenceRefreshTime = Time.time + 0.5f;
-                ResolveReferences();
-                SubscribeToResolvedReferences();
-            }
-
             EnsureStatusText();
             AttachStatusToView();
             UpdateBossHitPulse();
@@ -89,27 +84,6 @@ namespace ArcaneVR.UI
             lastSpellText = $"Spell: {SpellHitData.GetDisplayName(spellId)}";
             hitPulseUntilTime = Time.time + hitPulseDuration;
             hitPulseColor = Color.white;
-        }
-
-        private void ResolveReferences()
-        {
-            if (combatManager == null)
-                combatManager = FindAnyObjectByType<CombatManager>();
-
-            if (spellCaster == null)
-                spellCaster = FindAnyObjectByType<SpellCaster>();
-
-            if (voiceRecognizer == null)
-                voiceRecognizer = FindAnyObjectByType<VoiceRecognizer>();
-
-            if (golemTarget == null)
-                golemTarget = FindAnyObjectByType<GolemCombatTarget>();
-
-            if (bossAI == null)
-                bossAI = FindAnyObjectByType<BossAI>();
-
-            if (playerCamera == null)
-                playerCamera = Camera.main;
         }
 
         private void SubscribeToResolvedReferences()

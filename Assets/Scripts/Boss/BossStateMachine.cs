@@ -14,6 +14,12 @@ namespace ArcaneVR.Boss
         [SerializeField] private GolemCombatTarget golemTarget;
         [SerializeField] private BossPatternCombatBridge patternBridge;
 
+        [Header("디버그 / 테스트")]
+        [Tooltip("체크하면 HP 페이즈 트리거 및 자동 패턴이 모두 멈춥니다.")]
+        [SerializeField] private bool debugFreeze;
+
+        public bool DebugFreeze { get => debugFreeze; set => debugFreeze = value; }
+
         [Header("Pattern Timing")]
         [SerializeField] private bool runPatternsAutomatically;
         [SerializeField] private bool createResponsePatternHelpers;
@@ -65,7 +71,7 @@ namespace ArcaneVR.Boss
             ResolveReferences();
             Subscribe();
 
-            if (!runPatternsAutomatically || bossAI == null || golemTarget == null)
+            if (debugFreeze || !runPatternsAutomatically || bossAI == null || golemTarget == null)
                 return;
 
             if (bossAI.CurrentState == BossState.Dead || golemTarget.CurrentHealth <= 0f)

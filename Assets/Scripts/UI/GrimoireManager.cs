@@ -1,6 +1,7 @@
 using System;
 using ArcaneVR.Input;
 using ArcaneVR.Spell;
+using ArcaneVR.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,6 +19,11 @@ namespace ArcaneVR.UI
         [SerializeField] private Transform leftHandBookAnchor;
         [SerializeField] private GestureDetector gestureDetector;
         [SerializeField] private GestureEventRouter gestureRouter;
+        [SerializeField] private OVRHand leftOvrHand;
+        [SerializeField] private OVRHand rightOvrHand;
+        [SerializeField] private SpellCaster[] spellCasters = Array.Empty<SpellCaster>();
+        [SerializeField] private Canvas[] sceneGrimoireCanvases = Array.Empty<Canvas>();
+        [SerializeField] private Transform visualParkingAnchor;
 
         [Header("Input")]
         [SerializeField] private InputActionReference toggleAction;
@@ -56,8 +62,6 @@ namespace ArcaneVR.UI
         public bool IsExternallySuppressed { get; private set; }
         public string LastGrimoireStatus { get; private set; } = "Grimoire: idle";
 
-        private OVRHand leftOvrHand;
-        private OVRHand rightOvrHand;
         private float leftOpenHoldTimer;
         private float leftFistHoldTimer;
         private float lastToggleTime = -999f;
@@ -109,8 +113,6 @@ namespace ArcaneVR.UI
 
         private void Update()
         {
-            ResolveReferences();
-            SubscribeGestureEvents();
             UpdateGestureControl();
 
             if (IsOpen)
@@ -123,6 +125,11 @@ namespace ArcaneVR.UI
             {
                 DisableSceneGrimoireCanvases();
             }
+        }
+
+        private void OnValidate()
+        {
+            ResolveReferences();
         }
 
         public void ToggleGrimoire()
@@ -171,8 +178,6 @@ namespace ArcaneVR.UI
         {
             if (IsOpen || IsSuppressed())
                 return;
-
-            ResolveReferences();
             IsOpen = true;
             SetVisualActive(true);
             PositionGrimoire();
@@ -273,46 +278,79 @@ namespace ArcaneVR.UI
 
         private void ResolveReferences()
         {
-            if (playerCamera == null && Camera.main != null)
-                playerCamera = Camera.main.transform;
+            if (playerCamera == null || !playerCamera.gameObject.activeInHierarchy)
+                playerCamera = ArcanePlayerRigResolver.FindHeadTransform(leftHandBookAnchor);
 
-            if (grimoireUI == null)
+            if (leftHandBookAnchor == null ||
+                !leftHandBookAnchor.gameObject.activeInHierarchy ||
+                (playerCamera != null && !ArcanePlayerRigResolver.ShareResolvedRig(leftHandBookAnchor, playerCamera)))
             {
-                foreach (var ui in FindObjectsByType<GrimoireUI>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                {
-                    if (ui == null)
-                        continue;
-
-                    grimoireUI = ui;
-                    if (grimoireCanvas == null)
-                        grimoireCanvas = grimoireUI.gameObject;
-                    break;
-                }
+                leftHandBookAnchor = ArcanePlayerRigResolver.FindHandTransform(true, playerCamera) ?? leftHandBookAnchor;
             }
 
-            if (grimoireCanvas == null)
-            {
-                foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                {
-                    if (canvas == null || !canvas.name.Contains("Grimoire"))
-                        continue;
+            if (grimoireUI == null && grimoireCanvas != null)
+                grimoireUI = grimoireCanvas.GetComponent<GrimoireUI>();
 
-                    grimoireCanvas = canvas.gameObject;
-                    break;
-                }
+            if (grimoireCanvas == null && grimoireUI != null)
+                grimoireCanvas = grimoireUI.gameObject;
+
+            var rigRoot = ResolveRigRoot();
+            if (gestureDetector == null || !SharesRig(gestureDetector.transform, rigRoot))
+                gestureDetector = FindRigComponent<GestureDetector>(rigRoot);
+
+            if (gestureRouter == null || !SharesRig(gestureRouter.transform, rigRoot))
+                gestureRouter = FindRigComponent<GestureEventRouter>(rigRoot);
+
+            var scopedCasters = FindRigComponents<SpellCaster>(rigRoot);
+            if (scopedCasters.Length > 0)
+                spellCasters = scopedCasters;
+        }
+
+        private Transform ResolveRigRoot()
+        {
+            if (playerCamera != null)
+                return playerCamera.root;
+
+            if (transform.root != null && transform.root.name == "ArcanePlayerRig")
+                return transform.root;
+
+            var ovrRig = GetComponentInParent<OVRCameraRig>(true);
+            if (ovrRig != null && ovrRig.transform.root != null)
+                return ovrRig.transform.root;
+
+            var head = ArcanePlayerRigResolver.FindHeadTransform(transform);
+            return head != null ? head.root : transform.root;
+        }
+
+        private static T FindRigComponent<T>(Transform rigRoot) where T : Component
+        {
+            if (rigRoot != null)
+            {
+                var scoped = rigRoot.GetComponentInChildren<T>(true);
+                if (scoped != null)
+                    return scoped;
             }
 
-            if (gestureDetector == null)
-                gestureDetector = FindAnyObjectByType<GestureDetector>();
+            return FindAnyObjectByType<T>();
+        }
 
-            if (leftHandBookAnchor == null)
-                leftHandBookAnchor = GameObject.Find("L_Wrist")?.transform;
+        private static T[] FindRigComponents<T>(Transform rigRoot) where T : Component
+        {
+            if (rigRoot != null)
+            {
+                var scoped = rigRoot.GetComponentsInChildren<T>(true);
+                if (scoped != null && scoped.Length > 0)
+                    return scoped;
+            }
 
-            if (leftOvrHand == null)
-                leftOvrHand = FindBestOvrHand(true);
+            return FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        }
 
-            if (rightOvrHand == null)
-                rightOvrHand = FindBestOvrHand(false);
+        private static bool SharesRig(Transform candidate, Transform rigRoot)
+        {
+            return candidate != null &&
+                   rigRoot != null &&
+                   candidate.root == rigRoot;
         }
 
         private void SubscribeGestureEvents()
@@ -570,9 +608,6 @@ namespace ArcaneVR.UI
                 return false;
 
             var hand = leftHand ? leftOvrHand : rightOvrHand;
-            if (hand == null)
-                hand = FindBestOvrHand(leftHand);
-
             if (hand == null || !hand.IsTracked || hand.PointerPose == null)
                 return false;
 
@@ -600,8 +635,13 @@ namespace ArcaneVR.UI
             magicSuppressionApplied = suppress;
             nextMagicSuppressionRefreshTime = Time.unscaledTime + (suppress ? 1f : 0.25f);
 
-            foreach (var caster in FindObjectsByType<SpellCaster>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var caster in spellCasters)
+            {
+                if (caster == null)
+                    continue;
+
                 caster.SetCastingSuppressed(suppress, "Grimoire");
+            }
         }
 
         private void SetVisualActive(bool active)
@@ -648,9 +688,6 @@ namespace ArcaneVR.UI
                 return leftHandBookAnchor;
 
             if (leftOvrHand == null || !leftOvrHand.IsTracked)
-                leftOvrHand = FindBestOvrHand(true);
-
-            if (leftOvrHand == null || !leftOvrHand.IsTracked)
                 return null;
 
             return leftOvrHand.PointerPose != null && leftOvrHand.IsPointerPoseValid
@@ -660,9 +697,9 @@ namespace ArcaneVR.UI
 
         private void DisableSceneGrimoireCanvases()
         {
-            foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var canvas in sceneGrimoireCanvases)
             {
-                if (canvas == null || !canvas.name.Contains("Grimoire"))
+                if (canvas == null)
                     continue;
 
                 canvas.gameObject.SetActive(false);
@@ -738,15 +775,14 @@ namespace ArcaneVR.UI
 
         private Vector3 ResolveParkingPosition()
         {
+            if (visualParkingAnchor != null)
+                return visualParkingAnchor.position;
+
             if (playerCamera == null && Camera.main != null)
                 playerCamera = Camera.main.transform;
 
             if (playerCamera != null)
                 return playerCamera.position + playerCamera.forward * 0.6f + Vector3.down * 0.15f;
-
-            var spawnPoint = GameObject.Find("PlayerSpawnPoint");
-            if (spawnPoint != null)
-                return spawnPoint.transform.position + Vector3.up * 1.2f;
 
             return Vector3.up * 1.6f;
         }
@@ -881,18 +917,6 @@ namespace ArcaneVR.UI
             leftOpenHoldTimer = 0f;
             leftFistHoldTimer = 0f;
             pageSwipeActive = false;
-        }
-
-        private static OVRHand FindBestOvrHand(bool leftHand)
-        {
-            var expected = leftHand ? OVRPlugin.Hand.HandLeft : OVRPlugin.Hand.HandRight;
-            foreach (var hand in FindObjectsByType<OVRHand>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (hand != null && hand.GetHand() == expected && hand.enabled)
-                    return hand;
-            }
-
-            return null;
         }
 
         private static Material CreateRuntimeMaterial(Color color)

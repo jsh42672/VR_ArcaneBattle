@@ -23,6 +23,11 @@ namespace ArcaneVR.Spell
         private bool hasHit;
         private float destroyAfterSeconds = 3f;
 
+        public void SetLifetime(float seconds)
+        {
+            destroyAfterSeconds = Mathf.Max(0f, seconds);
+        }
+
         public void Initialize(
             SpellId newSpellId,
             ElementType newElement,

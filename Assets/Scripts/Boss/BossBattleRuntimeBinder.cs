@@ -12,7 +12,16 @@ namespace ArcaneVR.Boss
     {
         private const float SpawnBackDistance = 6f;
         private const float DesiredHeadHeightAboveGround = 1.65f;
+
+        [Header("디버그 / 테스트")]
+        [Tooltip("체크하면 골렘이 움직이거나 공격하지 않습니다.\n플레이 중에도 실시간으로 켜고 끌 수 있습니다.")]
+        [SerializeField] private bool 골렘_이동_공격_정지;
+
         private bool spawnAligned;
+        private bool _runtimeBound;
+        private GolemCombatTarget _cachedGolemTarget;
+        private BossChaseController _cachedChase;
+        private BossStateMachine _cachedStateMachine;
 
         private void Start()
         {
@@ -21,7 +30,21 @@ namespace ArcaneVR.Boss
 
         private void Update()
         {
-            EnsureBossRuntime();
+            if (!_runtimeBound)
+            {
+                EnsureBossRuntime();
+                return;
+            }
+
+            SyncDebugFreeze();
+        }
+
+        private void SyncDebugFreeze()
+        {
+            if (_cachedChase != null)
+                _cachedChase.DebugFreeze = 골렘_이동_공격_정지;
+            if (_cachedStateMachine != null)
+                _cachedStateMachine.DebugFreeze = 골렘_이동_공격_정지;
         }
 
         private IEnumerator BindWhenSceneIsReady()
@@ -38,22 +61,30 @@ namespace ArcaneVR.Boss
 
         private void EnsureBossRuntime()
         {
-            var golemTarget = ResolveOrCreateGolemTarget();
+            if (_cachedGolemTarget == null)
+                _cachedGolemTarget = ResolveOrCreateGolemTarget();
+
+            var golemTarget = _cachedGolemTarget;
             if (golemTarget == null)
                 return;
 
             EnsureBossPhysics(golemTarget);
             EnsureBattleHelpers(golemTarget);
 
-            if (FindAnyObjectByType<BossAI>() == null)
+            if (FindAnyObjectByType<BossAI>(FindObjectsInactive.Include) == null)
                 golemTarget.gameObject.AddComponent<BossAI>();
 
-            if (FindAnyObjectByType<BossStateMachine>() == null)
+            if (FindAnyObjectByType<BossStateMachine>(FindObjectsInactive.Include) == null)
                 golemTarget.gameObject.AddComponent<BossStateMachine>();
 
-            var chase = BossChaseController.EnsureForTarget(golemTarget);
-            if (chase != null)
-                chase.ApplyPresentationDefaults();
+            _cachedChase = BossChaseController.EnsureForTarget(golemTarget);
+            if (_cachedChase != null)
+                _cachedChase.ApplyPresentationDefaults();
+
+            _cachedStateMachine = FindAnyObjectByType<BossStateMachine>(FindObjectsInactive.Include);
+
+            _runtimeBound = true;
+            SyncDebugFreeze();
         }
 
         private static void EnsureBattleHelpers(GolemCombatTarget golemTarget)
@@ -61,14 +92,18 @@ namespace ArcaneVR.Boss
             if (golemTarget == null)
                 return;
 
+            var combatManager = FindAnyObjectByType<CombatManager>();
+            var feedbackManager = FindAnyObjectByType<FeedbackManager>();
+
             var patternHost = FindSceneObject("BossPatternBridge") ??
-                              FindOrCreateScenePath("GameSystems", "CombatSystems", "BossPatternBridge");
+                              FindOrCreateScenePath("ArcanePlayerRig", "GameSystems", "CombatSystems", "BossPatternBridge");
             var attackHost = FindSceneObject("BossAttackControllers") ??
-                             FindOrCreateScenePath("GameSystems", "CombatSystems", "BossAttackControllers");
-            var uiFeedbackHost = FindSceneObject("FeedbackManager") ??
-                                 FindOrCreateScenePath("GameSystems", "UIManagers", "FeedbackManager");
+                             FindOrCreateScenePath("ArcanePlayerRig", "GameSystems", "CombatSystems", "BossAttackControllers");
+            var uiFeedbackHost = feedbackManager != null
+                ? feedbackManager.gameObject
+                : FindOrCreateScenePath("ArcanePlayerRig", "GameSystems", "UIManagers", "FeedbackManager");
             var uiHealthHost = FindSceneObject("BossHealthBarUI") ??
-                               FindOrCreateScenePath("GameSystems", "UIManagers", "BossHealthBarUI");
+                               FindOrCreateScenePath("ArcanePlayerRig", "GameSystems", "UIManagers", "BossHealthBarUI");
 
             EnsureComponent(patternHost, () => patternHost.AddComponent<BossPatternCombatBridge>());
             EnsureComponent(attackHost, () => attackHost.AddComponent<BossAttackTelegraphController>());
@@ -78,7 +113,8 @@ namespace ArcaneVR.Boss
             EnsureComponent(attackHost, () => attackHost.AddComponent<DodgePlayerDamageBridge>());
             EnsureComponent(attackHost, () => attackHost.AddComponent<BarrierPlayerDamageBridge>());
             EnsureComponent(attackHost, () => attackHost.AddComponent<BarrierVisualController>());
-            EnsureComponent(uiFeedbackHost, () => uiFeedbackHost.AddComponent<FeedbackManager>());
+            if (feedbackManager == null)
+                EnsureComponent(uiFeedbackHost, () => uiFeedbackHost.AddComponent<FeedbackManager>());
             EnsureComponent(uiHealthHost, () => uiHealthHost.AddComponent<BossHealthBarUI>());
             EnsureComponent(golemTarget.gameObject, () => golemTarget.gameObject.AddComponent<BossElementStatusBridge>());
             EnsureComponent(golemTarget.gameObject, () => golemTarget.gameObject.AddComponent<BossElementStatusVfx>());
@@ -87,7 +123,7 @@ namespace ArcaneVR.Boss
 
         private static GolemCombatTarget ResolveOrCreateGolemTarget()
         {
-            var existing = FindAnyObjectByType<GolemCombatTarget>();
+            var existing = FindAnyObjectByType<GolemCombatTarget>(FindObjectsInactive.Include);
             if (existing != null)
                 return existing;
 

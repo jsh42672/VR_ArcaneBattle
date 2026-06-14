@@ -13,6 +13,14 @@ namespace ArcaneVR.Spell
     /// </summary>
     public class SpellCaster : MonoBehaviour
     {
+        [System.Serializable]
+        private struct ComboProjectileVisualScale
+        {
+            public float fireIce;
+            public float iceThunder;
+            public float thunderFire;
+        }
+
         [Header("── 핵심 시스템 참조 ──")]
         [SerializeField] private SpellDatabase spellDatabase;
         [SerializeField] private CombinationChecker combinationChecker;
@@ -41,6 +49,17 @@ namespace ArcaneVR.Spell
         [SerializeField] private float fallbackProjectileLifetime = 5f;
         [SerializeField] private bool useDebugPrimitiveProjectiles = true;
         [SerializeField] private float debugProjectileScale = 1f;
+        [SerializeField] private GameObject comboFireIceProjectilePrefab;
+        [SerializeField] private GameObject comboIceThunderProjectilePrefab;
+        [SerializeField] private GameObject comboThunderFireProjectilePrefab;
+        [SerializeField] private float comboProjectileLifetime = 6f;
+        [SerializeField] private float comboProjectileLightIntensity = 1.4f;
+        [SerializeField] private ComboProjectileVisualScale comboProjectileScale = new ComboProjectileVisualScale
+        {
+            fireIce = 0.34f,
+            iceThunder = 0.36f,
+            thunderFire = 0.4f
+        };
         [SerializeField] private bool showCombinationAura = true;
         [SerializeField] private float combinationReadyAuraScale = 0.18f;
         [SerializeField] private float combinationCompleteAuraScale = 0.42f;
@@ -118,7 +137,13 @@ namespace ArcaneVR.Spell
 
         private void Awake()
         {
+            EnsureSceneReferences();
             InitModules();
+        }
+
+        private void OnValidate()
+        {
+            EnsureSceneReferences();
         }
 
         private void OnEnable()
@@ -222,6 +247,8 @@ namespace ArcaneVR.Spell
             projectile.Initialize(spellId, element, data.damage, data.projectileSpeed,
                 data.statusEffect, data.statusDuration, direction, combatManager,
                 data.statusMagnitude, data.statusTickInterval);
+            var projectileLifetime = ResolveProjectileLifetime(data);
+            projectile.SetLifetime(projectileLifetime);
 
             RememberCast(element, spellId, data.manaCost,
                 combatManager != null ? $"마나 소비 {data.manaCost:0.#}" : "마나: CombatManager 없음");
@@ -230,7 +257,7 @@ namespace ArcaneVR.Spell
                 ? $"발동: {SpellHitData.GetDisplayName(spellId)}"
                 : $"발동: {element} {spellId}";
 
-            Destroy(projectileObj, fallbackProjectileLifetime);
+            Destroy(projectileObj, projectileLifetime);
             feedbackManager?.OnSpellCast(spellId);
             if (SpellHitData.IsComboSpellId(spellId))
                 StartCombinationAuraFeedback(spellId, true);
@@ -255,6 +282,85 @@ namespace ArcaneVR.Spell
         }
 
         // ── 초기화 ────────────────────────────────────────────────────────────
+
+        private void EnsureSceneReferences()
+        {
+            var rigRoot = ResolveRigRoot();
+
+            if (combinationChecker == null || !SharesRig(combinationChecker.transform, rigRoot))
+                combinationChecker = FindRigComponent<CombinationChecker>(rigRoot);
+
+            if (combatManager == null || !SharesRig(combatManager.transform, rigRoot))
+                combatManager = FindRigComponent<CombatManager>(rigRoot);
+
+            if (feedbackManager == null || !SharesRig(feedbackManager.transform, rigRoot))
+                feedbackManager = FindRigComponent<FeedbackManager>(rigRoot);
+
+            if (gestureDetector == null || !SharesRig(gestureDetector.transform, rigRoot))
+                gestureDetector = FindRigComponent<GestureDetector>(rigRoot);
+
+            if (grimoireManager == null || !SharesRig(grimoireManager.transform, rigRoot))
+                grimoireManager = FindRigComponent<GrimoireManager>(rigRoot);
+
+            if (focusModeController == null || !SharesRig(focusModeController.transform, rigRoot))
+                focusModeController = FindRigComponent<CombinationFocusModeController>(rigRoot);
+
+            if (headTransform == null || !headTransform.gameObject.activeInHierarchy)
+                headTransform = ArcanePlayerRigResolver.FindHeadTransform(rightHandSpawnPoint != null ? rightHandSpawnPoint : leftHandSpawnPoint);
+
+            if (headTransform != null)
+            {
+                leftHandSpawnPoint = ResolveHandReference(leftHandSpawnPoint, true);
+                rightHandSpawnPoint = ResolveHandReference(rightHandSpawnPoint, false);
+            }
+        }
+
+        private Transform ResolveHandReference(Transform current, bool isLeft)
+        {
+            if (current != null &&
+                current.gameObject.activeInHierarchy &&
+                ArcanePlayerRigResolver.ShareResolvedRig(current, headTransform))
+            {
+                return current;
+            }
+
+            return ArcanePlayerRigResolver.FindHandTransform(isLeft, headTransform) ?? current;
+        }
+
+        private Transform ResolveRigRoot()
+        {
+            if (headTransform != null)
+                return headTransform.root;
+
+            if (transform.root != null && transform.root.name == "ArcanePlayerRig")
+                return transform.root;
+
+            var ovrRig = GetComponentInParent<OVRCameraRig>(true);
+            if (ovrRig != null && ovrRig.transform.root != null)
+                return ovrRig.transform.root;
+
+            var fallbackHead = ArcanePlayerRigResolver.FindHeadTransform(transform);
+            return fallbackHead != null ? fallbackHead.root : transform.root;
+        }
+
+        private static T FindRigComponent<T>(Transform rigRoot) where T : Component
+        {
+            if (rigRoot != null)
+            {
+                var scoped = rigRoot.GetComponentInChildren<T>(true);
+                if (scoped != null)
+                    return scoped;
+            }
+
+            return FindAnyObjectByType<T>();
+        }
+
+        private static bool SharesRig(Transform candidate, Transform rigRoot)
+        {
+            return candidate != null &&
+                   rigRoot != null &&
+                   candidate.root == rigRoot;
+        }
 
         private void InitModules()
         {
@@ -771,8 +877,15 @@ private void UpdateRightGestureAttack()
 
         private GameObject CreateProjectileObject(SpellDatabase.SpellData data, ElementType element, Vector3 position, Quaternion rotation)
         {
+            var comboPrefab = ResolveComboProjectilePrefab(data.spellId);
+            if (comboPrefab != null)
+                return Instantiate(comboPrefab, position, rotation);
+
             if (!useDebugPrimitiveProjectiles && data.prefab != null)
                 return Instantiate(data.prefab, position, rotation);
+
+            if (SpellHitData.IsComboSpellId(data.spellId))
+                return CreateComboDebugProjectile(data.spellId, position, rotation);
 
             var go  = new GameObject($"Spell_{data.spellId}");
             go.transform.SetPositionAndRotation(position, rotation);
@@ -783,6 +896,111 @@ private void UpdateRightGestureAttack()
             rb.useGravity  = false;
             rb.isKinematic = true;
             return go;
+        }
+
+        private float ResolveProjectileLifetime(SpellDatabase.SpellData data)
+        {
+            if (data != null && SpellHitData.IsComboSpellId(data.spellId))
+                return Mathf.Max(0.5f, comboProjectileLifetime);
+
+            return fallbackProjectileLifetime;
+        }
+
+        private GameObject ResolveComboProjectilePrefab(SpellId spellId)
+        {
+            return spellId switch
+            {
+                SpellId.Combo_FireIce => comboFireIceProjectilePrefab,
+                SpellId.Combo_IceThunder => comboIceThunderProjectilePrefab,
+                SpellId.Combo_ThunderFire => comboThunderFireProjectilePrefab,
+                _ => null
+            };
+        }
+
+        private GameObject CreateComboDebugProjectile(SpellId spellId, Vector3 position, Quaternion rotation)
+        {
+            var primitiveType = spellId switch
+            {
+                SpellId.Combo_FireIce => PrimitiveType.Sphere,
+                SpellId.Combo_IceThunder => PrimitiveType.Capsule,
+                SpellId.Combo_ThunderFire => PrimitiveType.Cube,
+                _ => PrimitiveType.Sphere
+            };
+
+            var go = GameObject.CreatePrimitive(primitiveType);
+            go.name = $"Combo_{spellId}";
+            go.transform.SetPositionAndRotation(position, rotation);
+            go.transform.localScale = Vector3.one * GetComboProjectileScale(spellId);
+
+            var collider = go.GetComponent<Collider>();
+            if (collider == null)
+                collider = go.AddComponent<SphereCollider>();
+            collider.isTrigger = true;
+
+            var rb = go.GetComponent<Rigidbody>();
+            if (rb == null)
+                rb = go.AddComponent<Rigidbody>();
+            rb.useGravity = false;
+            rb.isKinematic = true;
+
+            ApplyComboProjectileVisuals(go, spellId);
+            return go;
+        }
+
+        private void ApplyComboProjectileVisuals(GameObject go, SpellId spellId)
+        {
+            var color = GetComboAuraColor(spellId);
+            var renderer = go.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                var shader = Shader.Find("Universal Render Pipeline/Lit") ??
+                             Shader.Find("Standard") ??
+                             Shader.Find("Unlit/Color");
+                if (shader != null)
+                {
+                    var material = new Material(shader);
+                    if (material.HasProperty("_BaseColor"))
+                        material.SetColor("_BaseColor", color);
+                    if (material.HasProperty("_Color"))
+                        material.SetColor("_Color", color);
+                    if (material.HasProperty("_EmissionColor"))
+                    {
+                        material.EnableKeyword("_EMISSION");
+                        material.SetColor("_EmissionColor", color * 1.6f);
+                    }
+
+                    renderer.sharedMaterial = material;
+                }
+            }
+
+            var light = go.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.range = 3.2f;
+            light.intensity = comboProjectileLightIntensity;
+            light.color = color;
+
+            var trail = go.AddComponent<TrailRenderer>();
+            trail.time = 0.18f;
+            trail.startWidth = 0.18f;
+            trail.endWidth = 0.02f;
+            trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            trail.receiveShadows = false;
+            var trailMaterial = new Material(Shader.Find("Sprites/Default"));
+            trailMaterial.color = color;
+            trail.sharedMaterial = trailMaterial;
+            trail.startColor = color;
+            trail.endColor = new Color(color.r, color.g, color.b, 0f);
+        }
+
+        private float GetComboProjectileScale(SpellId spellId)
+        {
+            return spellId switch
+            {
+                SpellId.Combo_FireIce => comboProjectileScale.fireIce,
+                SpellId.Combo_IceThunder => comboProjectileScale.iceThunder,
+                SpellId.Combo_ThunderFire => comboProjectileScale.thunderFire,
+                _ => 0.35f
+            };
         }
 
         private static Color GetComboAuraColor(SpellId spellId) => spellId switch

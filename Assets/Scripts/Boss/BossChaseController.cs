@@ -9,6 +9,12 @@ namespace ArcaneVR.Boss
     [DefaultExecutionOrder(120)]
     public class BossChaseController : MonoBehaviour
     {
+        [Header("디버그 / 테스트")]
+        [Tooltip("체크하면 골렘이 움직이거나 공격하지 않습니다.\n씬 오브젝트를 비활성화하지 않고도 조용히 디버그할 수 있습니다.")]
+        [SerializeField] private bool debugFreeze;
+
+        public bool DebugFreeze { get => debugFreeze; set => debugFreeze = value; }
+
         [Header("References")]
         [SerializeField] private GolemCombatTarget golemTarget;
         [SerializeField] private BossAI bossAI;
@@ -245,6 +251,13 @@ namespace ArcaneVR.Boss
         {
             IsChasing = false;
 
+            if (debugFreeze)
+            {
+                LastChaseStatus = "Chase: 디버그 정지";
+                UpdateAnimator(false, 0f);
+                return;
+            }
+
             if (!enableChase)
             {
                 LastChaseStatus = "Chase: disabled";
@@ -328,7 +341,8 @@ namespace ArcaneVR.Boss
 
         public bool TryStartMeleeAttack(float distance)
         {
-            if (!attackWhenInRange ||
+            if (debugFreeze ||
+                !attackWhenInRange ||
                 IsPlayerDead() ||
                 distance > attackRange ||
                 Time.time < nextMeleeAttackTime ||

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
@@ -50,14 +51,16 @@ namespace ArcaneVR.EditorTests
         }
 
         [Test]
-        public void CombinationChecker_SameElementsFailAndLockDeclarations()
+        public void CombinationChecker_SameElementsRemainDeclaredAndAllowRedeclaration()
         {
             var checkerType = Type.GetType("ArcaneVR.Input.CombinationChecker, Assembly-CSharp");
             var elementType = Type.GetType("ArcaneVR.Spell.ElementType, Assembly-CSharp");
             var stateType = Type.GetType("ArcaneVR.Input.CombinationState, Assembly-CSharp");
+            var spellIdType = Type.GetType("ArcaneVR.Spell.SpellId, Assembly-CSharp");
             Assert.IsNotNull(checkerType);
             Assert.IsNotNull(elementType);
             Assert.IsNotNull(stateType);
+            Assert.IsNotNull(spellIdType);
 
             var owner = new GameObject("CombinationChecker Test");
             try
@@ -68,11 +71,15 @@ namespace ArcaneVR.EditorTests
                 var ice = Enum.Parse(elementType, "Ice");
 
                 Assert.IsTrue((bool)submit.Invoke(checker, new[] { (object)true, fire }));
-                Assert.IsFalse((bool)submit.Invoke(checker, new[] { (object)false, fire }));
-                Assert.IsFalse((bool)submit.Invoke(checker, new[] { (object)false, ice }));
+                Assert.IsTrue((bool)submit.Invoke(checker, new[] { (object)false, fire }));
 
                 var state = checkerType.GetProperty("State")?.GetValue(checker);
-                Assert.AreEqual(Enum.Parse(stateType, "ComboFailed"), state);
+                Assert.AreEqual(Enum.Parse(stateType, "ElementDeclared"), state);
+
+                Assert.IsTrue((bool)submit.Invoke(checker, new[] { (object)false, ice }));
+
+                var candidate = checkerType.GetProperty("CurrentComboCandidate")?.GetValue(checker);
+                Assert.AreEqual(Enum.Parse(spellIdType, "Combo_FireIce"), candidate);
             }
             finally
             {
@@ -116,7 +123,124 @@ namespace ArcaneVR.EditorTests
         }
 
         [Test]
-        public void ElementAuraDummy_ProvidesSharedColoredTimeFocusExemptAura()
+        public void SpellCaster_OnValidate_ReplacesInactiveHeadReferenceWithMainCamera()
+        {
+            var type = Type.GetType("ArcaneVR.Spell.SpellCaster, Assembly-CSharp");
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic));
+
+            var inactiveHead = new GameObject("Inactive Head");
+            var mainCameraGo = new GameObject("Active Main Camera");
+            try
+            {
+                inactiveHead.SetActive(false);
+                mainCameraGo.tag = "MainCamera";
+                var mainCamera = mainCameraGo.AddComponent<Camera>();
+
+                var host = new GameObject("SpellCaster Host");
+                var spellCaster = host.AddComponent(type);
+                type.GetField("headTransform", InstanceFields)?.SetValue(spellCaster, inactiveHead.transform);
+
+                type.GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(spellCaster, null);
+
+                var resolved = type.GetField("headTransform", InstanceFields)?.GetValue(spellCaster) as Transform;
+                Assert.AreEqual(mainCamera.transform, resolved);
+
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(inactiveHead);
+                UnityEngine.Object.DestroyImmediate(mainCameraGo);
+            }
+        }
+
+        [Test]
+        public void SpellCaster_OnValidate_ReplacesMixedRigHandReferencesWithOvrAnchors()
+        {
+            var type = Type.GetType("ArcaneVR.Spell.SpellCaster, Assembly-CSharp");
+            Assert.IsNotNull(type);
+
+            var ovrRig = new GameObject("OVRCameraRig").AddComponent<OVRCameraRig>();
+            var trackingSpace = new GameObject("TrackingSpace").transform;
+            trackingSpace.SetParent(ovrRig.transform, false);
+
+            var centerEye = new GameObject("CenterEyeAnchor").transform;
+            centerEye.SetParent(trackingSpace, false);
+            centerEye.gameObject.tag = "MainCamera";
+            centerEye.gameObject.AddComponent<Camera>();
+
+            var leftHandAnchor = new GameObject("LeftHandAnchor").transform;
+            leftHandAnchor.SetParent(trackingSpace, false);
+            var rightHandAnchor = new GameObject("RightHandAnchor").transform;
+            rightHandAnchor.SetParent(trackingSpace, false);
+
+            var xrOrigin = new GameObject("XR Origin");
+            var xrLeftWrist = new GameObject("L_Wrist").transform;
+            xrLeftWrist.SetParent(xrOrigin.transform, false);
+            var xrRightWrist = new GameObject("R_Wrist").transform;
+            xrRightWrist.SetParent(xrOrigin.transform, false);
+
+            try
+            {
+                ovrRig.EnsureGameObjectIntegrity();
+                var expectedLeftAnchor = ovrRig.leftHandAnchor;
+                var expectedRightAnchor = ovrRig.rightHandAnchor;
+                Assert.IsNotNull(expectedLeftAnchor);
+                Assert.IsNotNull(expectedRightAnchor);
+
+                var host = new GameObject("SpellCaster Host");
+                var spellCaster = host.AddComponent(type);
+                type.GetField("headTransform", InstanceFields)?.SetValue(spellCaster, centerEye);
+                type.GetField("leftHandSpawnPoint", InstanceFields)?.SetValue(spellCaster, xrLeftWrist);
+                type.GetField("rightHandSpawnPoint", InstanceFields)?.SetValue(spellCaster, xrRightWrist);
+
+                type.GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(spellCaster, null);
+
+                var resolvedLeft = type.GetField("leftHandSpawnPoint", InstanceFields)?.GetValue(spellCaster) as Transform;
+                var resolvedRight = type.GetField("rightHandSpawnPoint", InstanceFields)?.GetValue(spellCaster) as Transform;
+
+                Assert.AreEqual(expectedLeftAnchor, resolvedLeft);
+                Assert.AreEqual(expectedRightAnchor, resolvedRight);
+
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(xrOrigin);
+                UnityEngine.Object.DestroyImmediate(ovrRig.gameObject);
+            }
+        }
+
+        [Test]
+        public void SpellCaster_ExposesComboProjectileOverrideSlots()
+        {
+            var type = Type.GetType("ArcaneVR.Spell.SpellCaster, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetField("comboFireIceProjectilePrefab", InstanceFields));
+            Assert.IsNotNull(type.GetField("comboIceThunderProjectilePrefab", InstanceFields));
+            Assert.IsNotNull(type.GetField("comboThunderFireProjectilePrefab", InstanceFields));
+            Assert.IsNotNull(type.GetField("comboProjectileLifetime", InstanceFields));
+            Assert.IsNotNull(type.GetField("comboProjectileLightIntensity", InstanceFields));
+            Assert.IsNotNull(type.GetField("comboProjectileScale", InstanceFields));
+            Assert.IsNotNull(type.GetMethod("ResolveComboProjectilePrefab", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("CreateComboDebugProjectile", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("ApplyComboProjectileVisuals", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("ResolveProjectileLifetime", BindingFlags.Instance | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void SpellProjectile_ExposesRuntimeLifetimeOverride()
+        {
+            var type = Type.GetType("ArcaneVR.Spell.SpellProjectile, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetMethod("SetLifetime", BindingFlags.Instance | BindingFlags.Public));
+        }
+
+        [Test]
+        public void ElementAuraDummy_ProvidesCombinationTimeFocusExemptAura()
         {
             var auraType = Type.GetType("ArcaneVR.Spell.ElementAuraDummy, Assembly-CSharp");
             var casterType = Type.GetType("ArcaneVR.Spell.SpellCaster, Assembly-CSharp");
@@ -126,25 +250,21 @@ namespace ArcaneVR.EditorTests
             Assert.IsNotNull(auraType.GetMethod("Configure"));
             Assert.IsNotNull(auraType.GetMethod("ApplyLayerRecursively"));
             Assert.IsNotNull(casterType);
-            Assert.IsNotNull(casterType.GetField("useCommonDummyAuras", InstanceFields));
             Assert.IsNotNull(casterType.GetField("auraTimeFocusExemptLayerName", InstanceFields));
-            Assert.IsNotNull(casterType.GetField("rightIceAuraInstance", InstanceFields));
-            Assert.IsNotNull(casterType.GetMethod("ShowRightElementAura", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(casterType.GetField("_combinationAuraRoot", InstanceFields));
+            Assert.IsNotNull(casterType.GetMethod("EnsureCombinationAura", BindingFlags.Instance | BindingFlags.NonPublic));
         }
 
         [Test]
-        public void SpellCaster_UsesXrGestureDetectorAndOwnsDummyAttackPrefabs()
+        public void SpellCaster_UsesXrGestureDetectorAndElementSpellModules()
         {
             var type = Type.GetType("ArcaneVR.Spell.SpellCaster, Assembly-CSharp");
 
             Assert.IsNotNull(type);
             Assert.IsNotNull(type.GetField("gestureDetector", InstanceFields));
-            Assert.IsNotNull(type.GetField("rightFireballPrefab", InstanceFields));
-            Assert.IsNotNull(type.GetField("rightIceProjectilePrefab", InstanceFields));
-            Assert.IsNotNull(type.GetField("rightThunderAuraPrefab", InstanceFields));
-            Assert.IsNotNull(type.GetField("rightThunderRangeMeters", InstanceFields));
-            Assert.IsNotNull(type.GetField("rightThunderChargeGraceSeconds", InstanceFields));
-            Assert.IsNotNull(type.GetField("rightThunderShootPoseGraceSeconds", InstanceFields));
+            Assert.IsNotNull(type.GetField("fireModule", InstanceFields));
+            Assert.IsNotNull(type.GetField("iceModule", InstanceFields));
+            Assert.IsNotNull(type.GetField("thunderModule", InstanceFields));
             Assert.IsNull(type.GetField("prototypeHand", InstanceFields));
         }
 
@@ -320,6 +440,192 @@ namespace ArcaneVR.EditorTests
             Assert.IsNotNull(type);
             Assert.IsNotNull(type.GetProperty("IsExternallySuppressed"));
             Assert.IsNotNull(type.GetMethod("SetExternalSuppressed"));
+        }
+
+        [Test]
+        public void FeedbackManager_UsesInspectorReferencesInsteadOfRuntimeDiscovery()
+        {
+            var type = Type.GetType("ArcaneVR.UI.FeedbackManager, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic));
+            AssertSourceDoesNotContain(
+                "Assets/Scripts/UI/FeedbackManager.cs",
+                "FindAnyObjectByType<CombatManager>",
+                "FindAnyObjectByType<SpellCaster>",
+                "FindAnyObjectByType<VoiceRecognizer>",
+                "FindAnyObjectByType<GolemCombatTarget>",
+                "FindAnyObjectByType<BossAI>");
+        }
+
+        [Test]
+        public void FeedbackManager_OnValidate_ReplacesInactivePlayerCamera()
+        {
+            var type = Type.GetType("ArcaneVR.UI.FeedbackManager, Assembly-CSharp");
+            Assert.IsNotNull(type);
+
+            var inactiveCameraGo = new GameObject("Inactive Feedback Camera");
+            var mainCameraGo = new GameObject("Active Main Camera");
+            try
+            {
+                var inactiveCamera = inactiveCameraGo.AddComponent<Camera>();
+                inactiveCameraGo.SetActive(false);
+                mainCameraGo.tag = "MainCamera";
+                var mainCamera = mainCameraGo.AddComponent<Camera>();
+
+                var host = new GameObject("FeedbackManager Host");
+                var feedback = host.AddComponent(type);
+                type.GetField("playerCamera", InstanceFields)?.SetValue(feedback, inactiveCamera);
+
+                type.GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(feedback, null);
+
+                var resolved = type.GetField("playerCamera", InstanceFields)?.GetValue(feedback) as Camera;
+                Assert.AreEqual(mainCamera, resolved);
+
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(inactiveCameraGo);
+                UnityEngine.Object.DestroyImmediate(mainCameraGo);
+            }
+        }
+
+        [Test]
+        public void CombinationChecker_UsesInspectorReferencesInsteadOfRuntimeDiscovery()
+        {
+            var type = Type.GetType("ArcaneVR.Input.CombinationChecker, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic));
+            AssertSourceDoesNotContain(
+                "Assets/Scripts/Input/CombinationChecker.cs",
+                "FindAnyObjectByType<GestureDetector>",
+                "FindAnyObjectByType<GrimoireManager>",
+                "FindAnyObjectByType<HandPullMovementController>",
+                "FindAnyObjectByType<ArcaneActionModeController>",
+                "FindAnyObjectByType<CombinationFocusModeController>");
+        }
+
+        [Test]
+        public void MovementController_UsesInspectorReferencesInsteadOfRuntimeDiscovery()
+        {
+            var type = Type.GetType("ArcaneVR.Input.MovementController, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic));
+            AssertSourceDoesNotContain(
+                "Assets/Scripts/Input/MovementController.cs",
+                "FindAnyObjectByType<GestureDetector>",
+                "FindAnyObjectByType<GestureEventRouter>",
+                "FindAnyObjectByType<ConstraintController>");
+        }
+
+        [Test]
+        public void GrimoireManager_UsesInspectorReferencesInsteadOfRuntimeDiscovery()
+        {
+            var type = Type.GetType("ArcaneVR.UI.GrimoireManager, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic));
+            AssertSourceDoesNotContain(
+                "Assets/Scripts/UI/GrimoireManager.cs",
+                "FindAnyObjectByType<GestureDetector>",
+                "GameObject.Find(\"L_Wrist\")",
+                "FindObjectsByType<SpellCaster>",
+                "FindObjectsByType<Canvas>",
+                "FindBestOvrHand(",
+                "GameObject.Find(\"PlayerSpawnPoint\")");
+        }
+
+        [Test]
+        public void GrimoireManager_OnValidate_ReplacesInactivePlayerCamera()
+        {
+            var type = Type.GetType("ArcaneVR.UI.GrimoireManager, Assembly-CSharp");
+            Assert.IsNotNull(type);
+
+            var inactiveHead = new GameObject("Inactive Grimoire Head");
+            var mainCameraGo = new GameObject("Active Main Camera");
+            try
+            {
+                inactiveHead.SetActive(false);
+                mainCameraGo.tag = "MainCamera";
+                var mainCamera = mainCameraGo.AddComponent<Camera>();
+
+                var host = new GameObject("GrimoireManager Host");
+                var manager = host.AddComponent(type);
+                type.GetField("playerCamera", InstanceFields)?.SetValue(manager, inactiveHead.transform);
+
+                type.GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(manager, null);
+
+                var resolved = type.GetField("playerCamera", InstanceFields)?.GetValue(manager) as Transform;
+                Assert.AreEqual(mainCamera.transform, resolved);
+
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(inactiveHead);
+                UnityEngine.Object.DestroyImmediate(mainCameraGo);
+            }
+        }
+
+        [Test]
+        public void GrimoireManager_OnValidate_ReplacesMixedRigBookAnchorWithOvrAnchor()
+        {
+            var type = Type.GetType("ArcaneVR.UI.GrimoireManager, Assembly-CSharp");
+            Assert.IsNotNull(type);
+
+            var ovrRig = new GameObject("OVRCameraRig").AddComponent<OVRCameraRig>();
+            var trackingSpace = new GameObject("TrackingSpace").transform;
+            trackingSpace.SetParent(ovrRig.transform, false);
+
+            var centerEye = new GameObject("CenterEyeAnchor").transform;
+            centerEye.SetParent(trackingSpace, false);
+            centerEye.gameObject.tag = "MainCamera";
+            centerEye.gameObject.AddComponent<Camera>();
+
+            var leftHandAnchor = new GameObject("LeftHandAnchor").transform;
+            leftHandAnchor.SetParent(trackingSpace, false);
+
+            var xrOrigin = new GameObject("XR Origin");
+            var xrLeftWrist = new GameObject("L_Wrist").transform;
+            xrLeftWrist.SetParent(xrOrigin.transform, false);
+
+            try
+            {
+                ovrRig.EnsureGameObjectIntegrity();
+                var expectedLeftAnchor = ovrRig.leftHandAnchor;
+                Assert.IsNotNull(expectedLeftAnchor);
+
+                var host = new GameObject("GrimoireManager Host");
+                var manager = host.AddComponent(type);
+                type.GetField("playerCamera", InstanceFields)?.SetValue(manager, centerEye);
+                type.GetField("leftHandBookAnchor", InstanceFields)?.SetValue(manager, xrLeftWrist);
+
+                type.GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(manager, null);
+
+                var resolved = type.GetField("leftHandBookAnchor", InstanceFields)?.GetValue(manager) as Transform;
+                Assert.AreEqual(expectedLeftAnchor, resolved);
+
+                UnityEngine.Object.DestroyImmediate(host);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(xrOrigin);
+                UnityEngine.Object.DestroyImmediate(ovrRig.gameObject);
+            }
+        }
+
+        static void AssertSourceDoesNotContain(string assetRelativePath, params string[] forbiddenSnippets)
+        {
+            var projectRoot = Directory.GetParent(Application.dataPath);
+            Assert.IsNotNull(projectRoot);
+
+            var fullPath = Path.Combine(projectRoot.FullName, assetRelativePath);
+            var source = File.ReadAllText(fullPath);
+            foreach (var snippet in forbiddenSnippets)
+                StringAssert.DoesNotContain(snippet, source, $"{assetRelativePath} should not contain runtime lookup snippet: {snippet}");
         }
     }
 }

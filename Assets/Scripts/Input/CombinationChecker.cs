@@ -79,24 +79,18 @@ namespace ArcaneVR.Input
 
         private void Awake()
         {
-            if (gestureDetector == null)
-                gestureDetector = FindAnyObjectByType<GestureDetector>();
+            ResolveReferences();
+        }
 
-            if (grimoireManager == null)
-                grimoireManager = FindAnyObjectByType<GrimoireManager>();
-
-            if (handPullMovement == null)
-                handPullMovement = FindAnyObjectByType<HandPullMovementController>();
-
-            if (actionModeController == null)
-                actionModeController = FindAnyObjectByType<ArcaneActionModeController>();
-
-            if (focusModeController == null)
-                focusModeController = FindAnyObjectByType<CombinationFocusModeController>();
+        private void OnValidate()
+        {
+            ResolveReferences();
         }
 
         private void OnEnable()
         {
+            ResolveReferences();
+
             if (gestureDetector != null)
             {
                 gestureDetector.OnPoseDetected += HandlePoseDetected;
@@ -339,6 +333,49 @@ namespace ArcaneVR.Input
             RefreshComboCandidate(Time.time);
         }
 
+        private void ResolveReferences()
+        {
+            var rigRoot = ResolveRigRoot();
+
+            if (gestureDetector == null || !SharesRig(gestureDetector.transform, rigRoot))
+                gestureDetector = FindRigComponent<GestureDetector>(rigRoot);
+
+            if (grimoireManager == null || !SharesRig(grimoireManager.transform, rigRoot))
+                grimoireManager = FindRigComponent<GrimoireManager>(rigRoot);
+        }
+
+        private Transform ResolveRigRoot()
+        {
+            if (transform.root != null && transform.root.name == "ArcanePlayerRig")
+                return transform.root;
+
+            var ovrRig = GetComponentInParent<OVRCameraRig>(true);
+            if (ovrRig != null && ovrRig.transform.root != null)
+                return ovrRig.transform.root;
+
+            var head = ArcanePlayerRigResolver.FindHeadTransform(transform);
+            return head != null ? head.root : transform.root;
+        }
+
+        private static T FindRigComponent<T>(Transform rigRoot) where T : Component
+        {
+            if (rigRoot != null)
+            {
+                var scoped = rigRoot.GetComponentInChildren<T>(true);
+                if (scoped != null)
+                    return scoped;
+            }
+
+            return FindAnyObjectByType<T>();
+        }
+
+        private static bool SharesRig(Transform candidate, Transform rigRoot)
+        {
+            return candidate != null &&
+                   rigRoot != null &&
+                   candidate.root == rigRoot;
+        }
+
         private static SpellId ResolveSpell(PoseId left, PoseId right)
         {
             if (left == PoseId.Fist && right == PoseId.Ok)
@@ -440,7 +477,6 @@ namespace ArcaneVR.Input
                 return false;
 
             CurrentElement = element;
-            RefreshActionModeReference();
 
             if (isLeft)
             {
@@ -610,9 +646,6 @@ namespace ArcaneVR.Input
 
         private bool IsLeftPullActive()
         {
-            if (handPullMovement == null)
-                handPullMovement = FindAnyObjectByType<HandPullMovementController>();
-
             return handPullMovement != null &&
                    handPullMovement.IsPulling &&
                    handPullMovement.ActiveHandName == "Left";
@@ -620,26 +653,16 @@ namespace ArcaneVR.Input
 
         private bool IsCastModeActive()
         {
-            RefreshActionModeReference();
             return actionModeController != null && actionModeController.IsCastModeActive;
         }
 
         private bool IsCombinationFocusActive()
         {
-            if (focusModeController == null)
-                focusModeController = FindAnyObjectByType<CombinationFocusModeController>();
-
             var focusActive = focusModeController != null && focusModeController.IsFocusActive;
             var shootWindowActive = IsComboReady &&
                                     CurrentComboCandidate != SpellId.None &&
                                     Time.time <= comboShootWindowUntilTime;
             return focusActive || shootWindowActive;
-        }
-
-        private void RefreshActionModeReference()
-        {
-            if (actionModeController == null)
-                actionModeController = FindAnyObjectByType<ArcaneActionModeController>();
         }
 
         private static bool IsElementPose(PoseId pose)
