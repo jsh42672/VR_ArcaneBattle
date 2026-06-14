@@ -74,14 +74,14 @@ namespace ArcaneVR.Input
             Grimoire
         }
 
-        [Header("XR Hands")]
+        [Header("── XR Hands 참조 ──")]
         [SerializeField] private XRHandTrackingEvents leftHandTrackingEvents;
         [SerializeField] private XRHandTrackingEvents rightHandTrackingEvents;
         [SerializeField] private bool useSubsystemPollingFallback = true;
         [SerializeField] private float subsystemRefreshInterval = 0.5f;
         [SerializeField] private float eventFallbackDelay = 0.15f;
 
-        [Header("Right Hand Gestures")]
+        [Header("── 오른손 재스처 자산 ──")]
         [SerializeField] private XRHandShape rightFireGesture;
         [SerializeField] private XRHandShape rightIceGesture;
         [SerializeField] private XRHandShape rightThunderGesture;
@@ -91,7 +91,7 @@ namespace ArcaneVR.Input
         [SerializeField] private XRHandShape rightCombineShoot;
         [SerializeField] private XRHandShape rightBarrier;
 
-        [Header("Left Hand Gestures")]
+        [Header("── 왼손 재스처 자산 ──")]
         [SerializeField] private XRHandShape leftGrimoireGesture;
         [SerializeField] private XRHandShape leftFire;
         [SerializeField] private XRHandShape leftIce;
@@ -100,26 +100,31 @@ namespace ArcaneVR.Input
         [SerializeField] private XRHandShape leftCombineShoot;
         [SerializeField] private XRHandShape leftBarrier;
 
-        [Header("Pose Timing")]
+        [Header("── 포즈 판정 / 유지 시간 ──")]
         [SerializeField] private float poseHoldDuration = 0.1f;
         [SerializeField] private float poseLostGracePeriod = 0.2f;
         [SerializeField] private float rightThunderShootArmWindowSeconds = 2.0f;
         [SerializeField] private float rightThunderShootPinkyCurlThreshold = 0.5f;
         [SerializeField] private float rightThunderChargeCompletenessThreshold = 0.85f;
+        [SerializeField] private float leftThunderCompletenessThreshold = 0.75f;
         [SerializeField] private float rightIcePalmUpDotThreshold = 0.35f;
         [SerializeField] private bool invertRightIcePalmDirection = true;
+        [SerializeField] private float leftIcePalmUpDotThreshold = 0.35f;
+        [SerializeField] private bool invertLeftIcePalmDirection = true;
 
-        [Header("Combine Push")]
+        [Header("── 양손 조합 밀기 판정 ──")]
         [SerializeField] private float combineDistance = 0.16f;
         [SerializeField] private float pushVelocity = 0.45f;
         [SerializeField] private float combinePushCooldown = 0.7f;
 
-        [Header("Debug")]
+        [Header("── 디버그 표시 / 로그 ──")]
         [SerializeField] private bool showDebugLog;
         [SerializeField] private bool showPlayModeDebugOverlay;
         [SerializeField] private KeyCode debugOverlayToggleKey = KeyCode.BackQuote;
         [SerializeField] private bool showLeftGestureCandidateScores = true;
         [SerializeField] private float leftGestureCandidateLogInterval = 0.35f;
+        [SerializeField] private bool showLeftThunderDebugLogs = true;
+        [SerializeField] private float leftThunderDebugScoreThreshold = 0.55f;
 
         public event Action<PoseId, PoseId> OnPoseDetected;
         public event Action OnGrimTrigger;
@@ -505,6 +510,10 @@ namespace ArcaneVR.Input
         {
             var handsCloseForCombine = AreHandsCloseForCombineGesture();
 
+            var leftThunderOverride = TryResolveLeftThunderGesture(args.hand, handsCloseForCombine);
+            if (leftThunderOverride != GestureKind.None)
+                return leftThunderOverride;
+
             if (Matches(leftBarrier, args))
                 return GestureKind.Barrier;
             if (handsCloseForCombine && Matches(leftCombineShoot, args))
@@ -513,7 +522,7 @@ namespace ArcaneVR.Input
                 return GestureKind.Combine;
             if (Matches(leftThunder, args))
                 return GestureKind.Thunder;
-            if (Matches(leftIce, args))
+            if (Matches(leftIce, args) && IsLeftPalmFacingUp(args.hand))
                 return GestureKind.Ice;
             if (Matches(leftFire, args))
                 return GestureKind.Fire;
@@ -527,6 +536,10 @@ namespace ArcaneVR.Input
         {
             var handsCloseForCombine = AreHandsCloseForCombineGesture();
 
+            var leftThunderOverride = TryResolveLeftThunderGesture(hand, handsCloseForCombine);
+            if (leftThunderOverride != GestureKind.None)
+                return leftThunderOverride;
+
             if (Matches(leftBarrier, hand))
                 return GestureKind.Barrier;
             if (handsCloseForCombine && Matches(leftCombineShoot, hand))
@@ -535,7 +548,7 @@ namespace ArcaneVR.Input
                 return GestureKind.Combine;
             if (Matches(leftThunder, hand))
                 return GestureKind.Thunder;
-            if (Matches(leftIce, hand))
+            if (Matches(leftIce, hand) && IsLeftPalmFacingUp(hand))
                 return GestureKind.Ice;
             if (Matches(leftFire, hand))
                 return GestureKind.Fire;
@@ -543,6 +556,26 @@ namespace ArcaneVR.Input
                 return GestureKind.Grimoire;
 
             return GestureKind.None;
+        }
+
+        private GestureKind TryResolveLeftThunderGesture(XRHand hand, bool handsCloseForCombine)
+        {
+            if (handsCloseForCombine)
+                return GestureKind.None;
+
+            if (!XRHandShapeTuningUtility.TryCalculateCompleteness(hand, leftThunder, out var thunderScore))
+                return GestureKind.None;
+
+            if (thunderScore < Mathf.Clamp01(leftThunderCompletenessThreshold))
+                return GestureKind.None;
+
+            XRHandShapeTuningUtility.TryCalculateCompleteness(hand, leftFire, out var fireScore);
+            XRHandShapeTuningUtility.TryCalculateCompleteness(hand, leftIce, out var iceScore);
+
+            if (thunderScore < fireScore || thunderScore < iceScore)
+                return GestureKind.None;
+
+            return GestureKind.Thunder;
         }
 
         private bool AreHandsCloseForCombineGesture()
@@ -562,16 +595,76 @@ namespace ArcaneVR.Input
             if (!changed && now - lastLeftCandidateScoreLogTime < Mathf.Max(0.05f, leftGestureCandidateLogInterval))
                 return;
 
+            if (showLeftThunderDebugLogs)
+            {
+                if (!XRHandShapeTuningUtility.TryCalculateCompleteness(hand, leftThunder, out var thunderScore))
+                    thunderScore = 0f;
+
+                if (detected != GestureKind.Thunder &&
+                    thunderScore < Mathf.Clamp01(leftThunderDebugScoreThreshold))
+                    return;
+
+                LogDebug(BuildLeftThunderDiagnostics(hand, detected, AreHandsCloseForCombineGesture(),
+                    leftFire, leftIce, leftThunder, leftCombine, leftCombineShoot, leftBarrier, leftGrimoireGesture));
+                lastLeftCandidateScoreKind = detected;
+                lastLeftCandidateScoreLogTime = now;
+                return;
+            }
+
             lastLeftCandidateScoreKind = detected;
             lastLeftCandidateScoreLogTime = now;
-            LogDebug(
+            LogDebug(BuildLeftCandidateDiagnostics(hand, detected, AreHandsCloseForCombineGesture(),
+                leftFire, leftIce, leftThunder, leftCombine, leftCombineShoot, leftBarrier, leftGrimoireGesture));
+        }
+
+        private static string BuildLeftCandidateDiagnostics(
+            in XRHand hand,
+            GestureKind detected,
+            bool handsCloseForCombine,
+            XRHandShape fire,
+            XRHandShape ice,
+            XRHandShape thunder,
+            XRHandShape combine,
+            XRHandShape combineShoot,
+            XRHandShape barrier,
+            XRHandShape grimoire)
+        {
+            return
                 "Left candidates " +
                 $"selected={detected} " +
-                $"Fire={BuildLeftShapeScore(hand, leftFire)} " +
-                $"Ice={BuildLeftShapeScore(hand, leftIce)} " +
-                $"Thunder={BuildLeftShapeScore(hand, leftThunder)} " +
-                $"Grimoire={BuildLeftShapeScore(hand, leftGrimoireGesture)} " +
-                $"Barrier={BuildLeftShapeScore(hand, leftBarrier)}");
+                $"handsClose={handsCloseForCombine} " +
+                $"Fire={BuildLeftShapeScore(hand, fire)} " +
+                $"Ice={BuildLeftShapeScore(hand, ice)} " +
+                $"Thunder={BuildLeftShapeScore(hand, thunder)} " +
+                $"Combine={BuildLeftShapeScore(hand, combine)} " +
+                $"CombineShoot={BuildLeftShapeScore(hand, combineShoot)} " +
+                $"Barrier={BuildLeftShapeScore(hand, barrier)} " +
+                $"Grimoire={BuildLeftShapeScore(hand, grimoire)}";
+        }
+
+        private static string BuildLeftThunderDiagnostics(
+            in XRHand hand,
+            GestureKind detected,
+            bool handsCloseForCombine,
+            XRHandShape fire,
+            XRHandShape ice,
+            XRHandShape thunder,
+            XRHandShape combine,
+            XRHandShape combineShoot,
+            XRHandShape barrier,
+            XRHandShape grimoire)
+        {
+            return
+                "Left thunder candidates " +
+                $"selected={detected} " +
+                $"handsClose={handsCloseForCombine} " +
+                $"Thunder={BuildLeftShapeScore(hand, thunder)} " +
+                $"Fire={BuildLeftShapeScore(hand, fire)} " +
+                $"Ice={BuildLeftShapeScore(hand, ice)} " +
+                $"Combine={BuildLeftShapeScore(hand, combine)} " +
+                $"CombineShoot={BuildLeftShapeScore(hand, combineShoot)} " +
+                $"Barrier={BuildLeftShapeScore(hand, barrier)} " +
+                $"Grimoire={BuildLeftShapeScore(hand, grimoire)}";
         }
 
         private static string BuildLeftShapeScore(in XRHand hand, XRHandShape shape)
@@ -614,12 +707,23 @@ namespace ArcaneVR.Input
 
         private bool IsRightPalmFacingUp(XRHand hand)
         {
+            return IsPalmFacingUp(hand, rightIcePalmUpDotThreshold, invertRightIcePalmDirection);
+        }
+
+        private bool IsLeftPalmFacingUp(XRHand hand)
+        {
+            return IsPalmFacingUp(hand, leftIcePalmUpDotThreshold, invertLeftIcePalmDirection);
+        }
+
+        private static bool IsPalmFacingUp(XRHand hand, float configuredThreshold, bool invertPalmDirection)
+        {
             if (!TryGetJointPose(hand, XRHandJointID.Palm, out var palmPose) &&
                 !TryGetJointPose(hand, XRHandJointID.Wrist, out palmPose))
                 return false;
 
-            var palmNormal = palmPose.rotation * (invertRightIcePalmDirection ? Vector3.down : Vector3.up);
-            return Vector3.Dot(palmNormal.normalized, Vector3.up) >= rightIcePalmUpDotThreshold;
+            var requiredDot = Mathf.Clamp(Mathf.Max(0.55f, configuredThreshold), 0f, 0.99f);
+            var palmNormal = palmPose.rotation * (invertPalmDirection ? Vector3.down : Vector3.up);
+            return Vector3.Dot(palmNormal.normalized, Vector3.up) >= requiredDot;
         }
 
         private void UpdatePoseState(bool isLeft, GestureKind detected, bool tracked)

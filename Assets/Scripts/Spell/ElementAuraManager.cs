@@ -12,12 +12,12 @@ namespace ArcaneVR.Spell
         [SerializeField] private ParticleSystem auraParticles;
         [SerializeField] private string timeFocusExemptLayerName = "TimeFocusExempt";
 
-        [Header("Element Colors")]
+        [Header("── 속성별 오라 색상 ──")]
         [SerializeField] private Color fireColor    = new Color(1.00f, 0.05f, 0.00f, 1f); // intense red
         [SerializeField] private Color iceColor     = new Color(0.45f, 0.85f, 1.00f, 1f); // sky blue
         [SerializeField] private Color thunderColor = new Color(1.00f, 0.95f, 0.00f, 1f); // clear yellow
 
-        [Header("Voice Boost")]
+        [Header("── 보이스 강화 반영 ──")]
         [SerializeField] private float voiceBoostSizeMultiplier = 2.4f;
 
         private Transform _followTarget;

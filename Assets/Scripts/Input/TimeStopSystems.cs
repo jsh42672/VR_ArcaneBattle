@@ -10,21 +10,21 @@ namespace ArcaneVR.Input
     /// </summary>
     public class TimeStopSystems : MonoBehaviour
     {
-        [Header("Time")]
+        [Header("── 시간 정지 핵심 참조 ──")]
         [SerializeField] private ArcaneTimeFocusController timeFocusController;
         [SerializeField] private float comboShootWindowSeconds = 6f;
 
-        [Header("Grimoire Mode")]
+        [Header("── 마도서 시간 정지 ──")]
         [SerializeField] private LeftGrimoireGesture leftGrimoireGesture;
         [SerializeField] private RightPageTurnGesture rightPageTurnGesture;
         [SerializeField] private GrimoireManager grimoireManager;
 
-        [Header("Combination Mode")]
+        [Header("── 양손 조합 시간 정지 ──")]
         [SerializeField] private CombinationFocusModeController combinationFocusController;
         [SerializeField] private CombinationChecker combinationChecker;
         [SerializeField] private bool enableComboDebugLogs = true;
 
-        [Header("Locked Actions")]
+        [Header("── 잠금 / 해제 대상 ──")]
         [SerializeField] private HandPullMovementController handPullMovement;
         [SerializeField] private SpellCaster spellCaster;
 

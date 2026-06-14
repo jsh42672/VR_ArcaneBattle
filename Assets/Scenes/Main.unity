@@ -3910,6 +3910,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1888764782}
     - target: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
       propertyPath: movementRoot
       value: 
       objectReference: {fileID: 11435022}

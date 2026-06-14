@@ -106,8 +106,12 @@ namespace ArcaneVR.EditorTests
 
             Assert.IsNotNull(type);
             Assert.IsNotNull(type.GetField("showCombinationAura", InstanceFields));
-            Assert.IsNotNull(type.GetField("combinationAuraRoot", InstanceFields));
+            Assert.IsNotNull(type.GetField("combinationFeedbackSfxVolume", InstanceFields));
+            Assert.IsNotNull(type.GetField("_comboFeedbackAudio", InstanceFields));
+            Assert.IsNotNull(type.GetField("_combinationAuraRoot", InstanceFields));
             Assert.IsNotNull(type.GetMethod("UpdateCombinationAuraFeedback", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("PlayCombinationFeedbackSfx", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("LogComboSfx", BindingFlags.Instance | BindingFlags.NonPublic));
             Assert.IsNotNull(type.GetMethod("GetComboAuraColor", BindingFlags.Static | BindingFlags.NonPublic));
         }
 
@@ -154,6 +158,129 @@ namespace ArcaneVR.EditorTests
             Assert.IsNotNull(type.GetField("rightThunderShootGesture", InstanceFields));
             Assert.IsNotNull(type.GetField("rightThunderShootArmWindowSeconds", InstanceFields));
             Assert.IsNotNull(type.GetField("rightThunderShootArmedUntilTime", InstanceFields));
+        }
+
+        [Test]
+        public void GestureDetector_ExposesLeftCandidateDiagnosticsForCombineAndBarrier()
+        {
+            var type = Type.GetType("ArcaneVR.Input.GestureDetector, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetMethod("BuildLeftCandidateDiagnostics", BindingFlags.Static | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void GestureDetector_ExposesLeftThunderSpecificDiagnostics()
+        {
+            var type = Type.GetType("ArcaneVR.Input.GestureDetector, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetMethod("BuildLeftThunderDiagnostics", BindingFlags.Static | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void GestureDetector_ExposesLeftThunderThresholdAndResolutionPath()
+        {
+            var type = Type.GetType("ArcaneVR.Input.GestureDetector, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetField("leftThunderCompletenessThreshold", InstanceFields));
+            Assert.IsNotNull(type.GetMethod("TryResolveLeftThunderGesture", BindingFlags.Instance | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void GestureDetector_ExposesSharedIcePalmUpGuardsForBothHands()
+        {
+            var type = Type.GetType("ArcaneVR.Input.GestureDetector, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetField("rightIcePalmUpDotThreshold", InstanceFields));
+            Assert.IsNotNull(type.GetField("leftIcePalmUpDotThreshold", InstanceFields));
+            Assert.IsNotNull(type.GetField("invertRightIcePalmDirection", InstanceFields));
+            Assert.IsNotNull(type.GetField("invertLeftIcePalmDirection", InstanceFields));
+            Assert.IsNotNull(type.GetMethod("IsRightPalmFacingUp", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("IsLeftPalmFacingUp", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("IsPalmFacingUp", BindingFlags.Static | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void CombinationChecker_ExposesLeftThunderDeclarationDiagnostics()
+        {
+            var type = Type.GetType("ArcaneVR.Input.CombinationChecker, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetMethod("BuildLeftThunderDeclarationDiagnostics", BindingFlags.Instance | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void CombinationChecker_DefaultsLeftElementDebugBypassOffAndLogsElementState()
+        {
+            var type = Type.GetType("ArcaneVR.Input.CombinationChecker, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetField("enableComboElementStateLogs", InstanceFields));
+            Assert.IsNotNull(type.GetField("lastComboElementStateLogKey", InstanceFields));
+            Assert.IsNotNull(type.GetMethod("LogComboElementStateIfChanged", BindingFlags.Instance | BindingFlags.NonPublic));
+
+            var owner = new GameObject("CombinationChecker Defaults Test");
+            try
+            {
+                var checker = owner.AddComponent(type);
+                var debugBypass = type.GetField("allowLeftElementDeclarationOutsideFocusForDebug", InstanceFields);
+                Assert.IsNotNull(debugBypass);
+                Assert.IsFalse((bool)debugBypass.GetValue(checker));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(owner);
+            }
+        }
+
+        [Test]
+        public void CombinationChecker_PullSuppressionYieldsToCombinationFocus()
+        {
+            var type = Type.GetType("ArcaneVR.Input.CombinationChecker, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetMethod("IsLeftPullActive", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("IsCombinationFocusActive", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("RefreshComboCandidate", BindingFlags.Instance | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void IceSpellModule_TracksProjectileLifetimeForAuraPersistence()
+        {
+            var type = Type.GetType("ArcaneVR.Spell.IceSpellModule, Assembly-CSharp");
+
+            Assert.IsNotNull(type);
+            Assert.IsNotNull(type.GetField("_activeProjectileCount", InstanceFields));
+            Assert.IsNotNull(type.GetProperty("HasActiveProjectile"));
+            Assert.IsNotNull(type.GetMethod("RefreshAuraVisibility", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("TrackProjectileLifetime", BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNotNull(type.GetMethod("NotifyProjectileDestroyed", BindingFlags.Instance | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void ElementSpellModules_ExposeSwapFriendlySfxFields()
+        {
+            var fireType = Type.GetType("ArcaneVR.Spell.FireSpellModule, Assembly-CSharp");
+            var iceType = Type.GetType("ArcaneVR.Spell.IceSpellModule, Assembly-CSharp");
+            var thunderType = Type.GetType("ArcaneVR.Spell.ThunderSpellModule, Assembly-CSharp");
+
+            Assert.IsNotNull(fireType);
+            Assert.IsNotNull(fireType.GetField("armSfxClip", InstanceFields));
+            Assert.IsNotNull(fireType.GetField("castSfxClip", InstanceFields));
+            Assert.IsNotNull(fireType.GetMethod("PlayElementSfx", BindingFlags.Instance | BindingFlags.NonPublic));
+
+            Assert.IsNotNull(iceType);
+            Assert.IsNotNull(iceType.GetField("armSfxClip", InstanceFields));
+            Assert.IsNotNull(iceType.GetField("castSfxClip", InstanceFields));
+            Assert.IsNotNull(iceType.GetMethod("PlayElementSfx", BindingFlags.Instance | BindingFlags.NonPublic));
+
+            Assert.IsNotNull(thunderType);
+            Assert.IsNotNull(thunderType.GetField("armSfxClip", InstanceFields));
+            Assert.IsNotNull(thunderType.GetField("castSfxClip", InstanceFields));
+            Assert.IsNotNull(thunderType.GetMethod("PlayElementSfx", BindingFlags.Instance | BindingFlags.NonPublic));
         }
 
         [Test]

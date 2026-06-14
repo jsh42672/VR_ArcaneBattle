@@ -10,13 +10,13 @@ namespace ArcaneVR.Input
     /// </summary>
     public class RightFireGesture : MonoBehaviour
     {
-        [Header("XR Hands")]
+        [Header("── XR Hands 참조 ──")]
         [SerializeField] private XRHandTrackingEvents handTrackingEvents;
         [SerializeField] private XRHandShape gunShape;
         [Tooltip("Right Hand Tracking > R_Wrist Transform — 구 OVR WristBone과 동일한 역할")]
         [SerializeField] private Transform wristTransform;
 
-        [Header("VFX")]
+        [Header("── 오라 / 이펙트 ──")]
         [SerializeField] private GameObject auraPrefab;
         [SerializeField] private GameObject fireballPrefab;
         [SerializeField] private Color fireAuraColor = new Color(1f, 0.35f, 0.05f);
@@ -25,23 +25,23 @@ namespace ArcaneVR.Input
         [SerializeField] private float explosionLifetime = 2f;
         [SerializeField] private Material explosionMaterialOverride;
 
-        [Header("Spawn")]
+        [Header("── 발사체 생성 설정 ──")]
         [SerializeField] private float spawnForwardOffset = 0.15f;
         [SerializeField] private float projectileScale = 1f;
         [SerializeField] private float projectileSpeed = 14f;
         [SerializeField] private Vector3 projectileEulerOffset = Vector3.zero;
 
-        [Header("Recoil Detection")]
+        [Header("── 반동 발사 판정 ──")]
         [SerializeField] private float recoilVelocityThreshold = 0.5f;
         [SerializeField] private float cooldown = 0.25f;
 
-        [Header("Aura")]
+        [Header("── 오라 크기 ──")]
         [SerializeField] private float auraScale = 0.25f;
 
-        [Header("Debug")]
+        [Header("── 디버그 ──")]
         [SerializeField] private bool debugLog = true;
 
-        [Header("Events")]
+        [Header("── 이벤트 ──")]
         public UnityEvent onShot;
         public UnityEvent onPoseStart;
         public UnityEvent onPoseEnd;

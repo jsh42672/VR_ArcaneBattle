@@ -33,6 +33,12 @@ namespace ArcaneVR.Spell
         [SerializeField] private float auraScale = 0.18f;
         [SerializeField] private string timeFocusExemptLayer = "TimeFocusExempt";
 
+        [Header("── 선언 / 발사 사운드 ──")]
+        [SerializeField] private AudioClip armSfxClip;
+        [SerializeField] private AudioClip castSfxClip;
+        [SerializeField] private float armSfxVolume = 0.7f;
+        [SerializeField] private float castSfxVolume = 0.95f;
+
         // SpellCaster에서 주입
         private Transform _rightSpawn;
         private Transform _spawnRoot;
@@ -41,6 +47,7 @@ namespace ArcaneVR.Spell
         private ElementAuraManager _auraManager;
 
         private GameObject _auraInstance;
+        private AudioSource _sfxAudioSource;
         private float _lastShotTime = -999f;
         private bool _armed;
         private bool _recoilLatched;
@@ -70,6 +77,7 @@ namespace ArcaneVR.Spell
             _armed = true;
             _recoilLatched = false;
             ShowAura();
+            PlayElementSfx(armSfxClip, ArcaneSpellSfxCue.ElementArm, armSfxVolume);
         }
 
         public void Disarm()
@@ -137,6 +145,7 @@ namespace ArcaneVR.Spell
                 data?.damage         ?? 10f,
                 data?.statusDuration ?? 3f);
 
+            PlayElementSfx(castSfxClip, ArcaneSpellSfxCue.SpellCast, castSfxVolume);
             Destroy(projectile, projectileLifetime);
         }
 
@@ -191,6 +200,34 @@ namespace ArcaneVR.Spell
             if (layer < 0 || root == null) return;
             foreach (var t in root.GetComponentsInChildren<Transform>(true))
                 t.gameObject.layer = layer;
+        }
+
+        private void PlayElementSfx(AudioClip explicitClip, ArcaneSpellSfxCue cue, float volume)
+        {
+            var audioSource = EnsureSfxAudioSource();
+            if (audioSource == null)
+                return;
+
+            if (explicitClip != null)
+            {
+                audioSource.PlayOneShot(explicitClip, Mathf.Clamp01(volume));
+                return;
+            }
+
+            ArcaneSpellSfx.Play(audioSource, ElementType.Fire, cue, volume);
+        }
+
+        private AudioSource EnsureSfxAudioSource()
+        {
+            if (_sfxAudioSource != null)
+                return _sfxAudioSource;
+
+            _sfxAudioSource = gameObject.AddComponent<AudioSource>();
+            _sfxAudioSource.playOnAwake = false;
+            _sfxAudioSource.loop = false;
+            _sfxAudioSource.spatialBlend = 0f;
+            _sfxAudioSource.dopplerLevel = 0f;
+            return _sfxAudioSource;
         }
 
         private static GameObject CreateFallbackProjectile(Vector3 pos, Vector3 dir)

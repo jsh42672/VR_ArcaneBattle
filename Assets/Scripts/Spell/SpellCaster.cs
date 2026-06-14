@@ -13,7 +13,7 @@ namespace ArcaneVR.Spell
     /// </summary>
     public class SpellCaster : MonoBehaviour
     {
-        [Header("── 핵심 참조 (ArcanePlayerRig 빌더가 자동 연결) ──")]
+        [Header("── 핵심 시스템 참조 ──")]
         [SerializeField] private SpellDatabase spellDatabase;
         [SerializeField] private CombinationChecker combinationChecker;
         [SerializeField] private CombatManager combatManager;
@@ -23,8 +23,9 @@ namespace ArcaneVR.Spell
         [SerializeField] private GrimoireManager grimoireManager;
         [SerializeField] private CombinationFocusModeController focusModeController;
         [SerializeField] private ElementAuraManager elementAuraManager;
+        [SerializeField] private ElementAuraManager leftElementAuraManager;
 
-        [Header("── 손 / 머리 Transform ──")]
+        [Header("── 손 / 머리 기준 Transform ──")]
         [SerializeField] private Transform leftHandSpawnPoint;
         [SerializeField] private Transform rightHandSpawnPoint;
         [SerializeField] private Transform headTransform;
@@ -35,7 +36,7 @@ namespace ArcaneVR.Spell
         [SerializeField] private IceSpellModule iceModule;
         [SerializeField] private ThunderSpellModule thunderModule;
 
-        [Header("── 조합 마법 설정 ──")]
+        [Header("── 조합 마법 / 피드백 ──")]
         [SerializeField] private bool allowCombinationSpellCasts = true;
         [SerializeField] private float fallbackProjectileLifetime = 5f;
         [SerializeField] private bool useDebugPrimitiveProjectiles = true;
@@ -44,18 +45,15 @@ namespace ArcaneVR.Spell
         [SerializeField] private float combinationReadyAuraScale = 0.18f;
         [SerializeField] private float combinationCompleteAuraScale = 0.42f;
         [SerializeField] private float combinationCompleteAuraHoldSeconds = 3f;
+        [SerializeField] private float combinationFeedbackSfxVolume = 0.85f;
         [SerializeField] private bool enableComboDebugLogs = true;
-        [SerializeField] private bool showLeftDebugAura = true;
-        [SerializeField] private float leftDebugAuraScale = 0.12f;
-        [SerializeField] private Vector3 leftDebugAuraOffset = new Vector3(0f, 0.04f, 0.08f);
-        [SerializeField] private float leftDebugAuraHoldSeconds = 3f;
 
         [Header("── 음성 부스트 ──")]
         [SerializeField] private AudioClip voiceBoostClip;
         [SerializeField] private float voiceBoostDuration = 4f;
         [SerializeField] private bool ignoreVoiceDuringCombinationFocus = true;
 
-        [Header("── 타임 포커스 레이어 ──")]
+        [Header("── 타임 포커스 제외 레이어 ──")]
         [SerializeField] private string auraTimeFocusExemptLayerName = "TimeFocusExempt";
 
         // ── 내부 상태 ─────────────────────────────────────────────────────────
@@ -67,10 +65,7 @@ namespace ArcaneVR.Spell
 
         // 조합 오라 피드백
         private GameObject _combinationAuraRoot;
-        private GameObject _leftDebugAuraRoot;
-        private Renderer _leftDebugAuraRenderer;
-        private Light _leftDebugAuraLight;
-        private float _leftDebugAuraVisibleUntilTime = -999f;
+        private ElementAuraManager _runtimeLeftAuraManager;
         private SpellId _combinationAuraSpell = SpellId.None;
         private bool _combinationAuraCompleted;
         private float _combinationAuraUntilTime = -999f;
@@ -79,6 +74,7 @@ namespace ArcaneVR.Spell
         private bool _isVoiceBoostActive;
         private float _voiceBoostExpiry = -999f;
         private AudioSource _voiceBoostAudio;
+        private AudioSource _comboFeedbackAudio;
         private AudioClip _cachedBoostTone;
 
         // 캐스팅 억제
@@ -156,14 +152,13 @@ namespace ArcaneVR.Spell
                 voiceRecognizer.OnVoiceCommand -= HandleVoiceCommand;
 
             DisarmAllModules();
-            HideLeftDebugAura(true);
+            HideLeftElementAura();
             StopCombinationAuraFeedback();
         }
 
         private void Update()
         {
             UpdateRightGestureAttack();
-            UpdateLeftDebugAura();
             UpdateCombinationAuraFeedback();
             UpdateTimeFocusVisibility();
             UpdateVoiceBoost();
@@ -296,8 +291,7 @@ namespace ArcaneVR.Spell
             {
                 _currentLeftGesture = gestureName;
                 PrototypeDebugStatus = $"Left ready {gestureName}";
-                ShowLeftDebugAura(gestureName);
-                LogCombo($"Left gesture confirmed: {gestureName}, aura={(leftHandSpawnPoint != null ? "shown" : "missing left spawn")}.");
+                ShowLeftElementAura(gestureName);
                 return;
             }
 
@@ -325,7 +319,7 @@ namespace ArcaneVR.Spell
                 if (gestureName == _currentLeftGesture)
                 {
                     _currentLeftGesture = string.Empty;
-                    HideLeftDebugAura();
+                    HideLeftElementAura();
 
                     LogCombo($"Left gesture cleared: {gestureName}.");
                 }
@@ -337,12 +331,17 @@ namespace ArcaneVR.Spell
             if (gestureName == "ThunderShoot" && thunderModule != null && thunderModule.IsBeamActive)
                 return;
 
+            var keepIceAuraVisible = gestureName == "Ice" &&
+                                     iceModule != null &&
+                                     iceModule.HasActiveProjectile;
+
             DisarmAllModules();
             _currentRightGesture = string.Empty;
             _hasPrevTrackingPos  = false;
             PrototypeDebugStatus = "대기";
             DeactivateVoiceBoost();
-            elementAuraManager?.Hide();
+            if (!keepIceAuraVisible)
+                elementAuraManager?.Hide();
         }
 
         private void DisarmAllModules()
@@ -352,174 +351,56 @@ namespace ArcaneVR.Spell
             thunderModule?.Disarm();
         }
 
-        private void ShowLeftDebugAura(string gestureName)
+        private ElementAuraManager ResolveLeftAuraManager()
+        {
+            if (leftElementAuraManager != null && leftElementAuraManager != elementAuraManager)
+                return leftElementAuraManager;
+
+            if (_runtimeLeftAuraManager != null)
+                return _runtimeLeftAuraManager;
+
+            if (elementAuraManager == null)
+                return null;
+
+            var sourceObject = elementAuraManager.gameObject;
+            var clone = Instantiate(sourceObject, sourceObject.transform.parent);
+            clone.name = $"{sourceObject.name}_LeftRuntime";
+            clone.hideFlags = HideFlags.DontSave;
+
+            _runtimeLeftAuraManager = clone.GetComponent<ElementAuraManager>();
+            leftElementAuraManager = _runtimeLeftAuraManager;
+            return _runtimeLeftAuraManager;
+        }
+
+        private void ShowLeftElementAura(string gestureName)
         {
             var element = GestureNameToElement(gestureName);
-            if (!showLeftDebugAura)
-            {
-                LogCombo($"Left debug aura skipped: disabled, gesture={gestureName}.");
-                return;
-            }
-
             if (element == ElementType.None)
             {
-                LogCombo($"Left debug aura skipped: non-element gesture={gestureName}.");
+                LogCombo($"Left aura skipped: non-element gesture={gestureName}.");
                 return;
             }
 
             if (leftHandSpawnPoint == null)
             {
-                LogCombo($"Left debug aura skipped: missing left hand spawn point, gesture={gestureName}.");
+                LogCombo($"Left aura skipped: missing left hand spawn point, gesture={gestureName}.");
                 return;
             }
 
-            EnsureLeftDebugAura();
-            if (_leftDebugAuraRoot == null)
+            var auraManager = ResolveLeftAuraManager();
+            if (auraManager == null)
             {
-                LogCombo($"Left debug aura skipped: failed to create aura, gesture={gestureName}.");
+                LogCombo($"Left aura skipped: missing aura manager, gesture={gestureName}.");
                 return;
             }
 
-            _leftDebugAuraRoot.SetActive(true);
-            _leftDebugAuraVisibleUntilTime = Time.unscaledTime + Mathf.Max(0.05f, leftDebugAuraHoldSeconds);
-            UpdateLeftDebugAuraTransform();
-
-            ApplyLeftDebugAuraColor(GetElementAuraColor(element));
-
-            LogCombo($"Left debug aura shown: element={element}, gesture={gestureName}, target={leftHandSpawnPoint.name}.");
+            auraManager.Show(element, leftHandSpawnPoint);
+            LogCombo($"Left aura shown: element={element}, gesture={gestureName}, target={leftHandSpawnPoint.name}.");
         }
 
-        private void HideLeftDebugAura(bool immediate = false)
+        private void HideLeftElementAura()
         {
-            if (_leftDebugAuraRoot == null)
-                return;
-
-            if (immediate)
-            {
-                _leftDebugAuraRoot.SetActive(false);
-                _leftDebugAuraVisibleUntilTime = -999f;
-                return;
-            }
-
-            _leftDebugAuraVisibleUntilTime = Mathf.Max(
-                _leftDebugAuraVisibleUntilTime,
-                Time.unscaledTime + Mathf.Max(0.05f, leftDebugAuraHoldSeconds));
-        }
-
-        private void UpdateLeftDebugAura()
-        {
-            if (_leftDebugAuraRoot == null || !_leftDebugAuraRoot.activeSelf)
-                return;
-
-            UpdateLeftDebugAuraTransform();
-
-            if (string.IsNullOrEmpty(_currentLeftGesture) &&
-                Time.unscaledTime > _leftDebugAuraVisibleUntilTime)
-            {
-                _leftDebugAuraRoot.SetActive(false);
-            }
-        }
-
-        private void UpdateLeftDebugAuraTransform()
-        {
-            if (_leftDebugAuraRoot == null || leftHandSpawnPoint == null)
-                return;
-
-            _leftDebugAuraRoot.transform.position = leftHandSpawnPoint.TransformPoint(ResolveLeftDebugAuraOffset());
-            _leftDebugAuraRoot.transform.rotation = leftHandSpawnPoint.rotation;
-            _leftDebugAuraRoot.transform.localScale = Vector3.one * ResolveLeftDebugAuraScale();
-        }
-
-        private void EnsureLeftDebugAura()
-        {
-            if (_leftDebugAuraRoot != null)
-                return;
-
-            _leftDebugAuraRoot = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            _leftDebugAuraRoot.name = "LeftHandDebugAura_Dummy";
-            _leftDebugAuraRoot.hideFlags = HideFlags.DontSave;
-
-            var collider = _leftDebugAuraRoot.GetComponent<Collider>();
-            if (collider != null)
-                Destroy(collider);
-
-            _leftDebugAuraRenderer = _leftDebugAuraRoot.GetComponent<Renderer>();
-            if (_leftDebugAuraRenderer != null)
-                _leftDebugAuraRenderer.sharedMaterial = CreateLeftDebugAuraMaterial(Color.white);
-
-            _leftDebugAuraLight = _leftDebugAuraRoot.AddComponent<Light>();
-            _leftDebugAuraLight.type = LightType.Point;
-            _leftDebugAuraLight.range = 0.45f;
-            _leftDebugAuraLight.intensity = 1.6f;
-
-            ApplyLayerRecursively(_leftDebugAuraRoot, auraTimeFocusExemptLayerName);
-            _leftDebugAuraRoot.SetActive(false);
-        }
-
-        private float ResolveLeftDebugAuraScale()
-        {
-            return Mathf.Clamp(leftDebugAuraScale, 0.08f, 0.12f);
-        }
-
-        private Vector3 ResolveLeftDebugAuraOffset()
-        {
-            var offset = leftDebugAuraOffset;
-            if (offset.sqrMagnitude < 0.0001f)
-                offset = new Vector3(0f, 0f, 0.14f);
-            else if (offset.z < 0.12f)
-                offset.z = 0.12f;
-            return offset;
-        }
-
-        private void ApplyLeftDebugAuraColor(Color color)
-        {
-            if (_leftDebugAuraRenderer != null)
-            {
-                if (_leftDebugAuraRenderer.sharedMaterial == null)
-                    _leftDebugAuraRenderer.sharedMaterial = CreateLeftDebugAuraMaterial(color);
-
-                ApplyMaterialColor(_leftDebugAuraRenderer.sharedMaterial, color);
-            }
-
-            if (_leftDebugAuraLight != null)
-                _leftDebugAuraLight.color = color;
-        }
-
-        private static Material CreateLeftDebugAuraMaterial(Color color)
-        {
-            var shader = Shader.Find("Universal Render Pipeline/Unlit") ??
-                         Shader.Find("Unlit/Color") ??
-                         Shader.Find("Standard");
-            var material = new Material(shader)
-            {
-                color = color
-            };
-            ApplyMaterialColor(material, color);
-            return material;
-        }
-
-        private static void ApplyMaterialColor(Material material, Color color)
-        {
-            if (material == null) return;
-            if (material.HasProperty("_BaseColor"))
-                material.SetColor("_BaseColor", color);
-            if (material.HasProperty("_Color"))
-                material.SetColor("_Color", color);
-            if (material.HasProperty("_EmissionColor"))
-            {
-                material.EnableKeyword("_EMISSION");
-                material.SetColor("_EmissionColor", color * 2.5f);
-            }
-        }
-
-        private static void ApplyLayerRecursively(GameObject root, string layerName)
-        {
-            var layer = LayerMask.NameToLayer(layerName);
-            if (root == null || layer < 0)
-                return;
-
-            foreach (var child in root.GetComponentsInChildren<Transform>(true))
-                child.gameObject.layer = layer;
+            ResolveLeftAuraManager()?.Hide();
         }
 
         // ── 매 프레임 갱신 ────────────────────────────────────────────────────
@@ -596,6 +477,7 @@ private void UpdateRightGestureAttack()
         {
             var grimoireOpen = grimoireManager != null && grimoireManager.IsOpen;
             elementAuraManager?.SetSuppressed(grimoireOpen);
+            ResolveLeftAuraManager()?.SetSuppressed(grimoireOpen);
 
             var timeStopped = grimoireOpen || (focusModeController != null && focusModeController.IsFocusActive);
             iceModule?.SetOrbVisible(!timeStopped);
@@ -622,7 +504,9 @@ private void UpdateRightGestureAttack()
 
         private void HandleComboReadyChanged(SpellId spellId, bool ready)
         {
-            if (ready && SpellHitData.IsComboSpellId(spellId))
+            LogComboSfx($"ready_changed spell={spellId} ready={ready}");
+
+            if (SpellHitData.IsComboSpellId(spellId))
                 StartCombinationAuraFeedback(spellId, false);
             else if (!_combinationAuraCompleted)
                 StopCombinationAuraFeedback();
@@ -632,7 +516,14 @@ private void UpdateRightGestureAttack()
 
         private void StartCombinationAuraFeedback(SpellId spellId, bool completed)
         {
-            if (!showCombinationAura || !SpellHitData.IsComboSpellId(spellId)) return;
+            if (!SpellHitData.IsComboSpellId(spellId))
+                return;
+
+            LogComboSfx($"start_feedback spell={spellId} completed={completed} showAura={showCombinationAura}");
+            PlayCombinationFeedbackSfx(spellId, completed);
+
+            if (!showCombinationAura)
+                return;
 
             _combinationAuraSpell     = spellId;
             _combinationAuraCompleted = completed;
@@ -673,6 +564,35 @@ private void UpdateRightGestureAttack()
                 .gameObject;
             _combinationAuraRoot.hideFlags = HideFlags.DontSave;
             _combinationAuraRoot.SetActive(false);
+        }
+
+        private void PlayCombinationFeedbackSfx(SpellId spellId, bool completed)
+        {
+            if (!SpellHitData.IsComboSpellId(spellId))
+                return;
+
+            if (_comboFeedbackAudio == null)
+            {
+                _comboFeedbackAudio = gameObject.AddComponent<AudioSource>();
+                _comboFeedbackAudio.playOnAwake = false;
+                _comboFeedbackAudio.spatialBlend = 0f;
+                _comboFeedbackAudio.volume = Mathf.Clamp01(combinationFeedbackSfxVolume);
+                LogComboSfx("audio_source_created");
+            }
+
+            var cue = completed ? ArcaneSpellSfxCue.ComboCast : ArcaneSpellSfxCue.ComboReady;
+            LogComboSfx($"play spell={spellId} cue={cue} volume={combinationFeedbackSfxVolume:0.00}");
+            ArcaneSpellSfx.PlayCombo(
+                _comboFeedbackAudio,
+                spellId,
+                cue,
+                combinationFeedbackSfxVolume);
+        }
+
+        private void LogComboSfx(string message)
+        {
+            if (enableComboDebugLogs)
+                Debug.Log($"[ComboSfxTrace] {message}", this);
         }
 
         // ── 음성 부스트 ───────────────────────────────────────────────────────

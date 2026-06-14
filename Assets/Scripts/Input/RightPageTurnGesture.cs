@@ -11,16 +11,16 @@ namespace ArcaneVR.Input
     /// </summary>
     public class RightPageTurnGesture : MonoBehaviour
     {
-        [Header("XR Hands")]
+        [Header("── XR Hands 참조 ──")]
         [SerializeField] private XRHandTrackingEvents handTrackingEvents;
         [Tooltip("Right Hand Tracking > R_Wrist Transform")]
         [SerializeField] private Transform wristTransform;
 
-        [Header("Grimoire 연동")]
+        [Header("── 마도서 연동 ──")]
         [Tooltip("마도서가 열려있는지 확인하는 LeftGrimoireGesture")]
         [SerializeField] private LeftGrimoireGesture leftGrimoireGesture;
 
-        [Header("스와이프 설정")]
+        [Header("── 페이지 스와이프 설정 ──")]
         [Tooltip("스와이프로 인정할 최소 수평 이동 거리 (m)")]
         [SerializeField] private float swipeDistance = 0.18f;
         [Tooltip("스와이프 최대 허용 시간 (초). 이 시간 안에 swipeDistance를 이동해야 함")]
@@ -30,10 +30,10 @@ namespace ArcaneVR.Input
         [Tooltip("페이지 전환 쿨다운 (초)")]
         [SerializeField] private float swipeCooldown = 0.4f;
 
-        [Header("Debug")]
+        [Header("── 디버그 ──")]
         [SerializeField] private bool debugLog = true;
 
-        [Header("Events")]
+        [Header("── 이벤트 ──")]
         public UnityEvent onNextPage;
         public UnityEvent onPreviousPage;
 

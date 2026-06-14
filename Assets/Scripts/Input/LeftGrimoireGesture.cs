@@ -12,7 +12,7 @@ namespace ArcaneVR.Input
     /// </summary>
     public class LeftGrimoireGesture : MonoBehaviour
     {
-        [Header("XR Hands")]
+        [Header("── XR Hands 참조 ──")]
         [SerializeField] private XRHandTrackingEvents handTrackingEvents;
         [SerializeField] private XRHandShape grimoireShape;
         [Tooltip("Left Hand Tracking > L_Wrist Transform")]
@@ -20,18 +20,18 @@ namespace ArcaneVR.Input
         [Tooltip("When assigned, GestureDetector owns recognition and this component only spawns/tracks the book.")]
         [SerializeField] private GestureDetector gestureDetector;
 
-        [Header("Grimoire")]
+        [Header("── 마도서 표시 설정 ──")]
         [SerializeField] private GameObject grimoirePrefab;
         [Tooltip("손목 기준 책 오프셋 (로컬 좌표)")]
         [SerializeField] private Vector3 positionOffset = new Vector3(0f, 0.05f, 0.1f);
         [SerializeField] private Vector3 rotationOffset = new Vector3(0f, 0f, 0f);
         [SerializeField] private float grimoireScale = 0.3f;
 
-        [Header("Time Focus Rendering")]
+        [Header("── 타임 포커스 렌더링 ──")]
         [SerializeField] private bool renderAfterTimeFocusPostProcess = true;
         [SerializeField] private string timeFocusExemptLayerName = "TimeFocusExempt";
 
-        [Header("Palm Direction Guard")]
+        [Header("── 손바닥 방향 조건 ──")]
         [Tooltip("손가락 모양이 맞더라도 손바닥이 위를 향할 때만 마도서를 엽니다.")]
         [SerializeField] private bool requirePalmUp = true;
         [Tooltip("Palm joint 로컬 축 중 손바닥 법선으로 사용할 축입니다. 디바이스별로 반대면 값을 조정하세요.")]
@@ -41,16 +41,16 @@ namespace ArcaneVR.Input
         [Tooltip("포즈가 이 시간만큼 유지되어야 마도서를 엽니다.")]
         [SerializeField] private float poseHoldDuration = 0.15f;
 
-        [Header("Pose Grace Period")]
+        [Header("── 포즈 유예 시간 ──")]
         [Tooltip("포즈 상실 후 바로 숨기지 않고 유지할 시간(초). 스와이프 중 왼손이 가려질 때 끊김 방지.")]
         [SerializeField] private float poseLostGracePeriod = 0.8f;
 
-        [Header("Debug")]
+        [Header("── 디버그 ──")]
         [SerializeField] private bool debugLog = true;
         [SerializeField] private bool debugDetectionDetails = true;
         [SerializeField] private float debugLogInterval = 0.5f;
 
-        [Header("Events")]
+        [Header("── 이벤트 ──")]
         public UnityEvent onGrimoireAppear;
         public UnityEvent onGrimoireDisappear;
         public UnityEvent onNextPage;

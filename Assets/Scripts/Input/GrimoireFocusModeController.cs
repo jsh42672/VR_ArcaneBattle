@@ -11,12 +11,12 @@ namespace ArcaneVR.Input
     {
         private const string FocusReason = "Grimoire";
 
-        [Header("References")]
+        [Header("── 핵심 참조 ──")]
         [SerializeField] private ArcaneTimeFocusController timeFocusController;
         [SerializeField] private GrimoireManager grimoireManager;
         [SerializeField] private LeftGrimoireGesture leftGrimoireGesture;
 
-        [Header("Right Hand Lock")]
+        [Header("── 오른손 재스처 잠금 ──")]
         [SerializeField] private bool disableRightElementGestures = true;
         [SerializeField] private MonoBehaviour[] rightElementGestures;
 

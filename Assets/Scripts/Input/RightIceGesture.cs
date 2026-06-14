@@ -14,7 +14,7 @@ namespace ArcaneVR.Input
     /// </summary>
     public class RightIceGesture : MonoBehaviour
     {
-        [Header("XR Hands")]
+        [Header("── XR Hands 참조 ──")]
         [SerializeField] private XRHandTrackingEvents handTrackingEvents;
         [SerializeField] private XRHandShape snowShape;
         [Tooltip("Optional shape that suppresses ice while a higher-priority gesture is active.")]
@@ -22,18 +22,18 @@ namespace ArcaneVR.Input
         [Tooltip("Right Hand Tracking > R_Wrist Transform")]
         [SerializeField] private Transform wristTransform;
 
-        [Header("포즈 유예")]
+        [Header("── 포즈 유예 시간 ──")]
         [Tooltip("포즈 상실 후 구체를 유지할 시간(초). 던지는 순간 살짝 끊겨도 발사 가능하게.")]
         [SerializeField] private float poseLostGracePeriod = 0.5f;
 
-        [Header("얼음 구체 VFX")]
+        [Header("── 얼음 구체 오라 / VFX ──")]
         [Tooltip("손 앞에 떠있을 얼음 구체 프리팹 (없으면 흰 구체 대체)")]
         [SerializeField] private GameObject iceOrbPrefab;
         [SerializeField] private float orbScale = 0.12f;
         [Tooltip("손목 기준 오프셋 (로컬 좌표)")]
         [SerializeField] private Vector3 palmOffset = new Vector3(0f, 0f, 0.1f);
 
-        [Header("발사체")]
+        [Header("── 얼음 발사체 설정 ──")]
         [Tooltip("발사될 얼음 마법 프리팹 (SpellProjectile 포함 권장)")]
         [SerializeField] private GameObject iceProjectilePrefab;
         [SerializeField] private float projectileScale = 0.12f;
@@ -45,7 +45,7 @@ namespace ArcaneVR.Input
         [SerializeField] private float minArcLaunchSpeed = 7f;
         [SerializeField] private float maxArcLaunchSpeed = 15f;
 
-        [Header("던지기 감지")]
+        [Header("── 던지기 발사 판정 ──")]
         [Tooltip("카메라 전방 속도가 이 값 이상이면 발사 (m/s)")]
         [SerializeField] private float minThrowSpeed = 2.0f;
         [Tooltip("발사 후 재소환 쿨다운 (초)")]
@@ -53,12 +53,12 @@ namespace ArcaneVR.Input
         [Tooltip("속도 샘플링 구간 (초)")]
         [SerializeField] private float velocitySampleDuration = 0.12f;
 
-        [Header("Debug")]
+        [Header("── 디버그 ──")]
         [SerializeField] private bool debugLog = true;
         [SerializeField] private bool tuningFeedback;
         [SerializeField] private float tuningLogInterval = 0.5f;
 
-        [Header("Events")]
+        [Header("── 이벤트 ──")]
         public UnityEvent onGrab;
         public UnityEvent onRelease;
         public UnityEvent<Vector3> onThrow;

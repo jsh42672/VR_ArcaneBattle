@@ -35,6 +35,12 @@ namespace ArcaneVR.Spell
         [SerializeField] private float auraScale = 0.18f;
         [SerializeField] private string timeFocusExemptLayer = "TimeFocusExempt";
 
+        [Header("── 선언 / 발사 사운드 ──")]
+        [SerializeField] private AudioClip armSfxClip;
+        [SerializeField] private AudioClip castSfxClip;
+        [SerializeField] private float armSfxVolume = 0.72f;
+        [SerializeField] private float castSfxVolume = 0.95f;
+
         // SpellCaster에서 주입
         private Transform _rightSpawn;
         private Transform _spawnRoot;
@@ -45,10 +51,13 @@ namespace ArcaneVR.Spell
         private readonly Queue<(float time, Vector3 pos)> _velocitySamples = new();
         private GameObject _orbInstance;
         private GameObject _auraInstance;
+        private AudioSource _sfxAudioSource;
         private float _lastLaunchTime = -999f;
         private bool _armed;
+        private int _activeProjectileCount;
 
         public bool IsArmed => _armed;
+        public bool HasActiveProjectile => _activeProjectileCount > 0;
 
         // ── 초기화 ────────────────────────────────────────────────────────────
 
@@ -73,13 +82,14 @@ namespace ArcaneVR.Spell
             _armed = true;
             ShowAura();
             ShowOrb();
+            PlayElementSfx(armSfxClip, ArcaneSpellSfxCue.ElementArm, armSfxVolume);
         }
 
         public void Disarm()
         {
             _armed = false;
-            HideAura();
             HideOrb();
+            RefreshAuraVisibility();
         }
 
         // 타임 포커스(마도서 등) 중 구체 표시 제어
@@ -163,8 +173,11 @@ namespace ArcaneVR.Spell
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             rb.linearVelocity        = launchVel;
 
+            TrackProjectileLifetime(projectile);
+            PlayElementSfx(castSfxClip, ArcaneSpellSfxCue.SpellCast, castSfxVolume);
+
             HideOrb();
-            HideAura();
+            RefreshAuraVisibility();
             Destroy(projectile, projectileLifetime);
         }
 
@@ -233,8 +246,37 @@ namespace ArcaneVR.Spell
 
         private void HideAura()
         {
+            _auraManager?.Hide();
             if (_auraInstance != null) Destroy(_auraInstance);
             _auraInstance = null;
+        }
+
+        private void RefreshAuraVisibility()
+        {
+            if (_armed || _activeProjectileCount > 0)
+                ShowAura();
+            else
+                HideAura();
+        }
+
+        private void TrackProjectileLifetime(GameObject projectile)
+        {
+            if (projectile == null)
+                return;
+
+            _activeProjectileCount++;
+            var tracker = projectile.GetComponent<IceProjectileTracker>();
+            if (tracker == null)
+                tracker = projectile.AddComponent<IceProjectileTracker>();
+
+            tracker.Bind(this);
+        }
+
+        private void NotifyProjectileDestroyed()
+        {
+            _activeProjectileCount = Mathf.Max(0, _activeProjectileCount - 1);
+            if (!_armed)
+                RefreshAuraVisibility();
         }
 
         private void UpdateAuraTransform()
@@ -272,6 +314,34 @@ namespace ArcaneVR.Spell
                 t.gameObject.layer = layer;
         }
 
+        private void PlayElementSfx(AudioClip explicitClip, ArcaneSpellSfxCue cue, float volume)
+        {
+            var audioSource = EnsureSfxAudioSource();
+            if (audioSource == null)
+                return;
+
+            if (explicitClip != null)
+            {
+                audioSource.PlayOneShot(explicitClip, Mathf.Clamp01(volume));
+                return;
+            }
+
+            ArcaneSpellSfx.Play(audioSource, ElementType.Ice, cue, volume);
+        }
+
+        private AudioSource EnsureSfxAudioSource()
+        {
+            if (_sfxAudioSource != null)
+                return _sfxAudioSource;
+
+            _sfxAudioSource = gameObject.AddComponent<AudioSource>();
+            _sfxAudioSource.playOnAwake = false;
+            _sfxAudioSource.loop = false;
+            _sfxAudioSource.spatialBlend = 0f;
+            _sfxAudioSource.dopplerLevel = 0f;
+            return _sfxAudioSource;
+        }
+
         private static GameObject CreateFallbackProjectile(Vector3 pos, Vector3 dir)
         {
             var go = new GameObject("Ice_Prototype");
@@ -291,6 +361,21 @@ namespace ArcaneVR.Spell
             var col = go.GetComponent<Collider>();
             if (col != null) col.enabled = false;
             return go;
+        }
+
+        private sealed class IceProjectileTracker : MonoBehaviour
+        {
+            private IceSpellModule _owner;
+
+            public void Bind(IceSpellModule owner)
+            {
+                _owner = owner;
+            }
+
+            private void OnDestroy()
+            {
+                _owner?.NotifyProjectileDestroyed();
+            }
         }
     }
 }

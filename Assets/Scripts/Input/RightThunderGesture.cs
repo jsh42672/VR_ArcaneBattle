@@ -24,19 +24,19 @@ namespace ArcaneVR.Input
         public const float defaultShootPoseGraceSeconds = 0.2f;
         public const float defaultLaserDownAngleDegrees = 8f;
 
-        [Header("XR Hands")]
+        [Header("── XR Hands 참조 ──")]
         [SerializeField] private XRHandTrackingEvents handTrackingEvents;
         [SerializeField] private XRHandShape thunderShape;
         [SerializeField] private XRHandShape thunderShootShape;
         [SerializeField] private Transform wristTransform;
 
-        [Header("Aura")]
+        [Header("── 오라 / 루프 사운드 ──")]
         [SerializeField] private GameObject auraPrefab;
         [SerializeField] private AudioClip auraAudioClip;
         [SerializeField] private Vector3 auraOffset = new Vector3(0f, 0f, 0.08f);
         [SerializeField] private float auraScale = 0.16f;
 
-        [Header("Laser")]
+        [Header("── 번개 빔 설정 ──")]
         [SerializeField] private float rangeMeters = defaultRangeMeters;
         [SerializeField] private float damage = defaultDamage;
         [SerializeField] private float statusDuration = 2.5f;
@@ -49,14 +49,14 @@ namespace ArcaneVR.Input
         [SerializeField] private LayerMask hitMask = ~0;
         [SerializeField] private Color laserColor = new Color(1f, 0.88f, 0.15f, 1f);
 
-        [Header("Debug")]
+        [Header("── 디버그 / 튜닝 피드백 ──")]
         [SerializeField] private bool debugLog;
         [SerializeField] private bool tuningFeedback = true;
         [SerializeField] private float tuningLogInterval = 0.5f;
         [SerializeField] private Color chargeFeedbackColor = new Color(1f, 0.88f, 0.15f, 0.9f);
         [SerializeField] private Color shootFeedbackColor = new Color(0.35f, 0.95f, 1f, 1f);
 
-        [Header("Events")]
+        [Header("── 이벤트 ──")]
         public UnityEvent onAuraStart;
         public UnityEvent onAuraEnd;
         public UnityEvent<Vector3> onShot;
