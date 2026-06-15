@@ -26,8 +26,8 @@ namespace ArcaneVR.Input
         [SerializeField] private float pageHalfHeight = 0.12f;
         [Tooltip("페이지 앞면 Z 위치 (m, 책 로컬)")]
         [SerializeField] private float pageSurfaceZ = -0.024f;
-        [Tooltip("페이지 표면 깊이 허용 범위 (m)")]
-        [SerializeField] private float touchDepthTolerance = 0.025f;
+        [Tooltip("페이지 표면 깊이 허용 범위 (m). VR 트래킹 오프셋을 고려해 여유 있게 설정.")]
+        [SerializeField] private float touchDepthTolerance = 0.05f;
         [Tooltip("터치 감지 X 여유 범위 (m)")]
         [SerializeField] private float touchXTolerance = 0.02f;
 
@@ -203,9 +203,20 @@ namespace ArcaneVR.Input
             currentAngle = Mathf.Clamp(normalizedX * 180f, 0f, 180f);
             pageTurner.SetManualTurnAngle(currentAngle);
 
-            // 드래그 중 자연스러운 손 이동으로 Y가 많이 변하므로 Z 이탈만 체크
-            bool zOut = Mathf.Abs(bookLocal.z - pageSurfaceZ) > touchDepthTolerance + releaseZTolerance;
+            // 페이지 반대편 끝까지 손가락이 넘어가면 자동 확정 (손을 떼지 않아도 완성)
+            bool crossedFarEdge = draggingForward
+                ? bookLocal.x <= -(pageOuterEdgeX - touchXTolerance)
+                : bookLocal.x >= (pageOuterEdgeX - touchXTolerance);
 
+            if (crossedFarEdge)
+            {
+                Debug.Log($"[PageTurn] 반대편 끝 도달 → 자동 확정 | 각도={currentAngle:F1}°");
+                ReleaseDrag("반대편 끝 도달");
+                return;
+            }
+
+            // Z 범위를 크게 벗어나면 손 뗀 것으로 간주 → 각도 기준으로 commit/rollback
+            bool zOut = Mathf.Abs(bookLocal.z - pageSurfaceZ) > touchDepthTolerance + releaseZTolerance;
             if (zOut)
             {
                 Debug.Log($"[PageTurn] Z 이탈로 해제 | z={bookLocal.z:F3} | 각도={currentAngle:F1}°");
