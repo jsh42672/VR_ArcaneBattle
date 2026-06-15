@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!1 &820898508964149103
 GameObject:
@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8745209290386941375}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: TurningPagePivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42,7 +42,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5318039081297836521}
   - component: {fileID: 1406360546397102859}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GrimoireBook
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -137,7 +137,7 @@ GameObject:
   - component: {fileID: 5359841887747538352}
   - component: {fileID: 998775503394685463}
   - component: {fileID: 1714160644096757170}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: LeftPage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -227,7 +227,7 @@ GameObject:
   - component: {fileID: 6715853830454579006}
   - component: {fileID: 2441446055255764954}
   - component: {fileID: 4338384021746755855}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: TurningPage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -317,7 +317,7 @@ GameObject:
   - component: {fileID: 7787545160828834109}
   - component: {fileID: 6440194720125270203}
   - component: {fileID: 745495193847571874}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: RightPage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
