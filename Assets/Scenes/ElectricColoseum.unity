@@ -635,57 +635,13 @@ Transform:
   - {fileID: 521105927}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &155051219 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 233042926861942598, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 634a2f112afb2af47972053f68c22c44, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.ConstraintController
---- !u!1 &163492705 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7134857722029925713, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &163492711
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163492705}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 32cec8edefcc14147b7cc0fa4e870040, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.DodgeDetector
-  headTransform: {fileID: 0}
-  highDodgeYDrop: 0.3
-  highDodgeYMax: 0.4
-  midDodgeZRetreat: 0.25
-  midDodgeZMax: 0.35
-  dodgeThreshold: 0.15
-  leftHandTransform: {fileID: 0}
-  rightHandTransform: {fileID: 0}
-  lowPoseHoldTime: 0.2
-  lowPoseHandMinSpread: 0.15
-  lowPoseHandMaxSpread: 0.45
-  lowPoseChestMinOffset: -0.45
-  lowPoseChestMaxOffset: -0.15
-  lowDodgeCooldown: 1.5
-  lowDodgeManaCost: 1
-  combatManager: {fileID: 0}
 --- !u!114 &163492712
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163492705}
+  m_GameObject: {fileID: 7134857721096826390}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 32cec8edefcc14147b7cc0fa4e870040, type: 3}
@@ -706,90 +662,7 @@ MonoBehaviour:
   lowPoseChestMaxOffset: -0.15
   lowDodgeCooldown: 1.5
   lowDodgeManaCost: 1
-  combatManager: {fileID: 591499615}
---- !u!114 &163492713
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163492705}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 237b57201c68d954f99f9323ce73a1ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BarrierVisualController
-  barrierController: {fileID: 0}
-  targetRenderers: []
-  activeColor: {r: 0.25, g: 0.65, b: 1, a: 1}
-  guardColor: {r: 0.2, g: 1, b: 0.7, a: 1}
---- !u!114 &163492714
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163492705}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d147179302c6e444bbea11e4e2777865, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BarrierPlayerDamageBridge
-  barrierController: {fileID: 0}
-  combatManager: {fileID: 0}
-  failedBarrierDamage: 10
---- !u!114 &163492715
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163492705}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e8143ba2ba86a54a84ad88bce23e62a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.DodgePlayerDamageBridge
-  dodgeDetector: {fileID: 0}
-  combatManager: {fileID: 0}
-  failedDodgeDamage: 10
---- !u!114 &163492716
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163492705}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 05f0ca17e78541eeba956151b2be03be, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BarrierController
-  gestureDetector: {fileID: 0}
-  combatManager: {fileID: 0}
-  currentAttackType: 2
-  defaultWindowDuration: 1.2
-  requiredHoldTime: 0.25
-  manaCost: 1
-  activeDuration: 0.8
---- !u!114 &163492717
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163492705}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 12743225c773f374da697238b3dfe479, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.DodgeDetector
-  headTransform: {fileID: 0}
-  dodgeWindowDuration: 1
-  duckThreshold: 0.15
-  bodySideThreshold: 0.25
-  maxVerticalMovementForBodyDodge: 0.2
-  showDebugLog: 1
+  combatManager: {fileID: 884017747205285966}
 --- !u!1 &216601153
 GameObject:
   m_ObjectHideFlags: 0
@@ -901,143 +774,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &274174078
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 274174079}
-  - component: {fileID: 274174080}
-  - component: {fileID: 274174081}
-  m_Layer: 0
-  m_Name: TitleText
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &274174079
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 274174078}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1931879241}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 250}
-  m_SizeDelta: {x: 400, y: 50}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &274174080
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 274174078}
-  m_CullTransparentMesh: 1
---- !u!114 &274174081
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 274174078}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_text: Magic Title
-  m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
-  m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
-  m_fontColor32:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
-  m_enableVertexGradient: 0
-  m_colorMode: 3
-  m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
-  m_fontColorGradientPreset: {fileID: 0}
-  m_spriteAsset: {fileID: 0}
-  m_tintAllSprites: 0
-  m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
-  m_overrideHtmlColors: 0
-  m_faceColor:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
-  m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 2
-  m_VerticalAlignment: 512
-  m_textAlignment: 65535
-  m_characterSpacing: 0
-  m_characterHorizontalScale: 1
-  m_wordSpacing: 0
-  m_lineSpacing: 0
-  m_lineSpacingMax: 0
-  m_paragraphSpacing: 0
-  m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
-  m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
-  m_linkedTextComponent: {fileID: 0}
-  parentLinkedComponent: {fileID: 0}
-  m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
-  m_enableExtraPadding: 0
-  checkPaddingRequired: 0
-  m_isRichText: 1
-  m_EmojiFallbackSupport: 1
-  m_parseCtrlCharacters: 1
-  m_isOrthographic: 1
-  m_isCullingEnabled: 0
-  m_horizontalMapping: 0
-  m_verticalMapping: 0
-  m_uvLineOffset: 0
-  m_geometrySortingOrder: 0
-  m_IsTextObjectScaleStatic: 0
-  m_VertexBufferAutoSizeReduction: 0
-  m_useMaxVisibleDescender: 1
-  m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
-  m_isUsingLegacyAnimationComponent: 0
-  m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
-  m_baseMaterial: {fileID: 0}
-  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1001 &287578678
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1106,7 +842,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 2135181386}
+    m_TransformParent: {fileID: 531783026242220351}
     m_Modifications:
     - target: {fileID: 938863271922564921, guid: 0ca8cd2663be29a4a89e1f3ba72144cb, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1192,77 +928,6 @@ MonoBehaviour:
   thunderColor: {r: 1, g: 0.95, b: 0, a: 1}
   normalAuraScale: 0.12
   voiceBoostSizeMultiplier: 2.4
---- !u!1 &373985488 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &424486749
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 424486751}
-  - component: {fileID: 424486750}
-  m_Layer: 0
-  m_Name: CombinationFocusModeController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &424486750
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 424486749}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 21e40d7a38557504f875ab2974b88b76, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombinationFocusModeController
-  combinationChecker: {fileID: 591499616}
-  combineGestureDetector: {fileID: 1964649933}
-  timeFocusController: {fileID: 1156770248}
-  handPullMovement: {fileID: 1083835326}
-  grimoireManager: {fileID: 591499612}
-  leftGrimoireGesture: {fileID: 0}
-  headTransform: {fileID: 0}
-  slowTimeScale: 0.2
-  maxDuration: 10
-  autoExitAfterDuration: 1
-  enableHandsTogetherEntry: 1
-  requireCombineGestureForFocus: 1
-  handsTogetherDistance: 0.12
-  handsReleaseDistance: 0.22
-  handsTogetherHoldTime: 0.35
-  combinePushDistance: 0.18
-  combinePushVelocity: 0.45
-  combinePushCooldown: 0.7
-  suppressLegacyGesturesDuringFocus: 1
-  legacyGesturesToSuppress: []
-  allowKeyboardToggleInEditor: 1
-  keyboardToggleKey: 289
---- !u!4 &424486751
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 424486749}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.9998911, z: -0, w: -0.014759225}
-  m_LocalPosition: {x: -11.912488, y: -24.32, z: 70.9025}
-  m_LocalScale: {x: 0.9999999, y: 1, z: 0.9999999}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1252757955}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &427515333
 GameObject:
   m_ObjectHideFlags: 0
@@ -1456,8 +1121,8 @@ MonoBehaviour:
   strikeDuration: 0.10284028
 --- !u!4 &439537204 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 5674676024875997756, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
+  m_CorrespondingSourceObject: {fileID: 459718, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+  m_PrefabInstance: {fileID: 5674676024207069885}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &444439296
 PrefabInstance:
@@ -1629,15 +1294,10 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
---- !u!4 &591499611 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &591499612 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
+  m_CorrespondingSourceObject: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+  m_PrefabInstance: {fileID: 1585528069007744276}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
@@ -1647,42 +1307,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.GrimoireManager
 --- !u!4 &591499613 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 5674676024875988652, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
+  m_CorrespondingSourceObject: {fileID: 487254, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+  m_PrefabInstance: {fileID: 5674676024207069885}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &591499614 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1381298484821246685, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a5cd75a996c58c4a8552413355bf9c8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.FeedbackManager
---- !u!114 &591499615 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 884017748142318345, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d8b5c9e20147ee44973f3ce01d740da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.CombatManager
---- !u!114 &591499616 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1965663315542510266, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b728a0fa6bad8b4da5c367dd9498e66, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombinationChecker
 --- !u!1 &605478556
 GameObject:
   m_ObjectHideFlags: 0
@@ -1766,7 +1393,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1729964848}
-  m_Father: {fileID: 591499611}
+  m_Father: {fileID: 3502794437237460367}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &757240210
 GameObject:
@@ -1990,17 +1617,6 @@ MonoBehaviour:
   minInterval: 1.5
   maxInterval: 5
   strikeDuration: 0.25396723
---- !u!114 &788957596 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4227694162533263583, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.XRHandTrackingEvents
 --- !u!1 &868746104
 GameObject:
   m_ObjectHideFlags: 0
@@ -2258,72 +1874,6 @@ MonoBehaviour:
   legacyGesturesToSuppress: []
   allowKeyboardToggleInEditor: 1
   keyboardToggleKey: 289
---- !u!114 &1083835326 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07327af1a52bc0843b7e008bc1500b8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.HandPullMovementController
---- !u!1 &1156770246
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1156770247}
-  - component: {fileID: 1156770248}
-  m_Layer: 0
-  m_Name: ArcaneTimeFocusController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1156770247
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1156770246}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.9998911, z: -0, w: -0.014759225}
-  m_LocalPosition: {x: -11.912488, y: -24.32, z: 70.9025}
-  m_LocalScale: {x: 0.9999999, y: 1, z: 0.9999999}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1252757955}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1156770248
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1156770246}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e4a73f2c716fab4449a5ea1cd2af61fa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.ArcaneTimeFocusController
-  slowTimeScale: 0.05
-  enableGrayscale: 1
-  grayscaleSaturation: -100
-  grayscaleVolumePriority: 250
-  enableExemptOverlayCamera: 1
-  exemptLayerName: TimeFocusExempt
-  baseCameraOverride: {fileID: 0}
-  enableTickSound: 1
-  tickLoopClip: {fileID: 0}
-  tickVolume: 0.85
-  tickIntervalSeconds: 0.5
 --- !u!1 &1179940077
 GameObject:
   m_ObjectHideFlags: 0
@@ -2377,90 +1927,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!4 &1252757955 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4443657294648019456, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1264297837
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1264297839}
-  - component: {fileID: 1264297838}
-  m_Layer: 0
-  m_Name: GrimoireSystem
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &1264297838
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1264297837}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea8d9cc488793ba46946fe7c307d85cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.GrimoireManager
-  grimoireCanvas: {fileID: 1342463286}
-  grimoireUI: {fileID: 1342463288}
-  playerCamera: {fileID: 1483082569}
-  leftHandBookAnchor: {fileID: 1483082568}
-  gestureDetector: {fileID: 1964649930}
-  gestureRouter: {fileID: 1964649929}
-  leftOvrHand: {fileID: 0}
-  rightOvrHand: {fileID: 0}
-  spellCasters:
-  - {fileID: 1964649928}
-  sceneGrimoireCanvases: []
-  visualParkingAnchor: {fileID: 0}
-  toggleAction: {fileID: -2793193389594146869, guid: 1d884ad9c3b0d19419ff27819852f67a, type: 3}
-  spawnDistance: 0.5
-  spawnHeightOffset: -0.2
-  useRuntimeHandBook: 1
-  leftHandBookLocalPosition: {x: 0, y: 0.055, z: 0.085}
-  leftHandBookLocalEuler: {x: 70, y: 0, z: 0}
-  leftHandBookScale: 0.9
-  enableGestureControl: 1
-  requireLeftPalmFacingPlayer: 1
-  openPalmHoldDuration: 0.6
-  closeFistHoldDuration: 0.18
-  palmFacingDotThreshold: 0.5
-  toggleCooldown: 0.65
-  enableRightHandPageSwipe: 1
-  requireRightOpenPalmForPageSwipe: 1
-  pageSwipeDistance: 0.22
-  pageSwipeMaxDuration: 0.75
-  pageSwipeCooldown: 0.35
-  pageSwipeVerticalTolerance: 0.28
-  timeFocusController: {fileID: 1745364755}
-  handPullMovement: {fileID: 1083835326}
-  suppressMagicWhileOpen: 1
---- !u!4 &1264297839
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1264297837}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1342463293}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1265124304
 GameObject:
   m_ObjectHideFlags: 0
@@ -2514,157 +1980,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!1 &1342463286
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1342463293}
-  - component: {fileID: 1342463292}
-  - component: {fileID: 1342463291}
-  - component: {fileID: 1342463290}
-  - component: {fileID: 1342463289}
-  - component: {fileID: 1342463288}
-  - component: {fileID: 1342463287}
-  m_Layer: 0
-  m_Name: GrimoireCanvas
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &1342463287
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1342463286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c41e53c670b2e674685a6b3cc0acbe84, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.GrimoireInputHandler
-  grimoireUI: {fileID: 1342463288}
-  nextPageAction: {fileID: 7228210143341138844, guid: 1d884ad9c3b0d19419ff27819852f67a, type: 3}
-  prevPageAction: {fileID: 0}
---- !u!114 &1342463288
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1342463286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 600846409634c184cb0bca5ca2e0cb75, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.GrimoireUI
-  grimoireData: {fileID: 11400000, guid: 5d6c1bb904d0e7248a60fc81698f9776, type: 2}
-  titleText: {fileID: 274174081}
-  symbolImage: {fileID: 1648921839}
-  descriptionText: {fileID: 1950236108}
-  contentFadeGroup: {fileID: 1931879240}
-  fadeDuration: 0.3
---- !u!225 &1342463289
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1342463286}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
---- !u!114 &1342463290
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1342463286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
-  m_IgnoreReversedGraphics: 1
-  m_BlockingObjects: 0
-  m_BlockingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
---- !u!114 &1342463291
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1342463286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
-  m_ReferencePixelsPerUnit: 100
-  m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
-  m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
-  m_PhysicalUnit: 3
-  m_FallbackScreenDPI: 96
-  m_DefaultSpriteDPI: 96
-  m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
---- !u!223 &1342463292
-Canvas:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1342463286}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_RenderMode: 2
-  m_Camera: {fileID: 0}
-  m_PlaneDistance: 100
-  m_PixelPerfect: 0
-  m_ReceivesEvents: 1
-  m_OverrideSorting: 0
-  m_OverridePixelPerfect: 0
-  m_SortingBucketNormalizedSize: 0
-  m_VertexColorAlwaysGammaSpace: 0
-  m_UseReflectionProbes: 0
-  m_AdditionalShaderChannelsFlag: 25
-  m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: 0
-  m_SortingOrder: 0
-  m_TargetDisplay: 0
---- !u!224 &1342463293
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1342463286}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.5}
-  m_LocalScale: {x: 0.001, y: 0.001, z: 0.001}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1931879241}
-  m_Father: {fileID: 1264297839}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 1.2}
-  m_SizeDelta: {x: 500, y: 700}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &1380208514
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7774,431 +7089,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Boss.BossBattleRuntimeBinder
   "\uACE8\uB818_\uC774\uB3D9_\uACF5\uACA9_\uC815\uC9C0": 0
---- !u!1001 &1483082567
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 233042926861942598, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: spellCaster
-      value: 
-      objectReference: {fileID: 1964649928}
-    - target: {fileID: 233042926861942598, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: playerRigRoot
-      value: 
-      objectReference: {fileID: 591499611}
-    - target: {fileID: 233042926861942598, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: combinationFocus
-      value: 
-      objectReference: {fileID: 424486750}
-    - target: {fileID: 233042926861942598, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: handPullMovement
-      value: 
-      objectReference: {fileID: 1083835326}
-    - target: {fileID: 233042926861942598, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: playerCenterAnchor
-      value: 
-      objectReference: {fileID: 1706532438}
-    - target: {fileID: 346613466061601160, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: patternBridge
-      value: 
-      objectReference: {fileID: 2145939743}
-    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: playerCamera
-      value: 
-      objectReference: {fileID: 1483082569}
-    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: gestureRouter
-      value: 
-      objectReference: {fileID: 1964649929}
-    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: gestureDetector
-      value: 
-      objectReference: {fileID: 1964649930}
-    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: handPullMovement
-      value: 
-      objectReference: {fileID: 1083835326}
-    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftHandBookAnchor
-      value: 
-      objectReference: {fileID: 1483082568}
-    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftHandBookLocalEuler.x
-      value: -70
-      objectReference: {fileID: 0}
-    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftHandBookLocalEuler.z
-      value: 180
-      objectReference: {fileID: 0}
-    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: 'spellCasters.Array.data[0]'
-      value: 
-      objectReference: {fileID: 1964649928}
-    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftHandBookLocalPosition.y
-      value: -0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: maxMoveSpeed
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: pullMultiplier
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 1965663315542510266, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: grimoireManager
-      value: 
-      objectReference: {fileID: 591499612}
-    - target: {fileID: 1965663315542510266, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: focusModeController
-      value: 
-      objectReference: {fileID: 424486750}
-    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -14
-      objectReference: {fileID: 0}
-    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 12.4
-      objectReference: {fileID: 0}
-    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -2.6
-      objectReference: {fileID: 0}
-    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: -181.691
-      objectReference: {fileID: 0}
-    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: iceModule
-      value: 
-      objectReference: {fileID: 1964649935}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: fireModule
-      value: 
-      objectReference: {fileID: 1964649936}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: combatManager
-      value: 
-      objectReference: {fileID: 591499615}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: headTransform
-      value: 
-      objectReference: {fileID: 1483082569}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: thunderModule
-      value: 
-      objectReference: {fileID: 1964649934}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: feedbackManager
-      value: 
-      objectReference: {fileID: 591499614}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: gestureDetector
-      value: 
-      objectReference: {fileID: 1964649930}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: grimoireManager
-      value: 
-      objectReference: {fileID: 591499612}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: combinationChecker
-      value: 
-      objectReference: {fileID: 591499616}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: elementAuraManager
-      value: 
-      objectReference: {fileID: 357495573}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftHandSpawnPoint
-      value: 
-      objectReference: {fileID: 1483082568}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: focusModeController
-      value: 
-      objectReference: {fileID: 424486750}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: rightHandSpawnPoint
-      value: 
-      objectReference: {fileID: 591499613}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: comboFireIceProjectilePrefab
-      value: 
-      objectReference: {fileID: 4382499408830527743, guid: 697582119625e654daae8ae344d8f899, type: 3}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: comboIceThunderProjectilePrefab
-      value: 
-      objectReference: {fileID: 1157306479389005453, guid: 66eee5f75a9a5df4da0738acd153c605, type: 3}
-    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: comboThunderFireProjectilePrefab
-      value: 
-      objectReference: {fileID: 4838282869563444037, guid: 787fa1fc46f85de44ab2f6b248fe796c, type: 3}
-    - target: {fileID: 3972151438535503955, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: bossAnimator
-      value: 
-      objectReference: {fileID: 3483821603137979074}
-    - target: {fileID: 3972151438535503955, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: patternBridge
-      value: 
-      objectReference: {fileID: 2145939743}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftIce
-      value: 
-      objectReference: {fileID: 11400000, guid: 17551065c8457334590e46e64a60a468, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftFire
-      value: 
-      objectReference: {fileID: 11400000, guid: 2964163fa2815c54db8d0606a2e510cc, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftBarrier
-      value: 
-      objectReference: {fileID: 11400000, guid: 38a71a19ff6f8964293aa3aba4f0eca1, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftCombine
-      value: 
-      objectReference: {fileID: 11400000, guid: d1e6e41e39b30e3448269b1c1bfe862c, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftThunder
-      value: 
-      objectReference: {fileID: 11400000, guid: 5c9e50234a8d9474183c66e65bf9d69c, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: rightBarrier
-      value: 
-      objectReference: {fileID: 11400000, guid: 29801e08c3939ec408ba61b76553ee29, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: rightCombine
-      value: 
-      objectReference: {fileID: 11400000, guid: 74f763f5d9a4dad47850581a1e03543a, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: showDebugLog
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: rightIceGesture
-      value: 
-      objectReference: {fileID: 11400000, guid: 844c60db6e0395f45a39f6ba58521e36, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftCombineShoot
-      value: 
-      objectReference: {fileID: 11400000, guid: 51932134eea09454c881e47a07b42847, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: rightFireGesture
-      value: 
-      objectReference: {fileID: 11400000, guid: f82675f516dbf3a4c8b89549414b42aa, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: rightCombineShoot
-      value: 
-      objectReference: {fileID: 11400000, guid: df632af86a1aeba408d4242706f6ad1e, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftGrimoireGesture
-      value: 
-      objectReference: {fileID: 11400000, guid: 6c4acf4e830f130418267b136dfb3d47, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: rightThunderGesture
-      value: 
-      objectReference: {fileID: 11400000, guid: 3ecf20e8b9e7ff940bba3120fc3ef2bb, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: rightPageTurnGesture
-      value: 
-      objectReference: {fileID: 11400000, guid: 29801e08c3939ec408ba61b76553ee29, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: leftHandTrackingEvents
-      value: 
-      objectReference: {fileID: 444439298}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: rightHandTrackingEvents
-      value: 
-      objectReference: {fileID: 1707517239}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: rightThunderShootGesture
-      value: 
-      objectReference: {fileID: 11400000, guid: f56abda03f495f041874ee1fc40fa6cf, type: 2}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: showPlayModeDebugOverlay
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: useSubsystemPollingFallback
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4655611850213027757, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: golemTarget
-      value: 
-      objectReference: {fileID: 3483821603137979072}
-    - target: {fileID: 4655611850213027757, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: patternBridge
-      value: 
-      objectReference: {fileID: 2145939743}
-    - target: {fileID: 4738014003903617534, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: gestureDetector
-      value: 
-      objectReference: {fileID: 1964649930}
-    - target: {fileID: 4897361036401193229, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: golemTarget
-      value: 
-      objectReference: {fileID: 3483821603137979072}
-    - target: {fileID: 5555209137438290923, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: golemTarget
-      value: 
-      objectReference: {fileID: 3483821603137979072}
-    - target: {fileID: 5555209137438290923, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: patternBridge
-      value: 
-      objectReference: {fileID: 2145939743}
-    - target: {fileID: 5555209137438290923, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: lowAttackVfxPrefab
-      value: 
-      objectReference: {fileID: 6813702408129134282, guid: efc527f8c4d3b2f40bb08fd2d503f893, type: 3}
-    - target: {fileID: 5555209137438290923, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: midAttackVfxPrefab
-      value: 
-      objectReference: {fileID: 7788902450298142146, guid: cf08c4742023be0498936c8df84b507d, type: 3}
-    - target: {fileID: 5555209137438290923, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: highAttackVfxPrefab
-      value: 
-      objectReference: {fileID: 3247836155836256208, guid: 1630d7d3bc7956648958558ce204d886, type: 3}
-    - target: {fileID: 6472235527627391572, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_Name
-      value: ArcanePlayerRig
-      objectReference: {fileID: 0}
-    - target: {fileID: 8844799399078106063, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 1139416396792521486, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-    m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 610663015}
-    - targetCorrespondingSourceObject: {fileID: 5674676024875997756, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 444439297}
-    - targetCorrespondingSourceObject: {fileID: 5674676024875997756, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1707517238}
-    - targetCorrespondingSourceObject: {fileID: 5674676024875975336, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1784666841}
-    - targetCorrespondingSourceObject: {fileID: 5674676024875988652, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1586660897}
-    - targetCorrespondingSourceObject: {fileID: 4443657294648019456, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1156770247}
-    - targetCorrespondingSourceObject: {fileID: 4443657294648019456, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 424486751}
-    - targetCorrespondingSourceObject: {fileID: 4443657294648019456, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1646166747}
-    - targetCorrespondingSourceObject: {fileID: 4443657294648019456, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1958728815}
-    - targetCorrespondingSourceObject: {fileID: 531783025304402552, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 357495571}
-    - targetCorrespondingSourceObject: {fileID: 8105743802863898020, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1828813121}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5674676024876359516, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1483082574}
-    - targetCorrespondingSourceObject: {fileID: 5674676024876359512, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1483082575}
-    - targetCorrespondingSourceObject: {fileID: 5674676024876359514, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1483082573}
-    - targetCorrespondingSourceObject: {fileID: 3497792176538945023, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1964649933}
-    - targetCorrespondingSourceObject: {fileID: 7134857722029925713, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 163492712}
-    - targetCorrespondingSourceObject: {fileID: 7134857722029925713, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 163492711}
-    - targetCorrespondingSourceObject: {fileID: 7134857722029925713, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 163492717}
-    - targetCorrespondingSourceObject: {fileID: 7134857722029925713, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 163492716}
-    - targetCorrespondingSourceObject: {fileID: 7134857722029925713, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 163492715}
-    - targetCorrespondingSourceObject: {fileID: 7134857722029925713, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 163492714}
-    - targetCorrespondingSourceObject: {fileID: 7134857722029925713, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 163492713}
-    - targetCorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1964649936}
-    - targetCorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1964649935}
-    - targetCorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1964649934}
-  m_SourcePrefab: {fileID: 100100000, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
 --- !u!4 &1483082568 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 5674676024875975336, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
+  m_CorrespondingSourceObject: {fileID: 482130, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+  m_PrefabInstance: {fileID: 5674676024207069885}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &1483082569 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 5674676024876057464, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
+  m_CorrespondingSourceObject: {fileID: 400002, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+  m_PrefabInstance: {fileID: 5674676024207069885}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1483082570 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 5674676024876359514, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
+  m_CorrespondingSourceObject: {fileID: 100000, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+  m_PrefabInstance: {fileID: 5674676024207069885}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1483082571 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 5674676024876359516, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
+  m_CorrespondingSourceObject: {fileID: 100006, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+  m_PrefabInstance: {fileID: 5674676024207069885}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1483082572 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 5674676024876359512, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
+  m_CorrespondingSourceObject: {fileID: 100002, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+  m_PrefabInstance: {fileID: 5674676024207069885}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &1483082573
 MonoBehaviour:
@@ -8363,16 +7277,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1541898459}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1498520854 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8105743802863898020, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1513946842 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3497792176538945023, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1534574486
 GameObject:
   m_ObjectHideFlags: 0
@@ -8880,7 +7784,7 @@ PrefabInstance:
     - target: {fileID: 7340131876162175075, guid: 0ca8cd2663be29a4a89e1f3ba72144cb, type: 3}
       propertyPath: combatManager
       value: 
-      objectReference: {fileID: 591499615}
+      objectReference: {fileID: 884017747205285966}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9033,7 +7937,7 @@ Transform:
   - {fileID: 1745364754}
   - {fileID: 1030009991}
   - {fileID: 2020540370}
-  m_Father: {fileID: 1252757955}
+  m_Father: {fileID: 4443657295594225991}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1647871694
 GameObject:
@@ -9148,81 +8052,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1647871694}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &1648921836
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1648921837}
-  - component: {fileID: 1648921838}
-  - component: {fileID: 1648921839}
-  m_Layer: 0
-  m_Name: SymbolImage
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1648921837
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1648921836}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1931879241}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 50}
-  m_SizeDelta: {x: 200, y: 200}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &1648921838
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1648921836}
-  m_CullTransparentMesh: 1
---- !u!114 &1648921839
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1648921836}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &1706532436
 GameObject:
   m_ObjectHideFlags: 0
@@ -9731,7 +8560,7 @@ PrefabInstance:
     - target: {fileID: 7340131876162175075, guid: 0ca8cd2663be29a4a89e1f3ba72144cb, type: 3}
       propertyPath: combatManager
       value: 
-      objectReference: {fileID: 591499615}
+      objectReference: {fileID: 884017747205285966}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9807,84 +8636,6 @@ Transform:
   - {fileID: 1647871695}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1828813119
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1828813121}
-  - component: {fileID: 1828813120}
-  m_Layer: 0
-  m_Name: GrimoireSystem
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &1828813120
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1828813119}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea8d9cc488793ba46946fe7c307d85cc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.GrimoireManager
-  grimoireCanvas: {fileID: 0}
-  grimoireUI: {fileID: 0}
-  playerCamera: {fileID: 1483082569}
-  leftHandBookAnchor: {fileID: 1483082568}
-  gestureDetector: {fileID: 1964649930}
-  gestureRouter: {fileID: 1964649929}
-  leftOvrHand: {fileID: 0}
-  rightOvrHand: {fileID: 0}
-  spellCasters:
-  - {fileID: 1964649928}
-  sceneGrimoireCanvases: []
-  visualParkingAnchor: {fileID: 0}
-  toggleAction: {fileID: 0}
-  spawnDistance: 0.5
-  spawnHeightOffset: -0.2
-  useRuntimeHandBook: 1
-  leftHandBookLocalPosition: {x: 0, y: 0.055, z: 0.085}
-  leftHandBookLocalEuler: {x: 70, y: 0, z: 0}
-  leftHandBookScale: 0.9
-  enableGestureControl: 1
-  requireLeftPalmFacingPlayer: 1
-  openPalmHoldDuration: 0.6
-  closeFistHoldDuration: 0.18
-  palmFacingDotThreshold: 0.5
-  toggleCooldown: 0.65
-  enableRightHandPageSwipe: 1
-  requireRightOpenPalmForPageSwipe: 1
-  pageSwipeDistance: 0.22
-  pageSwipeMaxDuration: 0.75
-  pageSwipeCooldown: 0.35
-  pageSwipeVerticalTolerance: 0.28
-  timeFocusController: {fileID: 1745364755}
-  handPullMovement: {fileID: 1083835326}
-  suppressMagicWhileOpen: 1
---- !u!4 &1828813121
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1828813119}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1498520854}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!134 &1906899038
 PhysicsMaterial:
   m_ObjectHideFlags: 0
@@ -9898,290 +8649,20 @@ PhysicsMaterial:
   m_Bounciness: 0
   m_FrictionCombine: 0
   m_BounceCombine: 0
---- !u!1 &1931879239
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1931879241}
-  - component: {fileID: 1931879240}
-  m_Layer: 0
-  m_Name: Content
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!225 &1931879240
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1931879239}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
---- !u!224 &1931879241
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1931879239}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 274174079}
-  - {fileID: 1648921837}
-  - {fileID: 1950236106}
-  m_Father: {fileID: 1342463293}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &1950236105
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1950236106}
-  - component: {fileID: 1950236107}
-  - component: {fileID: 1950236108}
-  m_Layer: 0
-  m_Name: DescriptionText
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1950236106
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1950236105}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1931879241}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -150}
-  m_SizeDelta: {x: 400, y: 150}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &1950236107
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1950236105}
-  m_CullTransparentMesh: 1
---- !u!114 &1950236108
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1950236105}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_text: Magic Description goes here...
-  m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
-  m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
-  m_fontColor32:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
-  m_enableVertexGradient: 0
-  m_colorMode: 3
-  m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
-  m_fontColorGradientPreset: {fileID: 0}
-  m_spriteAsset: {fileID: 0}
-  m_tintAllSprites: 0
-  m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
-  m_overrideHtmlColors: 0
-  m_faceColor:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
-  m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 2
-  m_VerticalAlignment: 256
-  m_textAlignment: 65535
-  m_characterSpacing: 0
-  m_characterHorizontalScale: 1
-  m_wordSpacing: 0
-  m_lineSpacing: 0
-  m_lineSpacingMax: 0
-  m_paragraphSpacing: 0
-  m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
-  m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
-  m_linkedTextComponent: {fileID: 0}
-  parentLinkedComponent: {fileID: 0}
-  m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
-  m_enableExtraPadding: 0
-  checkPaddingRequired: 0
-  m_isRichText: 1
-  m_EmojiFallbackSupport: 1
-  m_parseCtrlCharacters: 1
-  m_isOrthographic: 1
-  m_isCullingEnabled: 0
-  m_horizontalMapping: 0
-  m_verticalMapping: 0
-  m_uvLineOffset: 0
-  m_geometrySortingOrder: 0
-  m_IsTextObjectScaleStatic: 0
-  m_VertexBufferAutoSizeReduction: 0
-  m_useMaxVisibleDescender: 1
-  m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
-  m_isUsingLegacyAnimationComponent: 0
-  m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
-  m_baseMaterial: {fileID: 0}
-  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1 &1958728814
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1958728815}
-  - component: {fileID: 1958728816}
-  m_Layer: 0
-  m_Name: VoiceRecognizer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1958728815
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1958728814}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1252757955}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1958728816
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1958728814}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04f075b95df886e4f8a3399635bc0f0a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.VoiceRecognizer
-  autoStartListening: 1
-  restartAfterResult: 1
-  restartDelay: 0.25
-  microphonePermissionTimeout: 8
-  allowExternalSttProvider: 1
---- !u!114 &1964649928 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 373985488}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96200f986cd87b248806503fa57ae8e5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.SpellCaster
---- !u!114 &1964649929 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4738014003903617534, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de0c61d3ee1343ddb4252ccbc093ef3f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.GestureEventRouter
---- !u!114 &1964649930 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1513946842}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1b3c0ec330ef622488b5184eeed75a90, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.GestureDetector
 --- !u!114 &1964649933
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1513946842}
+  m_GameObject: {fileID: 3497792175332691640}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0e96206c1ee3d664da3b1c4f0269ee9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombineGestureDetector
-  leftHandTrackingEvents: {fileID: 2105545235}
-  rightHandTrackingEvents: {fileID: 788957596}
+  leftHandTrackingEvents: {fileID: 8365606702986294584}
+  rightHandTrackingEvents: {fileID: 4227694163739517848}
   leftCombineShape: {fileID: 11400000, guid: d1e6e41e39b30e3448269b1c1bfe862c, type: 2}
   rightCombineShape: {fileID: 11400000, guid: 74f763f5d9a4dad47850581a1e03543a, type: 2}
   poseHoldDuration: 0.15
@@ -10192,7 +8673,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 373985488}
+  m_GameObject: {fileID: 7812331016272970973}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6e8556c3ee5008b4d9160f82154c22a8, type: 3}
@@ -10228,7 +8709,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 373985488}
+  m_GameObject: {fileID: 7812331016272970973}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8dca7cdf7af8afb4aae7d1ca4aed8f36, type: 3}
@@ -10262,7 +8743,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 373985488}
+  m_GameObject: {fileID: 7812331016272970973}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3a2ce6b15895d0b41843e9708d80889e, type: 3}
@@ -10488,33 +8969,633 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1577224938}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2105545235 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8365606703931719295, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.XRHandTrackingEvents
---- !u!4 &2135181386 stripped
+--- !u!4 &29208431909758919
 Transform:
-  m_CorrespondingSourceObject: {fileID: 531783025304402552, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2145939743 stripped
+  m_GameObject: {fileID: 4803757966522523873}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4443657295594225991}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &169914123576817957
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6389328466440299787}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4443657295594225991}
+  - {fileID: 531783026242220351}
+  - {fileID: 8105743801930270435}
+  m_Father: {fileID: 3502794437237460367}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &204079995968697152
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 537460495723009128}
+  - component: {fileID: 594587742467845663}
+  m_Layer: 0
+  m_Name: ArenaBoundary
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &233042928076059649
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4897361036401193229, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
-  m_PrefabInstance: {fileID: 1483082567}
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 3061708849661792824}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0dc6f5a28e44151b91e56fb2337af88, type: 3}
+  m_Script: {fileID: 11500000, guid: 634a2f112afb2af47972053f68c22c44, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossPatternCombatBridge
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.ConstraintController
+  handPullMovement: {fileID: 823537291837661784}
+  spellCaster: {fileID: 3805601016832951519}
+  combinationFocus: {fileID: 0}
+  playerRigRoot: {fileID: 3502794437237460367}
+  playerCenterAnchor: {fileID: 1706532438}
+  pullSpeed: 3
+  arrivalThreshold: 0.3
+--- !u!114 &346613465383826127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7134857721096826390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 648397db6e014cf4a94afafc344e5ec6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossAttackTelegraphController
+  patternBridge: {fileID: 4897361035468356170}
+--- !u!4 &410017870221537892
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469073481712125713}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6976883346376057766}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &428829652036099885
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6038833209133885177}
+  - component: {fileID: 1381298483887622554}
+  m_Layer: 0
+  m_Name: FeedbackManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &469073481712125713
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 410017870221537892}
+  m_Layer: 0
+  m_Name: LeftHandOnControllerAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &503507264391784615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 724535395550318079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05f0ca17e78541eeba956151b2be03be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BarrierController
+  gestureDetector: {fileID: 0}
+  combatManager: {fileID: 0}
+  currentAttackType: 2
+  defaultWindowDuration: 1.2
+  requiredHoldTime: 0.25
+  manaCost: 1
+  activeDuration: 0.8
+--- !u!4 &531783026242220351
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8023222296729351934}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8351880227208478105}
+  - {fileID: 8367104559113556582}
+  - {fileID: 357495571}
+  m_Father: {fileID: 169914123576817957}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &532159292086678999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 724535395550318079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 237b57201c68d954f99f9323ce73a1ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BarrierVisualController
+  barrierController: {fileID: 0}
+  targetRenderers: []
+  activeColor: {r: 0.25, g: 0.65, b: 1, a: 1}
+  guardColor: {r: 0.2, g: 1, b: 0.7, a: 1}
+--- !u!4 &537460495723009128
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 204079995968697152}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4017715134997623712}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &557263922629111864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1938736510826681171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96de2d0be47f45b58e1efb28fd8ef8ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.ArcaneActionModeController
+  handPullMovement: {fileID: 0}
+  combinationChecker: {fileID: 0}
+  voiceRecognizer: {fileID: 0}
+  trackingSpaceRoot: {fileID: 0}
+  enableVoiceModeToggle: 1
+  disableHandGestureModeToggle: 1
+  enableTriangleGesture: 0
+  gestureHoldTime: 0.25
+  toggleCooldown: 0.65
+  useSimpleTwoHandGesture: 1
+  simpleHandDistanceMax: 0.42
+  simpleGestureForwardMin: 0.18
+  simpleGestureForwardMax: 1.45
+  simpleGestureVerticalMax: 0.8
+  simpleGestureLateralMax: 0.9
+  simpleExitHandDistanceMin: 0.72
+  simpleExitHoldTime: 0.25
+  indexTipTouchDistance: 0.095
+  thumbTipTouchDistance: 0.095
+  sameHandIndexThumbMinDistance: 0.105
+  triangleHeightMin: 0.09
+  triangleLateralOffsetMax: 0.14
+  indexAboveThumbMinDistance: 0.045
+  requireOuterFingersOpen: 0
+  openFingerTipPalmMinDistance: 0.075
+  requireTriangleFacingHead: 1
+  triangleFacingHeadDotMin: 0.2
+  castModeTimeout: 10
+  exitAfterComboCast: 1
+  showTriangleFeedback: 1
+  triangleFeedbackBaseSize: 0.055
+  triangleFeedbackReadySize: 0.18
+  triangleFeedbackVolume: 0.8
+  triangleMoveColor: {r: 0.2, g: 0.85, b: 1, a: 0.85}
+  triangleCastColor: {r: 1, g: 0.72, b: 0.18, a: 0.9}
+--- !u!114 &594587742467845663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 204079995968697152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d5c07e0825445a5960457c26e66b0da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.ArenaBoundaryRuntimeWall
+  fallbackRadius: 18
+  radiusScaleFromArenaFloor: 0.94
+  playerClampMargin: 0.65
+  wallHeight: 5.5
+  wallThickness: 0.35
+  wallSegments: 72
+  showTransparentWall: 1
+  wallAlpha: 0.1
+  wallColor: {r: 0.45, g: 0.85, b: 1, a: 0.1}
+--- !u!4 &648058619990887753
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7229132848085269093}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8105743801930270435}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &724535395550318079
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6723252555571400430}
+  - component: {fileID: 503507264391784615}
+  - component: {fileID: 5358839207532241668}
+  - component: {fileID: 532159292086678999}
+  m_Layer: 0
+  m_Name: BarrierSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &770173517445628253
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7766158311604685770}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3502794437237460367}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &823537291837661784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6366465968649454328}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07327af1a52bc0843b7e008bc1500b8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.HandPullMovementController
+  xrOriginRoot: {fileID: 0}
+  movementRoot: {fileID: 0}
+  headTransform: {fileID: 0}
+  autoRefreshHandSubsystem: 1
+  subsystemRefreshInterval: 0.5
+  fingerTipToPalmThreshold: 0.085
+  requiredClosedFingerCount: 3
+  pullHandMode: 0
+  pullMultiplier: 50
+  maxMoveSpeed: 100
+  handMoveDeadZone: 0.003
+  horizontalOnly: 1
+  applyMovementInLateUpdate: 1
+  requirePullTowardBody: 0
+  towardBodyDotThreshold: 0.25
+  requirePalmFacingDown: 1
+  pullPalmNormalLocalAxis: {x: 0, y: 1, z: 0}
+  palmFacingDownDotThreshold: 0.5
+  autoCorrectLowHeadHeight: 1
+  heightCorrectionDelay: 0.75
+  minimumHeadHeight: 0.85
+  fallbackHeadHeight: 1.45
+  showDebugLog: 0
+--- !u!114 &884017747205285966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2311125405989466432}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d8b5c9e20147ee44973f3ce01d740da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.CombatManager
+  currentHP: 100
+  maxHP: 100
+  currentMana: 4
+  maxMana: 4
+  manaRegenPerSecond: 0.3333333
+  voiceRefundAmount: 0.5
+  thunderManaDamage: 1
+  disruptionDuration: 3
+  disruptedRegenMultiplier: 0.25
+  failedDodgeDamage: 10
+  failedBarrierDamage: 10
+  genericMeleeDamage: 10
+  reloadSceneOnPlayerDeath: 1
+  deathSceneReloadDelay: 2
+--- !u!114 &899937632247851615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8844799400019859592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04f075b95df886e4f8a3399635bc0f0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.VoiceRecognizer
+  autoStartListening: 1
+  restartAfterResult: 1
+  restartDelay: 0.25
+  microphonePermissionTimeout: 8
+  allowExternalSttProvider: 1
+--- !u!4 &1089528606749326785
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3061708849661792824}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4017715134997623712}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1090213989836607283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8844799400019859592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ab82fc6269a4f118724c3a235b94d79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.MetaVoiceSdkAutoBridge
+  externalVoiceBridge: {fileID: 0}
+  autoBind: 1
+  createVoiceExperienceIfMissing: 1
+  useBuiltInEnglishWitConfiguration: 1
+  autoActivateWhenReady: 1
+  bindRetryInterval: 1
+  activationRetryInterval: 2.5
+--- !u!4 &1284831215044140459
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7617696590220161766}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 439537204}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1381298483887622554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428829652036099885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a5cd75a996c58c4a8552413355bf9c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.FeedbackManager
+  combatManager: {fileID: 0}
+  spellCaster: {fileID: 0}
+  voiceRecognizer: {fileID: 0}
+  golemTarget: {fileID: 0}
+  bossAI: {fileID: 0}
+  playerCamera: {fileID: 5674676024207069886}
+  createWorldStatusText: 1
+  statusLocalPosition: {x: 0.38, y: -0.28, z: 1.9}
+  statusCharacterSize: 0.011
+  normalTextColor: {r: 0.82, g: 0.94, b: 1, a: 1}
+  warningTextColor: {r: 1, g: 0.55, b: 0.35, a: 1}
+  pulseBossRenderers: 1
+  hitPulseDuration: 0.22
+  defaultHitPulseColor: {r: 1, g: 1, b: 1, a: 1}
+  chargeWarningColor: {r: 1, g: 0.5, b: 0.1, a: 1}
+  chargeWarningDuration: 3
+  weaknessColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  fireHitMaterial: {fileID: 0}
+  iceHitMaterial: {fileID: 0}
+  thunderHitMaterial: {fileID: 0}
+  noHpMaterial: {fileID: 0}
+  defaultBossElement: 3
+  screenHitDuration: 0.35
+  noHpThreshold: 0.3
+  noHpAlpha: 0.22
+  screenOverlayDistance: 0.32
+--- !u!1 &1420631417565500810
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3520059479394898519}
+  - component: {fileID: 4227694163739517848}
+  m_Layer: 0
+  m_Name: Right Hand Gestures
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1505037013314989222
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6366465968649454328}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4443657295594225991}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1585528069007744276
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 8105743801930270435}
+    m_Modifications:
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: playerCamera
+      value: 
+      objectReference: {fileID: 1483082569}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: gestureRouter
+      value: 
+      objectReference: {fileID: 4738014005118259897}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: gestureDetector
+      value: 
+      objectReference: {fileID: 4513273318433873931}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: handPullMovement
+      value: 
+      objectReference: {fileID: 823537291837661784}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: leftHandBookAnchor
+      value: 
+      objectReference: {fileID: 1483082568}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: leftHandBookLocalEuler.x
+      value: -70
+      objectReference: {fileID: 0}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: leftHandBookLocalEuler.z
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: 'spellCasters.Array.data[0]'
+      value: 
+      objectReference: {fileID: 3805601016832951519}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: leftHandBookLocalPosition.y
+      value: -0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9054881655656537953, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: m_Name
+      value: GrimoireSystem
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+--- !u!4 &1585528069007744277 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+  m_PrefabInstance: {fileID: 1585528069007744276}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1619528255529186938
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3250019585889705083}
+  - component: {fileID: 4897361035468356170}
+  m_Layer: 0
+  m_Name: BossPatternBridge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1001 &1712530287586790460
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10580,6 +9661,163 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0c0a32ea99f92684b92bd5e17af421a4, type: 3}
+--- !u!4 &1914107179663549074
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1938736510826681171}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4443657295594225991}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1921281065976355688
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5374002063237216928}
+  - component: {fileID: 4539651382722870640}
+  m_Layer: 0
+  m_Name: BossHealthBarUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &1938736510826681171
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1914107179663549074}
+  - component: {fileID: 557263922629111864}
+  m_Layer: 0
+  m_Name: ArcaneActionModeController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1965663314328125949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4803757966522523873}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b728a0fa6bad8b4da5c367dd9498e66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombinationChecker
+  gestureDetector: {fileID: 4513273318433873931}
+  grimoireManager: {fileID: 591499612}
+  combinationWindow: 0.5
+  comboDeclarationWindow: 4
+  enableLegacyTwoHandPoseCombos: 0
+  emitFailEvents: 1
+  allowCombosWithoutGameManager: 1
+  allowLockedCombosInEditor: 1
+  handPullMovement: {fileID: 0}
+  actionModeController: {fileID: 0}
+  focusModeController: {fileID: 0}
+  failureFeedbackSeconds: 0.5
+  enableComboDebugLogs: 1
+  allowLeftElementDeclarationOutsideFocusForDebug: 0
+  showLeftThunderDeclarationDebugLogs: 1
+  enableComboElementStateLogs: 1
+--- !u!1 &2311125405989466432
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7268302930968622411}
+  - component: {fileID: 884017747205285966}
+  m_Layer: 0
+  m_Name: CombatManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &2620297499985216108
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8105743801930270435}
+  m_Layer: 0
+  m_Name: UIManagers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &3061708849661792824
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1089528606749326785}
+  - component: {fileID: 233042928076059649}
+  m_Layer: 0
+  m_Name: ConstraintController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3250019585889705083
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1619528255529186938}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4017715134997623712}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &3392948613507198899
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3716842266251608622}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4017715134997623712}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &3483821603137979069
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10852,7 +10090,7 @@ MonoBehaviour:
   golemTarget: {fileID: 3483821603137979072}
   bossAI: {fileID: 3483821603137979083}
   stateMachine: {fileID: 3483821603137979082}
-  patternBridge: {fileID: 2145939743}
+  patternBridge: {fileID: 4897361035468356170}
   target: {fileID: 1483082569}
   movementRoot: {fileID: 3483821603137979073}
   bossAnimator: {fileID: 3483821603137979074}
@@ -10908,8 +10146,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Boss.BossStateMachine
   bossAI: {fileID: 3483821603137979083}
   golemTarget: {fileID: 3483821603137979072}
-  patternBridge: {fileID: 2145939743}
-  constraintController: {fileID: 155051219}
+  patternBridge: {fileID: 4897361035468356170}
+  constraintController: {fileID: 233042928076059649}
   debugFreeze: 0
   debugAutoTriggerCenterFixed: 1
   runPatternsAutomatically: 1
@@ -10940,6 +10178,1238 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 702e010a91e279242bac7aeddca56fbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Boss.BossAI
+--- !u!1 &3497792175332691640
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7157009301564054684}
+  - component: {fileID: 4513273318433873931}
+  - component: {fileID: 1964649933}
+  m_Layer: 0
+  m_Name: GestureDetector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3502794437237460367
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6472235526949882131}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -14, y: 12.4, z: -2.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6152074233298061646}
+  - {fileID: 5674676024207069887}
+  - {fileID: 169914123576817957}
+  - {fileID: 770173517445628253}
+  - {fileID: 610663015}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -181.691, z: 0}
+--- !u!4 &3520059479394898519
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1420631417565500810}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6152074233298061646}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3643376572058951193
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4017715134997623712}
+  m_Layer: 0
+  m_Name: CombatSystems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &3716842266251608622
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3392948613507198899}
+  - component: {fileID: 4758177172003076266}
+  m_Layer: 0
+  m_Name: DodgeSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &3805601016832951519
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7812331016272970973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96200f986cd87b248806503fa57ae8e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.SpellCaster
+  spellDatabase: {fileID: 11400000, guid: f98acd53da88fbc488ff9cff44cf66c1, type: 2}
+  combinationChecker: {fileID: 1965663314328125949}
+  combatManager: {fileID: 884017747205285966}
+  voiceRecognizer: {fileID: 0}
+  feedbackManager: {fileID: 1381298483887622554}
+  gestureDetector: {fileID: 4513273318433873931}
+  grimoireManager: {fileID: 591499612}
+  focusModeController: {fileID: 0}
+  elementAuraManager: {fileID: 357495573}
+  leftElementAuraManager: {fileID: 0}
+  leftHandSpawnPoint: {fileID: 1483082568}
+  rightHandSpawnPoint: {fileID: 591499613}
+  headTransform: {fileID: 1483082569}
+  spellSpawnRoot: {fileID: 770173517445628253}
+  fireModule: {fileID: 1964649936}
+  iceModule: {fileID: 1964649935}
+  thunderModule: {fileID: 1964649934}
+  allowCombinationSpellCasts: 1
+  fallbackProjectileLifetime: 5
+  useDebugPrimitiveProjectiles: 1
+  debugProjectileScale: 1
+  comboFireIceProjectilePrefab: {fileID: 4382499408830527743, guid: 697582119625e654daae8ae344d8f899, type: 3}
+  comboIceThunderProjectilePrefab: {fileID: 1157306479389005453, guid: 66eee5f75a9a5df4da0738acd153c605, type: 3}
+  comboThunderFireProjectilePrefab: {fileID: 4838282869563444037, guid: 787fa1fc46f85de44ab2f6b248fe796c, type: 3}
+  comboProjectileLifetime: 6
+  comboProjectileLightIntensity: 1.4
+  comboProjectileScale:
+    fireIce: 0.34
+    iceThunder: 0.36
+    thunderFire: 0.4
+  showCombinationAura: 1
+  combinationReadyAuraScale: 0.18
+  combinationCompleteAuraScale: 0.42
+  combinationCompleteAuraHoldSeconds: 3
+  combinationFeedbackSfxVolume: 0.85
+  enableComboDebugLogs: 1
+  voiceBoostClip: {fileID: 0}
+  voiceBoostDuration: 4
+  ignoreVoiceDuringCombinationFocus: 1
+  auraTimeFocusExemptLayerName: TimeFocusExempt
+--- !u!114 &3972151439199910676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7134857721096826390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1b26d4c30254a04aaa54f54fa309218, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossAttackAnimatorBridge
+  patternBridge: {fileID: 4897361035468356170}
+  bossAnimator: {fileID: 3483821603137979074}
+  highAttackTrigger: AttackHigh
+  middleAttackTrigger: AttackMiddle
+  lowAttackTrigger: AttackLow
+  chargeTrigger: Charge
+  barrierTrigger: Barrier
+  highAttackState: AttackHigh
+  middleAttackState: AttackMiddle
+  lowAttackState: AttackLow
+  fallbackAttackState: Armature|Armature|Armature|Armature|Triple_Combo_Attack|baselayer
+  resourcesFallbackControllerPath: ArcaneVR/ThunderGolemAttackController
+  fallbackControllerRestoreDelay: 1.2
+  crossFadeDuration: 0.05
+  showDebugLog: 0
+--- !u!4 &4017715134997623712
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3643376572058951193}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -14, y: 12.4, z: -2.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7268302930968622411}
+  - {fileID: 6723252555571400430}
+  - {fileID: 3392948613507198899}
+  - {fileID: 3250019585889705083}
+  - {fileID: 7683818389315287403}
+  - {fileID: 1089528606749326785}
+  - {fileID: 537460495723009128}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4227694163739517848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1420631417565500810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.XRHandTrackingEvents
+  m_Handedness: 2
+  m_UpdateType: 1
+  m_PoseUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  m_JointsUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  m_TrackingAcquired:
+    m_PersistentCalls:
+      m_Calls: []
+  m_TrackingLost:
+    m_PersistentCalls:
+      m_Calls: []
+  m_TrackingChanged:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &4277737215971241144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8844799400019859592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d9fd013872049d9a7ce2cb4d7138c11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.ExternalVoiceCommandBridge
+  voiceRecognizer: {fileID: 0}
+  providerName: External STT
+  registerProviderOnEnable: 0
+  createRecognizerIfMissing: 1
+  showDebugLog: 0
+--- !u!4 &4443657295594225991
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5406505031526691514}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7157009301564054684}
+  - {fileID: 6673471764499228948}
+  - {fileID: 29208431909758919}
+  - {fileID: 1914107179663549074}
+  - {fileID: 1505037013314989222}
+  - {fileID: 1646166747}
+  m_Father: {fileID: 169914123576817957}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4513273318433873931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3497792175332691640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3c0ec330ef622488b5184eeed75a90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.GestureDetector
+  leftHandTrackingEvents: {fileID: 444439298}
+  rightHandTrackingEvents: {fileID: 1707517239}
+  useSubsystemPollingFallback: 1
+  subsystemRefreshInterval: 0.5
+  eventFallbackDelay: 0.15
+  rightFireGesture: {fileID: 11400000, guid: f82675f516dbf3a4c8b89549414b42aa, type: 2}
+  rightIceGesture: {fileID: 11400000, guid: 844c60db6e0395f45a39f6ba58521e36, type: 2}
+  rightThunderGesture: {fileID: 11400000, guid: 3ecf20e8b9e7ff940bba3120fc3ef2bb, type: 2}
+  rightThunderShootGesture: {fileID: 11400000, guid: f56abda03f495f041874ee1fc40fa6cf, type: 2}
+  rightPageTurnGesture: {fileID: 11400000, guid: 29801e08c3939ec408ba61b76553ee29, type: 2}
+  rightCombine: {fileID: 11400000, guid: 74f763f5d9a4dad47850581a1e03543a, type: 2}
+  rightCombineShoot: {fileID: 11400000, guid: df632af86a1aeba408d4242706f6ad1e, type: 2}
+  rightBarrier: {fileID: 11400000, guid: 29801e08c3939ec408ba61b76553ee29, type: 2}
+  leftGrimoireGesture: {fileID: 11400000, guid: 6c4acf4e830f130418267b136dfb3d47, type: 2}
+  leftFire: {fileID: 11400000, guid: 2964163fa2815c54db8d0606a2e510cc, type: 2}
+  leftIce: {fileID: 11400000, guid: 17551065c8457334590e46e64a60a468, type: 2}
+  leftThunder: {fileID: 11400000, guid: 5c9e50234a8d9474183c66e65bf9d69c, type: 2}
+  leftCombine: {fileID: 11400000, guid: d1e6e41e39b30e3448269b1c1bfe862c, type: 2}
+  leftCombineShoot: {fileID: 11400000, guid: 51932134eea09454c881e47a07b42847, type: 2}
+  leftBarrier: {fileID: 11400000, guid: 38a71a19ff6f8964293aa3aba4f0eca1, type: 2}
+  poseHoldDuration: 0.1
+  poseLostGracePeriod: 0.2
+  rightThunderShootArmWindowSeconds: 2
+  rightThunderShootPinkyCurlThreshold: 0.5
+  rightThunderChargeCompletenessThreshold: 0.85
+  leftThunderCompletenessThreshold: 0.75
+  rightIcePalmUpDotThreshold: 0.35
+  invertRightIcePalmDirection: 1
+  leftIcePalmUpDotThreshold: 0.35
+  invertLeftIcePalmDirection: 1
+  combineDistance: 0.16
+  pushVelocity: 0.45
+  combinePushCooldown: 0.7
+  showDebugLog: 1
+  showPlayModeDebugOverlay: 1
+  debugOverlayToggleKey: 96
+  showLeftGestureCandidateScores: 1
+  leftGestureCandidateLogInterval: 0.35
+  showLeftThunderDebugLogs: 1
+  leftThunderDebugScoreThreshold: 0.55
+--- !u!114 &4539651382722870640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1921281065976355688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e01f7d1c35e4a0e9da8d7c8b0a92162, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.BossHealthBarUI
+  golemTarget: {fileID: 0}
+  worldOffset: {x: 0, y: 0.65, z: 0}
+  barWidth: 1.8
+  barHeight: 0.075
+  barDepth: 0.018
+  textScale: 0.03
+  backgroundColor: {r: 0.05, g: 0.01, b: 0.01, a: 0.88}
+  borderColor: {r: 0.28, g: 0.04, b: 0.04, a: 0.96}
+  healthColor: {r: 1, g: 0.05, b: 0.03, a: 0.96}
+  textColor: {r: 1, g: 0.86, b: 0.78, a: 1}
+--- !u!114 &4655611851158971626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7134857721096826390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c7b151ceaf046ad91e7a6c1fbc242f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossCombatFeedbackController
+  patternBridge: {fileID: 4897361035468356170}
+  dodgeDetector: {fileID: 0}
+  barrierController: {fileID: 0}
+  combatManager: {fileID: 0}
+  golemTarget: {fileID: 3483821603137979072}
+  enableAudio: 1
+  enableText: 1
+  successVolume: 1
+  textWorldOffset: {x: 0, y: 1.05, z: 0}
+  textScale: 0.05
+  textDuration: 0.75
+  successTextDuration: 1.05
+  incomingColor: {r: 1, g: 0.66, b: 0.08, a: 1}
+  successColor: {r: 0.2, g: 1, b: 0.55, a: 1}
+  failColor: {r: 1, g: 0.22, b: 0.12, a: 1}
+--- !u!114 &4738014005118259897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5204697409932829586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de0c61d3ee1343ddb4252ccbc093ef3f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.GestureEventRouter
+  gestureDetector: {fileID: 4513273318433873931}
+  showDebugLog: 0
+--- !u!114 &4758177172003076266
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3716842266251608622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e8143ba2ba86a54a84ad88bce23e62a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.DodgePlayerDamageBridge
+  dodgeDetector: {fileID: 0}
+  combatManager: {fileID: 0}
+  failedDodgeDamage: 10
+--- !u!1 &4803757966522523873
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 29208431909758919}
+  - component: {fileID: 1965663314328125949}
+  m_Layer: 0
+  m_Name: CombinationChecker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &4897361035468356170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1619528255529186938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0dc6f5a28e44151b91e56fb2337af88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossPatternCombatBridge
+  dodgeDetector: {fileID: 0}
+  barrierController: {fileID: 0}
+  golemTarget: {fileID: 3483821603137979072}
+  defaultResponseWindowDuration: 1.2
+  defaultChargeCounterDuration: 3
+  defaultGolemBarrierDuration: 8
+--- !u!1 &4898993419108100071
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7671100817029042719}
+  m_Layer: 0
+  m_Name: RightHandAnchorDetached
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &5175469787105766798
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7605540171141950624}
+  m_Layer: 0
+  m_Name: RightHandOnControllerAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &5183717039702129235
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6211977739337092501}
+  - component: {fileID: 8365606702986294584}
+  m_Layer: 0
+  m_Name: Left Hand Gestures
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &5204697409932829586
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6673471764499228948}
+  - component: {fileID: 4738014005118259897}
+  m_Layer: 0
+  m_Name: GestureEventRouter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &5358839207532241668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 724535395550318079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d147179302c6e444bbea11e4e2777865, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BarrierPlayerDamageBridge
+  barrierController: {fileID: 0}
+  combatManager: {fileID: 0}
+  failedBarrierDamage: 10
+--- !u!4 &5374002063237216928
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1921281065976355688}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8105743801930270435}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5406505031526691514
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4443657295594225991}
+  m_Layer: 0
+  m_Name: InputSystems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &5555209138115803308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7134857721096826390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51cc5d46a0614d9e8cf340c8749d8ff2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossAttackEffectController
+  patternBridge: {fileID: 4897361035468356170}
+  dodgeDetector: {fileID: 0}
+  barrierController: {fileID: 0}
+  combatManager: {fileID: 0}
+  golemTarget: {fileID: 3483821603137979072}
+  bossRoot: {fileID: 0}
+  headTransform: {fileID: 0}
+  chargeVfxPrefab: {fileID: 0}
+  chargeVfxDuration: 3
+  weaknessVfxPrefab: {fileID: 0}
+  highAttackVfxPrefab: {fileID: 3247836155836256208, guid: 1630d7d3bc7956648958558ce204d886, type: 3}
+  midAttackVfxPrefab: {fileID: 7788902450298142146, guid: cf08c4742023be0498936c8df84b507d, type: 3}
+  lowAttackVfxPrefab: {fileID: 6813702408129134282, guid: efc527f8c4d3b2f40bb08fd2d503f893, type: 3}
+  enableAttackEffects: 1
+  effectDurationMultiplier: 1.05
+  bossForwardOffset: 0.35
+  highAttackHeightOffset: 0.18
+  middleAttackHeightOffset: -0.32
+  lowAttackGroundOffset: 0.08
+  highAttackColor: {r: 1, g: 0.08, b: 0.02, a: 0.92}
+  middleAttackColor: {r: 1, g: 0.58, b: 0.04, a: 0.9}
+  lowAttackColor: {r: 0.16, g: 0.74, b: 1, a: 0.88}
+  successColor: {r: 0.18, g: 1, b: 0.52, a: 0.95}
+  failColor: {r: 1, g: 0.12, b: 0.06, a: 0.95}
+--- !u!1001 &5674676024207069885
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3502794437237460367}
+    m_Modifications:
+    - target: {fileID: 100004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_Name
+      value: OVRCameraRig
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 459718, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1284831215044140459}
+    - targetCorrespondingSourceObject: {fileID: 459718, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7671100817029042719}
+    - targetCorrespondingSourceObject: {fileID: 459718, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 444439297}
+    - targetCorrespondingSourceObject: {fileID: 459718, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1707517238}
+    - targetCorrespondingSourceObject: {fileID: 482130, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6976883346376057766}
+    - targetCorrespondingSourceObject: {fileID: 482130, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1784666841}
+    - targetCorrespondingSourceObject: {fileID: 487254, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5781493116439987267}
+    - targetCorrespondingSourceObject: {fileID: 487254, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1586660897}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 100006, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1483082574}
+    - targetCorrespondingSourceObject: {fileID: 100002, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1483082575}
+    - targetCorrespondingSourceObject: {fileID: 100000, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1483082573}
+  m_SourcePrefab: {fileID: 100100000, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+--- !u!20 &5674676024207069886 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 2037080, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+  m_PrefabInstance: {fileID: 5674676024207069885}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5674676024207069887 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 400004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+  m_PrefabInstance: {fileID: 5674676024207069885}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5781493116439987267
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8028936078818540228}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7605540171141950624}
+  m_Father: {fileID: 591499613}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &6038833209133885177
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428829652036099885}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8105743801930270435}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6104300246551852078
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6976883346376057766}
+  m_Layer: 0
+  m_Name: LeftControllerInHandAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6152074233298061646
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7376414124083694122}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6211977739337092501}
+  - {fileID: 3520059479394898519}
+  m_Father: {fileID: 3502794437237460367}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &6211977739337092501
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5183717039702129235}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6152074233298061646}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6348346112253125968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8482526032616898369}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43f0f55a68d14dcfaf2b86d2c7a817d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.ManaWristDisplay
+  combatManager: {fileID: 0}
+  wristAnchor: {fileID: 0}
+  playerCamera: {fileID: 0}
+  wristLocalOffset: {x: 0, y: -0.075, z: 0}
+  wristTowardPlayerOffset: 0.065
+  wristLocalEuler: {x: 0, y: 0, z: 0}
+  segmentSpacing: 0.027
+  segmentScale: {x: 0.022, y: 0.005, z: 0.008}
+  filledColor: {r: 0.2, g: 0.78, b: 1, a: 0.95}
+  partialColor: {r: 0.65, g: 0.92, b: 1, a: 0.85}
+  emptyColor: {r: 0.04, g: 0.09, b: 0.14, a: 0.65}
+  disruptedColor: {r: 0.95, g: 0.35, b: 1, a: 0.95}
+--- !u!1 &6366465968649454328
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1505037013314989222}
+  - component: {fileID: 823537291837661784}
+  m_Layer: 0
+  m_Name: HandPullMovementController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &6389328466440299787
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 169914123576817957}
+  m_Layer: 0
+  m_Name: GameSystems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &6472235526949882131
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3502794437237460367}
+  m_Layer: 0
+  m_Name: ArcanePlayerRig
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6673471764499228948
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5204697409932829586}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4443657295594225991}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &6723252555571400430
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 724535395550318079}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4017715134997623712}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &6976883346376057766
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6104300246551852078}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 410017870221537892}
+  m_Father: {fileID: 1483082568}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7134857721096826390
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7683818389315287403}
+  - component: {fileID: 346613465383826127}
+  - component: {fileID: 5555209138115803308}
+  - component: {fileID: 3972151439199910676}
+  - component: {fileID: 4655611851158971626}
+  - component: {fileID: 163492712}
+  m_Layer: 0
+  m_Name: BossAttackControllers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7157009301564054684
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3497792175332691640}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4443657295594225991}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7229132848085269093
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 648058619990887753}
+  - component: {fileID: 7512674293920042442}
+  m_Layer: 0
+  m_Name: ArcaneAimReticle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7268302930968622411
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2311125405989466432}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4017715134997623712}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7376414124083694122
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6152074233298061646}
+  m_Layer: 0
+  m_Name: XR Hands Gesture System
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &7512674293920042442
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7229132848085269093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49f88aeae5a14d04a938f7f938d518f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.ArcaneAimReticle
+  reticleDistance: 1.9
+  localOffset: {x: 0.15, y: -0.4}
+  ringRadius: 0.034
+  dotDiameter: 0.009
+  idleLineWidth: 0.0018
+  armedLineWidth: 0.0028
+  ringSegments: 72
+  idleColor: {r: 0.72, g: 0.95, b: 1, a: 0.48}
+  lockedColor: {r: 0.45, g: 0.55, b: 0.62, a: 0.18}
+  fireColor: {r: 1, g: 0.28, b: 0.12, a: 0.95}
+  iceColor: {r: 0.28, g: 0.72, b: 1, a: 0.95}
+  thunderColor: {r: 1, g: 0.86, b: 0.08, a: 0.95}
+--- !u!4 &7605540171141950624
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5175469787105766798}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5781493116439987267}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7617696590220161766
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1284831215044140459}
+  m_Layer: 0
+  m_Name: LeftHandAnchorDetached
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7671100817029042719
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4898993419108100071}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 439537204}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &7683818389315287403
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7134857721096826390}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4017715134997623712}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7766158311604685770
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 770173517445628253}
+  m_Layer: 0
+  m_Name: SpellSpawnRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &7812331016272970973
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8351880227208478105}
+  - component: {fileID: 3805601016832951519}
+  - component: {fileID: 1964649936}
+  - component: {fileID: 1964649935}
+  - component: {fileID: 1964649934}
+  m_Layer: 0
+  m_Name: SpellCaster
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7876496934923742893
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8482526032616898369}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8105743801930270435}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8023222296729351934
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 531783026242220351}
+  m_Layer: 0
+  m_Name: SpellSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &8028936078818540228
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5781493116439987267}
+  m_Layer: 0
+  m_Name: RightControllerInHandAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8105743801930270435
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2620297499985216108}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7876496934923742893}
+  - {fileID: 648058619990887753}
+  - {fileID: 5374002063237216928}
+  - {fileID: 6038833209133885177}
+  - {fileID: 1585528069007744277}
+  m_Father: {fileID: 169914123576817957}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &8351880227208478105
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7812331016272970973}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 531783026242220351}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8365606702986294584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5183717039702129235}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.XRHandTrackingEvents
+  m_Handedness: 1
+  m_UpdateType: 1
+  m_PoseUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  m_JointsUpdated:
+    m_PersistentCalls:
+      m_Calls: []
+  m_TrackingAcquired:
+    m_PersistentCalls:
+      m_Calls: []
+  m_TrackingLost:
+    m_PersistentCalls:
+      m_Calls: []
+  m_TrackingChanged:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!4 &8367104559113556582
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8844799400019859592}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 531783026242220351}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8482526032616898369
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7876496934923742893}
+  - component: {fileID: 6348346112253125968}
+  m_Layer: 0
+  m_Name: ManaWristDisplay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &8844799400019859592
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8367104559113556582}
+  - component: {fileID: 899937632247851615}
+  - component: {fileID: 4277737215971241144}
+  - component: {fileID: 1090213989836607283}
+  m_Layer: 0
+  m_Name: VoiceSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -10954,11 +11424,11 @@ SceneRoots:
   - {fileID: 270710309}
   - {fileID: 1827789354}
   - {fileID: 2066838525}
-  - {fileID: 1264297839}
   - {fileID: 8036273}
   - {fileID: 3483821603137979069}
   - {fileID: 1610837396}
-  - {fileID: 1483082567}
+  - {fileID: 3502794437237460367}
   - {fileID: 1545296681}
   - {fileID: 1706532438}
   - {fileID: 1397668525}
+  - {fileID: 4017715134997623712}
