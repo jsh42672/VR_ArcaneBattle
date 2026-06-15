@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using ArcaneVR.Combat;
@@ -13,10 +14,13 @@ namespace ArcaneVR.Boss
         [SerializeField] private BossAI bossAI;
         [SerializeField] private GolemCombatTarget golemTarget;
         [SerializeField] private BossPatternCombatBridge patternBridge;
+        [SerializeField] private ArcaneVR.Input.ConstraintController constraintController;
 
         [Header("디버그 / 테스트")]
         [Tooltip("체크하면 HP 페이즈 트리거 및 자동 패턴이 모두 멈춥니다.")]
         [SerializeField] private bool debugFreeze;
+        [Tooltip("체크하면 플레이 모드 시작 5초 후 CenterFixed 페이즈를 자동으로 발동합니다.")]
+        [SerializeField] private bool debugAutoTriggerCenterFixed;
 
         public bool DebugFreeze { get => debugFreeze; set => debugFreeze = value; }
 
@@ -31,6 +35,14 @@ namespace ArcaneVR.Boss
         [SerializeField] private float chargeCounterDuration = 3f;
         [SerializeField] private float responseWindowDuration = 1.25f;
 
+        [Header("중앙 고정 페이즈")]
+        [Tooltip("보스가 이동할 경기장 외곽 위치 (Circle2).")]
+        [SerializeField] private Transform bossPerimeterAnchor;
+        [Tooltip("보스가 외곽으로 이동하는 속도 (m/s).")]
+        [SerializeField] private float bossMoveSpeed = 5f;
+        [SerializeField] private float centerFixedDuration = 12f;
+        [SerializeField] private float centerFixedStateLockDuration = 1.5f;
+
         [Header("HP Phase Triggers")]
         [SerializeField, Range(0f, 1f)] private float phaseOneHpRatio = 0.7f;
         [SerializeField, Range(0f, 1f)] private float phaseTwoHpRatio = 0.4f;
@@ -39,12 +51,16 @@ namespace ArcaneVR.Boss
         private float nextAttackTime;
         private float nextDefenseTime;
         private float stateLockUntilTime;
+        private float centerFixedEndTime;
         private bool phaseOneTriggered;
         private bool phaseTwoTriggered;
         private bool finalPhaseTriggered;
         private bool subscribed;
         private BossChaseController chaseController;
         private bool battleHelpersEnsured;
+        private bool isCenterFixedPhaseActive;
+        private bool isBossMovingToPerimeter;
+        private Coroutine bossPerimeterRoutine;
 
         public string LastPatternStatus { get; private set; } = "BossSM: idle";
         public float NextAttackIn => Mathf.Max(0f, nextAttackTime - Time.time);
@@ -54,6 +70,18 @@ namespace ArcaneVR.Boss
         {
             ResolveReferences();
             ResetTimers();
+        }
+
+        private void Start()
+        {
+            if (debugAutoTriggerCenterFixed)
+                StartCoroutine(DebugAutoTriggerRoutine());
+        }
+
+        private IEnumerator DebugAutoTriggerRoutine()
+        {
+            yield return new WaitForSeconds(5f);
+            TriggerCenterFixed("debug: 5초 자동 발동");
         }
 
         private void OnEnable()
@@ -79,6 +107,43 @@ namespace ArcaneVR.Boss
                 return;
 
             CheckHpPhaseTriggers();
+
+            if (isCenterFixedPhaseActive)
+            {
+                if (bossAI.CurrentState == BossState.Weakness &&
+                    !golemTarget.IsWeakExposed &&
+                    !golemTarget.IsStaggered)
+                {
+                    bossAI.EnterCenterFixed();
+                }
+
+                if (Time.time >= centerFixedEndTime)
+                {
+                    EndCenterFixedPhase("BossSM: center-fixed complete");
+                    return;
+                }
+
+                // 보스가 외곽으로 이동 중이면 공격 대기
+                if (isBossMovingToPerimeter)
+                {
+                    LastPatternStatus = "BossSM: boss moving to perimeter";
+                    return;
+                }
+
+                if (Time.time < stateLockUntilTime)
+                    return;
+
+                if (!golemTarget.CanAct)
+                    return;
+
+                if (Time.time >= nextAttackTime)
+                {
+                    bossAI.EnterCenterFixed();
+                    TriggerAttackPattern();
+                }
+
+                return;
+            }
 
             if (Time.time < stateLockUntilTime)
                 return;
@@ -122,6 +187,11 @@ namespace ArcaneVR.Boss
             TriggerCharge("manual charge");
         }
 
+        public void TriggerCenterFixedNow()
+        {
+            TriggerCenterFixed("manual center-fixed");
+        }
+
         public void TriggerAttackNow(BossAttackType attackType)
         {
             if (!runPatternsAutomatically)
@@ -131,7 +201,10 @@ namespace ArcaneVR.Boss
             }
 
             ResolveReferences();
-            bossAI?.ChangeState(BossState.Idle);
+            if (isCenterFixedPhaseActive)
+                bossAI?.EnterCenterFixed();
+            else
+                bossAI?.ChangeState(BossState.Idle);
             patternBridge?.BeginAttackResponseWindow(attackType, responseWindowDuration);
             LastPatternStatus = $"BossSM: attack {attackType}";
             ScheduleNextAttack();
@@ -154,7 +227,7 @@ namespace ArcaneVR.Boss
             if (!phaseTwoTriggered && hpRatio <= phaseTwoHpRatio)
             {
                 phaseTwoTriggered = true;
-                TriggerCharge("HP 40% charge");
+                TriggerCenterFixed("HP 40% center-fixed");
                 return;
             }
 
@@ -185,6 +258,8 @@ namespace ArcaneVR.Boss
 
         private void TriggerDefense(string reason)
         {
+            isCenterFixedPhaseActive = false;
+            centerFixedEndTime = -1f;
             ResolveReferences();
             bossAI?.EnterDefense();
             patternBridge?.BeginGolemBarrier(defenseDuration);
@@ -196,12 +271,72 @@ namespace ArcaneVR.Boss
 
         private void TriggerCharge(string reason)
         {
+            isCenterFixedPhaseActive = false;
             ResolveReferences();
             bossAI?.BeginCharge();
             patternBridge?.BeginChargeCounterWindow(chargeCounterDuration);
             stateLockUntilTime = Time.time + chargeCounterDuration;
             ScheduleNextAttack(chargeCounterDuration + 1f);
             LastPatternStatus = $"BossSM: {reason}";
+        }
+
+        private void TriggerCenterFixed(string reason)
+        {
+            ResolveReferences();
+
+            isCenterFixedPhaseActive = true;
+            isBossMovingToPerimeter = bossPerimeterAnchor != null;
+            centerFixedEndTime = Time.time + Mathf.Max(0.5f, centerFixedDuration);
+            stateLockUntilTime = Time.time + Mathf.Max(0f, centerFixedStateLockDuration);
+            nextDefenseTime = Mathf.Max(nextDefenseTime, centerFixedEndTime);
+            nextAttackTime = Time.time + Mathf.Max(0.1f, centerFixedStateLockDuration);
+
+            bossAI?.EnterCenterFixed();
+            constraintController?.BeginConstraint();
+
+            if (bossPerimeterAnchor != null)
+            {
+                if (bossPerimeterRoutine != null)
+                    StopCoroutine(bossPerimeterRoutine);
+                bossPerimeterRoutine = StartCoroutine(MoveBossToPerimeterRoutine());
+            }
+
+            LastPatternStatus = $"BossSM: {reason}";
+        }
+
+        private IEnumerator MoveBossToPerimeterRoutine()
+        {
+            var bossTransform = golemTarget != null ? golemTarget.transform : transform;
+            var target = bossPerimeterAnchor;
+
+            while (bossTransform != null && target != null)
+            {
+                var current = bossTransform.position;
+                var dest = new Vector3(target.position.x, current.y, target.position.z);
+                var dist = Vector3.Distance(new Vector3(current.x, 0f, current.z),
+                                            new Vector3(dest.x, 0f, dest.z));
+
+                if (dist <= 0.5f)
+                {
+                    bossTransform.position = dest;
+                    break;
+                }
+
+                bossTransform.position = Vector3.MoveTowards(current, dest, bossMoveSpeed * Time.deltaTime);
+                yield return null;
+            }
+
+            isBossMovingToPerimeter = false;
+            bossPerimeterRoutine = null;
+            LastPatternStatus = "BossSM: boss arrived, waiting for player";
+
+            // 플레이어도 경기장 중앙에 도착할 때까지 대기
+            while (constraintController != null && !constraintController.HasArrived && isCenterFixedPhaseActive)
+                yield return null;
+
+            // 둘 다 도착 — 1초 후 첫 공격 시작
+            nextAttackTime = Time.time + 1f;
+            LastPatternStatus = "BossSM: both arrived, attacks begin";
         }
 
         private void HandleHealthChanged(float current, float max)
@@ -212,13 +347,15 @@ namespace ArcaneVR.Boss
 
         private void HandleDefeated()
         {
+            isCenterFixedPhaseActive = false;
             bossAI?.Die();
             LastPatternStatus = "BossSM: dead";
         }
 
         private void HandleBarrierStarted()
         {
-            bossAI?.EnterDefense();
+            if (!isCenterFixedPhaseActive)
+                bossAI?.EnterDefense();
             LastPatternStatus = "BossSM: barrier active";
         }
 
@@ -255,6 +392,9 @@ namespace ArcaneVR.Boss
 
             if (golemTarget != null)
                 chaseController = BossChaseController.EnsureForTarget(golemTarget);
+
+            if (constraintController == null)
+                constraintController = FindAnyObjectByType<ArcaneVR.Input.ConstraintController>();
 
             if (runPatternsAutomatically && patternBridge == null)
                 patternBridge = GetComponent<BossPatternCombatBridge>() ??
@@ -333,12 +473,33 @@ namespace ArcaneVR.Boss
             nextAttackTime = Time.time + firstPatternDelay;
             nextDefenseTime = Time.time + firstBarrierDelay;
             stateLockUntilTime = 0f;
+            centerFixedEndTime = -1f;
+            isCenterFixedPhaseActive = false;
         }
 
         private void ScheduleNextAttack(float extraDelay = 0f)
         {
             var speedMultiplier = golemTarget != null ? Mathf.Max(0.25f, golemTarget.ActionSpeedMultiplier) : 1f;
             nextAttackTime = Time.time + (attackInterval / speedMultiplier) + Mathf.Max(0f, extraDelay);
+        }
+
+        private void EndCenterFixedPhase(string reason)
+        {
+            isCenterFixedPhaseActive = false;
+            isBossMovingToPerimeter = false;
+            centerFixedEndTime = -1f;
+
+            if (bossPerimeterRoutine != null)
+            {
+                StopCoroutine(bossPerimeterRoutine);
+                bossPerimeterRoutine = null;
+            }
+
+            bossAI?.ChangeState(BossState.Idle);
+            constraintController?.EndConstraint();
+            nextDefenseTime = Time.time + defenseInterval;
+            ScheduleNextAttack(1f);
+            LastPatternStatus = $"BossSM: {reason}";
         }
     }
 }
