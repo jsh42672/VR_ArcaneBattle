@@ -10,6 +10,12 @@ namespace ArcaneVR.Boss
     /// </summary>
     public class BossStateMachine : MonoBehaviour
     {
+        public enum BossCombatPhase
+        {
+            Normal,
+            Pattern
+        }
+
         [Header("References")]
         [SerializeField] private BossAI bossAI;
         [SerializeField] private GolemCombatTarget golemTarget;
@@ -75,6 +81,8 @@ namespace ArcaneVR.Boss
         public string LastPatternStatus { get; private set; } = "BossSM: idle";
         public float NextAttackIn => Mathf.Max(0f, nextAttackTime - Time.time);
         public float NextDefenseIn => Mathf.Max(0f, nextDefenseTime - Time.time);
+        public BossCombatPhase CurrentCombatPhase => isCenterFixedPhaseActive ? BossCombatPhase.Pattern : BossCombatPhase.Normal;
+        public bool IsPatternAttackPhaseActive => CurrentCombatPhase == BossCombatPhase.Pattern;
 
         private void Awake()
         {
@@ -197,7 +205,8 @@ namespace ArcaneVR.Boss
                     return;
                 }
 
-                TriggerAttackPattern();
+                LastPatternStatus = "BossSM: normal phase melee handled by chase";
+                ScheduleNextAttack(1f);
             }
         }
 
@@ -222,6 +231,12 @@ namespace ArcaneVR.Boss
             {
                 Debug.LogWarning("[CenterFixed] TriggerAttackNow 취소: runPatternsAutomatically=false");
                 LastPatternStatus = "BossSM: attack patterns disabled";
+                return;
+            }
+
+            if (!IsPatternAttackPhaseActive)
+            {
+                LastPatternStatus = "BossSM: attack ignored outside pattern phase";
                 return;
             }
 
