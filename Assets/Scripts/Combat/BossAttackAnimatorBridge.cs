@@ -124,6 +124,8 @@ namespace ArcaneVR.Combat
             if (bossAnimator == null)
                 return;
 
+            bossAnimator.applyRootMotion = false;
+
             if (TrySetTrigger(triggerName))
             {
                 MaybeLog($"Animator trigger: {triggerName}");

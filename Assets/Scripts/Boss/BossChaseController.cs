@@ -31,7 +31,7 @@ namespace ArcaneVR.Boss
         [SerializeField] private float resumeDistance = 9.3f;
         [SerializeField] private float maxChaseDistance = 250f;
         [SerializeField] private float rotationSpeed = 720f;
-        [SerializeField] private float visualYawOffsetDegrees = 180f;
+        [SerializeField] private float visualYawOffsetDegrees = 0f;
         [SerializeField] private bool keepGrounded = true;
         [SerializeField] private float groundProbeUpDistance = 4f;
         [SerializeField] private float groundProbeDownDistance = 20f;
@@ -86,6 +86,18 @@ namespace ArcaneVR.Boss
         public float DistanceToTarget { get; private set; } = -1f;
         public bool IsInAttackRange => DistanceToTarget >= 0f && DistanceToTarget <= attackRange;
 
+        public void CancelFallbackAttackMotion()
+        {
+            if (fallbackAttackMotionRoutine != null)
+            {
+                StopCoroutine(fallbackAttackMotionRoutine);
+                fallbackAttackMotionRoutine = null;
+            }
+
+            if (bossAnimator != null)
+                bossAnimator.applyRootMotion = false;
+        }
+
         public static BossChaseController EnsureForTarget(GolemCombatTarget target)
         {
             if (target == null)
@@ -109,7 +121,7 @@ namespace ArcaneVR.Boss
             resumeDistance = Mathf.Max(resumeDistance, stoppingDistance + 1.0f);
             maxChaseDistance = Mathf.Max(maxChaseDistance, 250f);
             rotationSpeed = Mathf.Max(rotationSpeed, 720f);
-            visualYawOffsetDegrees = 180f;
+            visualYawOffsetDegrees = 0f;
             runAnimationSpeedMultiplier = 0.45f;
             attackRange = Mathf.Max(attackRange, 9.3f);
             meleeHitRange = Mathf.Max(meleeHitRange, attackRange + 0.5f);
@@ -466,7 +478,9 @@ namespace ArcaneVR.Boss
                 return false;
 
             if (!enableAttackResponsePatterns)
-                return bossAI == null || bossAI.CurrentState != BossState.Dead;
+                return bossAI == null ||
+                       (bossAI.CurrentState != BossState.Dead &&
+                        bossAI.CurrentState != BossState.CenterFixed);
 
             if (bossAI == null)
                 return true;
@@ -510,6 +524,7 @@ namespace ArcaneVR.Boss
             {
                 case BossState.Dead:
                 case BossState.Defense:
+                case BossState.CenterFixed:
                 case BossState.Weakness:
                     LastChaseStatus = $"Chase: state {bossAI.CurrentState}";
                     return false;
@@ -651,7 +666,7 @@ namespace ArcaneVR.Boss
 
         private void EnsureRunControllerIfNeeded()
         {
-            if (bossAnimator == null || runController == null || bossAnimator.runtimeAnimatorController != null)
+            if (bossAnimator == null || runController == null || bossAnimator.runtimeAnimatorController == runController)
                 return;
 
             controllerBeforeRun = bossAnimator.runtimeAnimatorController;

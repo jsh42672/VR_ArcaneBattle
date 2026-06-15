@@ -130,6 +130,14 @@ namespace ArcaneVR.Boss
                     return;
                 }
 
+                // 보스 도착, 플레이어 아직 미도착 — 공격 시간 계속 밀기
+                if (constraintController != null && !constraintController.HasArrived)
+                {
+                    nextAttackTime = Time.time + 0.5f;
+                    LastPatternStatus = "BossSM: waiting for player";
+                    return;
+                }
+
                 if (Time.time < stateLockUntilTime)
                     return;
 
@@ -293,6 +301,9 @@ namespace ArcaneVR.Boss
 
             bossAI?.EnterCenterFixed();
             constraintController?.BeginConstraint();
+
+            // 진행 중인 근접 돌진 모션 취소
+            chaseController?.CancelFallbackAttackMotion();
 
             if (bossPerimeterAnchor != null)
             {

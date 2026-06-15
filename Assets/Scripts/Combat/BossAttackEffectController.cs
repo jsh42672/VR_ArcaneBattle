@@ -360,27 +360,45 @@ namespace ArcaneVR.Combat
         {
             ResolveReferences();
 
-            var root = new GameObject($"Arcane Boss {attackType} Attack FX")
-            {
-                hideFlags = HideFlags.DontSave
-            };
-
-            var color = ResolveAttackColor(attackType);
             var lifetime = duration * Mathf.Max(0.2f, effectDurationMultiplier);
-            BuildAttackVisual(root.transform, attackType, color);
-            SpawnVfxPrefab(attackType, lifetime);
             LastEffectStatus = $"AttackFx: {attackType}";
 
-            var started = Time.time;
-            while (root != null && Time.time - started < lifetime)
+            var prefab = attackType switch
             {
-                var t = Mathf.Clamp01((Time.time - started) / Mathf.Max(0.01f, lifetime));
-                UpdateAttackVisual(root.transform, attackType, color, t);
-                yield return null;
-            }
+                BossAttackType.High => highAttackVfxPrefab,
+                BossAttackType.Middle => midAttackVfxPrefab,
+                BossAttackType.Low => lowAttackVfxPrefab,
+                _ => null
+            };
 
-            if (root != null)
-                Destroy(root);
+            if (prefab != null)
+            {
+                // 실제 VFX 프리팹 사용 — 더미 LineRenderer 없음
+                SpawnVfxPrefab(attackType, lifetime);
+                yield return new WaitForSeconds(lifetime);
+            }
+            else
+            {
+                // 프리팹 없을 때만 더미 LineRenderer fallback
+                var root = new GameObject($"Arcane Boss {attackType} Attack FX")
+                {
+                    hideFlags = HideFlags.DontSave
+                };
+
+                var color = ResolveAttackColor(attackType);
+                BuildAttackVisual(root.transform, attackType, color);
+
+                var started = Time.time;
+                while (root != null && Time.time - started < lifetime)
+                {
+                    var t = Mathf.Clamp01((Time.time - started) / Mathf.Max(0.01f, lifetime));
+                    UpdateAttackVisual(root.transform, attackType, color, t);
+                    yield return null;
+                }
+
+                if (root != null)
+                    Destroy(root);
+            }
 
             activeAttackRoutine = null;
             LastEffectStatus = "AttackFx: idle";
