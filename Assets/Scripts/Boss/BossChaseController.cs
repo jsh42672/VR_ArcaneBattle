@@ -80,6 +80,7 @@ namespace ArcaneVR.Boss
         private bool wasMoving;
         private bool animatorWasMoving;
         private Coroutine fallbackAttackMotionRoutine;
+        private Vector3 prevDebugPosition;
 
         public string LastChaseStatus { get; private set; } = "Chase: idle";
         public bool IsChasing { get; private set; }
@@ -265,10 +266,21 @@ namespace ArcaneVR.Boss
 
             if (debugFreeze)
             {
+                // DebugFreeze 중 위치 변경 감지 (골렘 순간이동 원인 추적)
+                var debugRoot = movementRoot != null ? movementRoot : transform;
+                if (prevDebugPosition != Vector3.zero)
+                {
+                    var debugDelta = Vector3.Distance(debugRoot.position, prevDebugPosition);
+                    if (debugDelta > 0.05f)
+                        Debug.LogWarning($"[CenterFixed] 골렘 위치 변경 감지 (DebugFreeze 중) | delta={debugDelta:0.00}m | pos={debugRoot.position} | prev={prevDebugPosition} | applyRootMotion={bossAnimator?.applyRootMotion} | time={Time.time:0.0}s");
+                }
+                prevDebugPosition = debugRoot.position;
+
                 LastChaseStatus = "Chase: 디버그 정지";
                 UpdateAnimator(false, 0f);
                 return;
             }
+            prevDebugPosition = Vector3.zero;
 
             if (!enableChase)
             {
@@ -399,6 +411,7 @@ namespace ArcaneVR.Boss
         {
             var root = movementRoot != null ? movementRoot : transform;
             var origin = root.position;
+            Debug.Log($"[CenterFixed] FallbackAttackMotion 시작 | type={attackType} | debugFreeze={debugFreeze} | bossState={bossAI?.CurrentState} | pos={origin} | time={Time.time:0.0}s");
             var forward = target != null ? target.position - root.position : root.forward;
             forward.y = 0f;
             if (forward.sqrMagnitude < 0.0001f)

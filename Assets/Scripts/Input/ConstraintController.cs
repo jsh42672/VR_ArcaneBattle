@@ -22,10 +22,10 @@ namespace ArcaneVR.Input
         [SerializeField] private Transform playerRigRoot;
         [Tooltip("플레이어를 끌어당길 경기장 중앙 마커 (Circle).")]
         [SerializeField] private Transform playerCenterAnchor;
-        [Tooltip("끌어당기는 속도 (m/s).")]
-        [SerializeField] private float pullSpeed = 3f;
+        [Tooltip("플레이어를 중앙으로 이동시키는 데 걸리는 시간 (초).")]
+        [SerializeField] private float pullDuration = 3f;
         [Tooltip("도착 판정 거리 (m).")]
-        [SerializeField] private float arrivalThreshold = 0.3f;
+        [SerializeField] private float arrivalThreshold = 1.0f;
 
         public event Action OnConstraintStart;
         public event Action OnConstraintEnd;
@@ -115,36 +115,58 @@ namespace ArcaneVR.Input
 
         private IEnumerator PullToCenter()
         {
-            var target = playerCenterAnchor;
+            var anchor = playerCenterAnchor;
             var head = ArcanePlayerRigResolver.FindHeadTransform();
+            if (playerRigRoot == null || anchor == null || head == null)
+                yield break;
 
-            while (playerRigRoot != null && target != null && head != null)
+            // 시작 시점의 head-rig 오프셋 기준으로 목표 rig 위치 계산
+            var headOffsetAtStart = new Vector3(
+                head.position.x - playerRigRoot.position.x,
+                0f,
+                head.position.z - playerRigRoot.position.z);
+            var startRigPos = playerRigRoot.position;
+            var targetRigPos = new Vector3(
+                anchor.position.x - headOffsetAtStart.x,
+                playerRigRoot.position.y,
+                anchor.position.z - headOffsetAtStart.z);
+
+            var elapsed = 0f;
+            while (elapsed < pullDuration && playerRigRoot != null && anchor != null)
             {
+                elapsed += Time.deltaTime;
+                var t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / pullDuration));
+                playerRigRoot.position = Vector3.Lerp(startRigPos, targetRigPos, t);
+
                 var headXZ = new Vector3(head.position.x, 0f, head.position.z);
-                var targetXZ = new Vector3(target.position.x, 0f, target.position.z);
-                var dist = Vector3.Distance(headXZ, targetXZ);
+                var anchorXZ = new Vector3(anchor.position.x, 0f, anchor.position.z);
+                var dist = Vector3.Distance(headXZ, anchorXZ);
+                LastDebugMessage = $"Constraint: pulling {dist:0.1f}m";
 
                 if (dist <= arrivalThreshold)
                 {
-                    var headOffset = new Vector3(
-                        head.position.x - playerRigRoot.position.x,
-                        0f,
-                        head.position.z - playerRigRoot.position.z);
-                    playerRigRoot.position = new Vector3(
-                        target.position.x - headOffset.x,
-                        playerRigRoot.position.y,
-                        target.position.z - headOffset.z);
                     HasArrived = true;
                     LastDebugMessage = "Constraint: arrived";
                     break;
                 }
 
-                var dir = (targetXZ - headXZ).normalized;
-                playerRigRoot.position += new Vector3(dir.x, 0f, dir.z) * pullSpeed * Time.deltaTime;
-                LastDebugMessage = $"Constraint: pulling {dist:0.1f}m";
                 yield return null;
             }
 
+            // 3초 종료 후 정확한 위치로 스냅
+            if (playerRigRoot != null && head != null && anchor != null)
+            {
+                var finalOffset = new Vector3(
+                    head.position.x - playerRigRoot.position.x,
+                    0f,
+                    head.position.z - playerRigRoot.position.z);
+                playerRigRoot.position = new Vector3(
+                    anchor.position.x - finalOffset.x,
+                    playerRigRoot.position.y,
+                    anchor.position.z - finalOffset.z);
+            }
+            HasArrived = true;
+            LastDebugMessage = "Constraint: arrived";
             pullRoutine = null;
         }
 

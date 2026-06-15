@@ -211,6 +211,8 @@ namespace ArcaneVR.Combat
 
         private void HandleAttackStarted(BossAttackType attackType, float duration)
         {
+            Debug.Log($"[CenterFixed] EffectController.HandleAttackStarted | type={attackType} | dur={duration:0.0}s | enabled={enableAttackEffects}");
+
             if (!enableAttackEffects)
                 return;
 
