@@ -1,7 +1,7 @@
 using System;
+using System.Collections;
 using System.Reflection;
 using NUnit.Framework;
-using UnityEditor;
 using UnityEngine;
 
 namespace ArcaneVR.EditorTests
@@ -11,7 +11,29 @@ namespace ArcaneVR.EditorTests
         private const string TurnerTypeName = "CodexGenerated.GrimoirePages.GrimoirePageTurner, Assembly-CSharp";
 
         [Test]
-        public void SetSpread_AssignsDifferentFrontAndBackContentForVisiblePages()
+        public void SetSpread_CreatesAllTurnableSheetsUpFront()
+        {
+            var fixture = new PageTurnerFixture();
+
+            try
+            {
+                fixture.AssignAllRenderers();
+                fixture.AssignPageMaterials(6);
+                fixture.InvokeSetSpread(0);
+
+                Assert.AreEqual(3, fixture.GetRuntimeSheetCount());
+                fixture.AssertRuntimeSheetPages(0, 1, 2);
+                fixture.AssertRuntimeSheetPages(1, 3, 4);
+                fixture.AssertRuntimeSheetPages(2, 5, 6);
+            }
+            finally
+            {
+                fixture.Dispose();
+            }
+        }
+
+        [Test]
+        public void SetSpread_ShowsReadSheetOnLeftAndUnreadSheetOnRight()
         {
             var fixture = new PageTurnerFixture();
 
@@ -21,12 +43,10 @@ namespace ArcaneVR.EditorTests
                 fixture.AssignPageMaterials(6);
                 fixture.InvokeSetSpread(1);
 
-                AssertRendererMatches(fixture.LeftFrontRenderer, fixture.PageMaterials[2]);
-                AssertRendererMatches(fixture.LeftBackRenderer, fixture.PageMaterials[1]);
-                AssertRendererMatches(fixture.RightFrontRenderer, fixture.PageMaterials[3]);
-                AssertRendererMatches(fixture.RightBackRenderer, fixture.PageMaterials[4]);
-                AssertRendererMatches(fixture.TurningFrontRenderer, fixture.PageMaterials[3]);
-                AssertRendererMatches(fixture.TurningBackRenderer, fixture.PageMaterials[4]);
+                Assert.IsFalse(fixture.LeftFrontRenderer.gameObject.activeSelf);
+                fixture.AssertRuntimeSheetMaterial(0, "backRenderer", fixture.PageMaterials[2], shouldBeActive: true);
+                fixture.AssertRuntimeSheetMaterial(1, "frontRenderer", fixture.PageMaterials[3], shouldBeActive: true);
+                fixture.AssertRuntimeSheetInactive(2);
             }
             finally
             {
@@ -35,7 +55,7 @@ namespace ArcaneVR.EditorTests
         }
 
         [Test]
-        public void BeginManualTurn_UsesNextPageOnBackOfForwardTurningSheet()
+        public void BeginManualTurn_ForwardRevealsNextUnreadSheetOnlyAfterActualDragProgress()
         {
             var fixture = new PageTurnerFixture();
 
@@ -48,53 +68,21 @@ namespace ArcaneVR.EditorTests
                 bool began = fixture.InvokeBeginManualTurn(true);
 
                 Assert.IsTrue(began);
-                AssertRendererMatches(fixture.TurningFrontRenderer, fixture.PageMaterials[1]);
-                AssertRendererMatches(fixture.TurningBackRenderer, fixture.PageMaterials[2]);
-                Assert.IsFalse(fixture.RightFrontRenderer.gameObject.activeSelf);
-                Assert.IsFalse(fixture.RightBackRenderer.gameObject.activeSelf);
-            }
-            finally
-            {
-                fixture.Dispose();
-            }
-        }
-
-        [Test]
-        public void SetManualTurnAngle_RevealsUnderlyingNextPageOnlyAfterActualDragProgress()
-        {
-            var fixture = new PageTurnerFixture();
-
-            try
-            {
-                fixture.AssignAllRenderers();
-                fixture.AssignPageMaterials(6);
-                fixture.InvokeSetSpread(0);
-
-                bool began = fixture.InvokeBeginManualTurn(true);
-
-                Assert.IsTrue(began);
-                Assert.IsFalse(fixture.RightFrontRenderer.gameObject.activeSelf);
+                fixture.AssertRuntimeSheetMaterial(0, "frontRenderer", fixture.PageMaterials[1], shouldBeActive: true);
+                fixture.AssertRuntimeSheetMaterial(0, "backRenderer", fixture.PageMaterials[2], shouldBeActive: true);
+                fixture.AssertRuntimeSheetInactive(1);
 
                 fixture.InvokeSetManualTurnAngle(2f);
-                Assert.IsFalse(fixture.RightFrontRenderer.gameObject.activeSelf);
+                fixture.AssertRuntimeSheetInactive(1);
 
                 fixture.InvokeSetManualTurnAngle(12f);
-                Assert.IsTrue(fixture.RightFrontRenderer.gameObject.activeSelf);
-                Assert.IsTrue(fixture.RightBackRenderer.gameObject.activeSelf);
-                AssertRendererMatches(fixture.RightFrontRenderer, fixture.PageMaterials[3]);
-                AssertRendererMatches(fixture.RightBackRenderer, fixture.PageMaterials[4]);
+                fixture.AssertRuntimeSheetMaterial(1, "frontRenderer", fixture.PageMaterials[3], shouldBeActive: true);
+                fixture.AssertRuntimeSheetMaterial(1, "backRenderer", fixture.PageMaterials[4], shouldBeActive: true);
             }
             finally
             {
                 fixture.Dispose();
             }
-        }
-
-        private static void AssertRendererMatches(Renderer renderer, Material expected)
-        {
-            Assert.IsNotNull(renderer);
-            Assert.IsNotNull(renderer.sharedMaterial);
-            Assert.AreEqual(expected.color, renderer.sharedMaterial.color);
         }
 
         private sealed class PageTurnerFixture : IDisposable
@@ -134,6 +122,9 @@ namespace ArcaneVR.EditorTests
 
             public void AssignAllRenderers()
             {
+                LeftFrontRenderer.transform.localPosition = new Vector3(-0.12f, 0.01f, 0f);
+                RightFrontRenderer.transform.localPosition = new Vector3(0.12f, 0.01f, 0f);
+
                 SetField("leftPageRenderer", LeftFrontRenderer);
                 SetField("leftPageBackRenderer", LeftBackRenderer);
                 SetField("rightPageRenderer", RightFrontRenderer);
@@ -181,6 +172,42 @@ namespace ArcaneVR.EditorTests
                 method.Invoke(turner, new object[] { angle });
             }
 
+            public int GetRuntimeSheetCount()
+            {
+                IList runtimeSheets = GetRuntimeSheets();
+                return runtimeSheets.Count;
+            }
+
+            public void AssertRuntimeSheetPages(int sheetIndex, int expectedFrontPage, int expectedBackPage)
+            {
+                object sheet = GetRuntimeSheets()[sheetIndex];
+                Assert.AreEqual(expectedFrontPage, GetFieldValue<int>(sheet, "frontPageIndex"));
+                Assert.AreEqual(expectedBackPage, GetFieldValue<int>(sheet, "backPageIndex"));
+            }
+
+            public void AssertRuntimeSheetMaterial(int sheetIndex, string rendererFieldName, Material expected, bool shouldBeActive)
+            {
+                object sheet = GetRuntimeSheets()[sheetIndex];
+                Renderer renderer = GetFieldValue<Renderer>(sheet, rendererFieldName);
+                Assert.IsNotNull(renderer);
+                Assert.AreEqual(shouldBeActive, renderer.gameObject.activeSelf);
+                Assert.IsNotNull(renderer.sharedMaterial);
+                Assert.AreEqual(expected.color, renderer.sharedMaterial.color);
+            }
+
+            public void AssertRuntimeSheetInactive(int sheetIndex)
+            {
+                object sheet = GetRuntimeSheets()[sheetIndex];
+                Renderer renderer = GetFieldValue<Renderer>(sheet, "frontRenderer");
+                Assert.IsNotNull(renderer);
+                Assert.IsFalse(renderer.gameObject.activeSelf);
+            }
+
+            private IList GetRuntimeSheets()
+            {
+                return GetFieldValue<IList>(turner, "runtimeSheets");
+            }
+
             private void SetField(string fieldName, object value)
             {
                 FieldInfo field = turnerType.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
@@ -188,16 +215,23 @@ namespace ArcaneVR.EditorTests
                 field.SetValue(turner, value);
             }
 
+            private static T GetFieldValue<T>(object target, string fieldName)
+            {
+                FieldInfo field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                Assert.IsNotNull(field, $"Expected field '{fieldName}' to exist on {target.GetType().Name}.");
+                return (T)field.GetValue(target);
+            }
+
             private static Renderer CreateRenderer(string name, Transform parent)
             {
                 var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 go.name = name;
                 go.transform.SetParent(parent, false);
+                go.transform.localScale = new Vector3(0.25f, 0.3f, 1f);
+
                 var collider = go.GetComponent<Collider>();
                 if (collider != null)
-                {
                     UnityEngine.Object.DestroyImmediate(collider);
-                }
 
                 return go.GetComponent<Renderer>();
             }
@@ -209,16 +243,12 @@ namespace ArcaneVR.EditorTests
                     foreach (Material material in PageMaterials)
                     {
                         if (material != null)
-                        {
                             UnityEngine.Object.DestroyImmediate(material);
-                        }
                     }
                 }
 
                 if (root != null)
-                {
                     UnityEngine.Object.DestroyImmediate(root);
-                }
             }
         }
     }
