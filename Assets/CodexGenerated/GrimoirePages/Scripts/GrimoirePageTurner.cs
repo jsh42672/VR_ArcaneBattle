@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -9,9 +10,12 @@ namespace CodexGenerated.GrimoirePages
     public class GrimoirePageTurner : MonoBehaviour
     {
         [SerializeField] private Renderer leftPageRenderer;
+        [SerializeField] private Renderer leftPageBackRenderer;
         [SerializeField] private Renderer rightPageRenderer;
+        [SerializeField] private Renderer rightPageBackRenderer;
         [SerializeField] private Transform turningPagePivot;
         [SerializeField] private Renderer turningPageRenderer;
+        [SerializeField] private Renderer turningPageBackRenderer;
         [SerializeField] private Renderer[] turningPageRenderers;
         [SerializeField] private Transform[] turningPageStrips;
         [SerializeField] private Material[] pageMaterials;
@@ -20,45 +24,45 @@ namespace CodexGenerated.GrimoirePages
         [SerializeField] private float curlAngle = 34f;
         [SerializeField] private AnimationCurve turnCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-        [Header("── 페이지 두께 표현 ──")]
-        [Tooltip("왼쪽 페이지 스택 Transform (없으면 자동 생성)")]
+        [Header("Page Stack Visuals")]
         [SerializeField] private Transform leftPageStack;
-        [Tooltip("오른쪽 페이지 스택 Transform (없으면 자동 생성)")]
         [SerializeField] private Transform rightPageStack;
-        [Tooltip("읽지 않은 전체 페이지의 최대 두께 (m)")]
         [SerializeField] private float maxPageStackWidth = 0.018f;
+        [SerializeField] private float manualRevealAngleThreshold = 8f;
 
         private int spreadIndex;
         private bool isTurning;
         private Quaternion pivotBaseRotation;
         private Vector3[] stripBasePositions;
         private Quaternion[] stripBaseRotations;
+        private readonly Dictionary<Material, Material> runtimePageMaterialCache = new();
 
-        // 수동 드래그 턴 상태
         private float currentTurnAngle;
         private int manualTargetSpread;
         private bool manualTurnForward;
+        private bool manualUnderlyingPageRevealed;
+
+        private struct PageFaceMaterials
+        {
+            public Material front;
+            public Material back;
+        }
+
 #if UNITY_EDITOR
         private double editorTurnStartTime;
         private int editorTargetSpread;
         private bool editorTurnForward;
-        private Material editorTurningMaterial;
 #endif
 
         public bool IsTurning => isTurning;
 
-        /// <summary>손가락 드래그 턴을 시작할 수 있는 상태인지</summary>
         public bool CanManualTurn => !isTurning && pageMaterials != null && pageMaterials.Length > 2;
 
-        /// <summary>
-        /// 손가락 드래그 턴 시작. forward=true면 다음 페이지, false면 이전 페이지.
-        /// 성공 시 true 반환.
-        /// </summary>
         public bool BeginManualTurn(bool forward)
         {
             if (!CanManualTurn)
             {
-                Debug.LogWarning($"[PageTurn] BeginManualTurn 거부 | isTurning={isTurning} | pageMaterials={(pageMaterials == null ? "null" : pageMaterials.Length.ToString())}");
+                Debug.LogWarning($"[PageTurn] BeginManualTurn blocked | isTurning={isTurning} | pageMaterials={(pageMaterials == null ? "null" : pageMaterials.Length.ToString())}");
                 return false;
             }
 
@@ -68,28 +72,27 @@ namespace CodexGenerated.GrimoirePages
 
             if (targetSpread == spreadIndex)
             {
-                Debug.Log($"[PageTurn] BeginManualTurn 거부: 더 이상 페이지 없음 | forward={forward} | spreadIndex={spreadIndex} | last={GetLastSpreadIndex()}");
+                Debug.Log($"[PageTurn] BeginManualTurn blocked: no more pages | forward={forward} | spreadIndex={spreadIndex} | last={GetLastSpreadIndex()}");
                 return false;
             }
 
             EnsureCachedTransforms();
+            EnsureBackRenderers();
+
             manualTargetSpread = targetSpread;
             manualTurnForward = forward;
-
-            // 각도를 먼저 세팅 (pivot이 항상 표시되므로 시각적 점프 방지)
             currentTurnAngle = forward ? 0f : 180f;
-            SetTurningAngle(currentTurnAngle);
+            manualUnderlyingPageRevealed = false;
 
-            var turningMat = PrepareTurningPage(targetSpread, forward);
-            SetTurningPageVisible(true, turningMat);
+            SetTurningAngle(currentTurnAngle);
+            PageFaceMaterials turningMaterials = PrepareTurningPage(targetSpread, forward);
+            SetTurningPageVisible(true, turningMaterials);
+            UpdateManualUnderlyingPageVisibility();
 
             isTurning = true;
-
-            Debug.Log($"[PageTurn] BeginManualTurn | forward={forward} | spread {spreadIndex}→{targetSpread} | turningMat={(turningMat == null ? "null" : turningMat.name)}");
             return true;
         }
 
-        /// <summary>드래그 중 각도 갱신 (0°=오른쪽, 180°=왼쪽)</summary>
         public void SetManualTurnAngle(float angle)
         {
             if (!isTurning)
@@ -97,18 +100,14 @@ namespace CodexGenerated.GrimoirePages
 
             currentTurnAngle = Mathf.Clamp(angle, 0f, 180f);
             SetTurningAngle(currentTurnAngle);
+            UpdateManualUnderlyingPageVisibility();
         }
 
-        /// <summary>
-        /// 손가락 뗄 때 호출. 현재 각도 기준으로 커밋/취소 결정 후 스냅 애니메이션.
-        /// forward: 90° 이상이면 다음 페이지 확정.
-        /// backward: 90° 이하이면 이전 페이지 확정.
-        /// </summary>
         public void CommitManualTurn()
         {
             if (!isTurning)
             {
-                Debug.LogWarning("[PageTurn] CommitManualTurn 호출됐으나 isTurning=false");
+                Debug.LogWarning("[PageTurn] CommitManualTurn called while not turning.");
                 return;
             }
 
@@ -122,17 +121,14 @@ namespace CodexGenerated.GrimoirePages
 
             int finalSpread = commit ? manualTargetSpread : spreadIndex;
 
-            Debug.Log($"[PageTurn] CommitManualTurn | 각도={currentTurnAngle:F1}° | {(commit ? $"확정 spread→{finalSpread}" : $"취소 spread 유지={spreadIndex}")} | 스냅→{targetAngle:F0}°");
-
-            // 오브젝트가 비활성이면 코루틴 불가 → 즉시 완료 처리
             if (!gameObject.activeInHierarchy)
             {
-                Debug.Log("[PageTurn] CommitManualTurn: 오브젝트 비활성, 즉시 완료");
                 SetTurningAngle(targetAngle);
                 spreadIndex = finalSpread;
                 ApplySpread(spreadIndex);
                 HideTurningPage();
                 isTurning = false;
+                manualUnderlyingPageRevealed = false;
                 return;
             }
 
@@ -141,13 +137,27 @@ namespace CodexGenerated.GrimoirePages
 
         private void OnDisable()
         {
-            // 비활성화 시 isTurning 강제 리셋 (코루틴이 중단되어도 다음 사용 가능하도록)
             if (isTurning)
             {
                 isTurning = false;
                 HideTurningPage();
-                Debug.Log("[PageTurn] OnDisable: isTurning 리셋");
             }
+        }
+
+        private void OnDestroy()
+        {
+            foreach (Material cachedMaterial in runtimePageMaterialCache.Values)
+            {
+                if (cachedMaterial == null)
+                    continue;
+
+                if (Application.isPlaying)
+                    Destroy(cachedMaterial);
+                else
+                    DestroyImmediate(cachedMaterial);
+            }
+
+            runtimePageMaterialCache.Clear();
         }
 
         private IEnumerator SnapAndFinishTurn(float targetAngle, int finalSpread)
@@ -169,23 +179,18 @@ namespace CodexGenerated.GrimoirePages
             ApplySpread(spreadIndex);
             HideTurningPage();
             isTurning = false;
-
-            Debug.Log($"[PageTurn] 스냅 완료 | 최종 spread={spreadIndex}");
+            manualUnderlyingPageRevealed = false;
         }
 
         [ContextMenu("Next Page")]
         public void NextPage()
         {
             if (isTurning || pageMaterials == null || pageMaterials.Length <= 2)
-            {
                 return;
-            }
 
             int nextSpread = Mathf.Min(spreadIndex + 1, GetLastSpreadIndex());
             if (nextSpread == spreadIndex)
-            {
                 return;
-            }
 
             BeginTurn(nextSpread, true);
         }
@@ -194,21 +199,18 @@ namespace CodexGenerated.GrimoirePages
         public void PreviousPage()
         {
             if (isTurning || pageMaterials == null || pageMaterials.Length <= 2)
-            {
                 return;
-            }
 
             int nextSpread = Mathf.Max(spreadIndex - 1, 0);
             if (nextSpread == spreadIndex)
-            {
                 return;
-            }
 
             BeginTurn(nextSpread, false);
         }
 
         public void SetSpread(int index)
         {
+            EnsureBackRenderers();
             spreadIndex = Mathf.Clamp(index, 0, GetLastSpreadIndex());
             ApplySpread(spreadIndex);
             HideTurningPage();
@@ -218,8 +220,8 @@ namespace CodexGenerated.GrimoirePages
         public void PreviewMidTurn()
         {
             EnsureCachedTransforms();
-            Material turningMaterial = GetMaterialForSpread(spreadIndex, 1);
-            SetTurningPageVisible(true, turningMaterial);
+            EnsureBackRenderers();
+            SetTurningPageVisible(true, GetRightPageFaceMaterials(spreadIndex));
             SetTurningAngle(65f);
         }
 
@@ -227,12 +229,14 @@ namespace CodexGenerated.GrimoirePages
         public void HideTurnPreview()
         {
             EnsureCachedTransforms();
+            EnsureBackRenderers();
             HideTurningPage();
         }
 
         private void Awake()
         {
             EnsureCachedTransforms();
+            EnsureBackRenderers();
             EnsurePageStacks();
             ApplySpread(spreadIndex);
             HideTurningPage();
@@ -241,6 +245,8 @@ namespace CodexGenerated.GrimoirePages
         private void BeginTurn(int targetSpread, bool forward)
         {
             EnsureCachedTransforms();
+            EnsureBackRenderers();
+
             if (Application.isPlaying)
             {
                 StartCoroutine(TurnToSpread(targetSpread, forward));
@@ -263,13 +269,11 @@ namespace CodexGenerated.GrimoirePages
             float from = forward ? 0f : 180f;
             float to = forward ? 180f : 0f;
 
-            // 시각적 점프 방지: 각도를 먼저 세팅한 뒤 표시
             SetTurningAngle(from);
-            Material turningMaterial = PrepareTurningPage(targetSpread, forward);
-            SetTurningPageVisible(true, turningMaterial);
+            PageFaceMaterials turningMaterials = PrepareTurningPage(targetSpread, forward);
+            SetTurningPageVisible(true, turningMaterials);
 
             float elapsed = 0f;
-
             while (elapsed < turnDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
@@ -284,37 +288,38 @@ namespace CodexGenerated.GrimoirePages
             ApplySpread(spreadIndex);
             HideTurningPage();
             isTurning = false;
+            manualUnderlyingPageRevealed = false;
         }
 
-        private Material PrepareTurningPage(int targetSpread, bool forward)
+        private PageFaceMaterials PrepareTurningPage(int targetSpread, bool forward)
         {
-            Material turningMaterial = GetMaterialForSpread(spreadIndex, forward ? 1 : 0);
-            if (forward && rightPageRenderer != null)
+            PageFaceMaterials turningMaterials = forward
+                ? GetRightPageFaceMaterials(spreadIndex)
+                : GetLeftPageFaceMaterials(spreadIndex);
+
+            if (forward)
             {
-                rightPageRenderer.sharedMaterial = GetMaterialForSpread(targetSpread, 1);
+                ApplyFaceMaterials(rightPageRenderer, rightPageBackRenderer, GetRightPageFaceMaterials(targetSpread));
             }
-            else if (!forward && leftPageRenderer != null)
+            else
             {
-                leftPageRenderer.sharedMaterial = GetMaterialForSpread(targetSpread, 0);
+                ApplyFaceMaterials(leftPageRenderer, leftPageBackRenderer, GetLeftPageFaceMaterials(targetSpread));
             }
 
-            return turningMaterial;
+            return turningMaterials;
         }
 
 #if UNITY_EDITOR
         private void StartEditorTurn(int targetSpread, bool forward)
         {
             if (isTurning)
-            {
                 return;
-            }
 
             isTurning = true;
             editorTargetSpread = targetSpread;
             editorTurnForward = forward;
             editorTurnStartTime = EditorApplication.timeSinceStartup;
-            editorTurningMaterial = PrepareTurningPage(targetSpread, forward);
-            SetTurningPageVisible(true, editorTurningMaterial);
+            SetTurningPageVisible(true, PrepareTurningPage(targetSpread, forward));
             EditorApplication.update -= UpdateEditorTurn;
             EditorApplication.update += UpdateEditorTurn;
         }
@@ -355,128 +360,164 @@ namespace CodexGenerated.GrimoirePages
         private static float EvaluateBookTurnAngle(float from, float to, float t)
         {
             if (t < 0.35f)
-            {
                 return Mathf.Lerp(from, 70f, t / 0.35f);
-            }
 
             if (t < 0.48f)
-            {
                 return Mathf.Lerp(70f, 110f, (t - 0.35f) / 0.13f);
-            }
 
             return Mathf.Lerp(110f, to, (t - 0.48f) / 0.52f);
         }
 
         private void ApplySpread(int index)
         {
-            if (leftPageRenderer != null)
-                leftPageRenderer.sharedMaterial = GetMaterialForSpread(index, 0);
-
-            if (rightPageRenderer != null)
-                rightPageRenderer.sharedMaterial = GetMaterialForSpread(index, 1);
-
-            // turningPagePivot이 항상 오른쪽 페이지 역할을 하므로 재질 동기화
-            if (turningPageRenderer != null)
-                turningPageRenderer.sharedMaterial = GetMaterialForSpread(index, 1);
-
+            ApplyFaceMaterials(leftPageRenderer, leftPageBackRenderer, GetLeftPageFaceMaterials(index));
+            ApplyFaceMaterials(rightPageRenderer, rightPageBackRenderer, GetRightPageFaceMaterials(index));
+            ApplyFaceMaterials(turningPageRenderer, turningPageBackRenderer, GetRightPageFaceMaterials(index));
             UpdatePageStacks(index);
         }
 
         private void EnsurePageStacks()
         {
             if (leftPageStack == null && leftPageRenderer != null)
-                leftPageStack = CreateStackObject("LeftPageStack", leftPageRenderer.transform, isLeft: true);
+                leftPageStack = CreateStackObject("LeftPageStack", leftPageRenderer, true);
 
             if (rightPageStack == null && rightPageRenderer != null)
-                rightPageStack = CreateStackObject("RightPageStack", rightPageRenderer.transform, isLeft: false);
+                rightPageStack = CreateStackObject("RightPageStack", rightPageRenderer, false);
         }
 
-        private Transform CreateStackObject(string objName, Transform pageTransform, bool isLeft)
+        private Transform CreateStackObject(string objectName, Renderer pageRenderer, bool isLeft)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            go.name = objName;
-            go.transform.SetParent(transform, false);
+            GameObject stackObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            stackObject.name = objectName;
+            stackObject.transform.SetParent(transform, false);
 
-            var col = go.GetComponent<Collider>();
-            if (col != null) Destroy(col);
+            Collider collider = stackObject.GetComponent<Collider>();
+            if (collider != null)
+                Destroy(collider);
 
-            // 페이지와 동일한 rotation
-            go.transform.localRotation = pageTransform.localRotation;
-
-            // 페이지 외부 가장자리에 배치
-            var pos = pageTransform.localPosition;
-            float halfWidth = pageTransform.localScale.x * 0.5f;
-            pos.x += isLeft ? -halfWidth : halfWidth;
-            go.transform.localPosition = pos;
-
-            // 초기 scale: 페이지 높이에 맞춤, 두께는 UpdatePageStacks에서 설정
-            go.transform.localScale = new Vector3(0f, pageTransform.localScale.y * 0.92f, pageTransform.localScale.z);
-
-            // 페이지 가장자리 색상 (크림색)
-            var mat = new Material(Shader.Find("Universal Render Pipeline/Unlit") ??
-                                   Shader.Find("Unlit/Color") ??
-                                   Shader.Find("Standard"))
+            Bounds worldBounds = pageRenderer.bounds;
+            Vector3[] worldCorners =
             {
-                color = new Color(0.88f, 0.82f, 0.68f)
+                new Vector3(worldBounds.min.x, worldBounds.min.y, worldBounds.min.z),
+                new Vector3(worldBounds.min.x, worldBounds.min.y, worldBounds.max.z),
+                new Vector3(worldBounds.min.x, worldBounds.max.y, worldBounds.min.z),
+                new Vector3(worldBounds.min.x, worldBounds.max.y, worldBounds.max.z),
+                new Vector3(worldBounds.max.x, worldBounds.min.y, worldBounds.min.z),
+                new Vector3(worldBounds.max.x, worldBounds.min.y, worldBounds.max.z),
+                new Vector3(worldBounds.max.x, worldBounds.max.y, worldBounds.min.z),
+                new Vector3(worldBounds.max.x, worldBounds.max.y, worldBounds.max.z)
             };
-            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", mat.color);
-            go.GetComponent<Renderer>().sharedMaterial = mat;
 
-            return go.transform;
+            float minX = float.MaxValue;
+            float maxX = float.MinValue;
+            float minY = float.MaxValue;
+            float maxY = float.MinValue;
+            float minZ = float.MaxValue;
+            float maxZ = float.MinValue;
+
+            foreach (Vector3 worldCorner in worldCorners)
+            {
+                Vector3 localCorner = transform.InverseTransformPoint(worldCorner);
+                minX = Mathf.Min(minX, localCorner.x);
+                maxX = Mathf.Max(maxX, localCorner.x);
+                minY = Mathf.Min(minY, localCorner.y);
+                maxY = Mathf.Max(maxY, localCorner.y);
+                minZ = Mathf.Min(minZ, localCorner.z);
+                maxZ = Mathf.Max(maxZ, localCorner.z);
+            }
+
+            float height = maxY - minY;
+            float depth = Mathf.Max(maxZ - minZ, 0.004f);
+            float edgeX = isLeft ? minX : maxX;
+
+            stackObject.transform.localRotation = Quaternion.identity;
+            stackObject.transform.localPosition = new Vector3(edgeX, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f);
+            stackObject.transform.localScale = new Vector3(0f, height * 0.92f, depth);
+
+            Shader shader = Shader.Find("Universal Render Pipeline/Unlit")
+                ?? Shader.Find("Unlit/Color")
+                ?? Shader.Find("Standard");
+            if (shader != null)
+            {
+                Material stackMaterial = new Material(shader)
+                {
+                    color = new Color(0.88f, 0.82f, 0.68f)
+                };
+
+                if (stackMaterial.HasProperty("_BaseColor"))
+                    stackMaterial.SetColor("_BaseColor", stackMaterial.color);
+
+                stackObject.GetComponent<Renderer>().sharedMaterial = stackMaterial;
+            }
+
+            return stackObject.transform;
         }
 
         private void UpdatePageStacks(int index)
         {
             int last = GetLastSpreadIndex();
-            if (last <= 0) return;
+            if (last <= 0)
+                return;
 
-            float readFraction = (float)index / last;            // 0=첫페이지, 1=마지막
+            float readFraction = (float)index / last;
             float unreadFraction = 1f - readFraction;
 
-            // 오른쪽: 읽지 않은 페이지 (두꺼움 → 얇아짐)
-            // 왼쪽: 읽은 페이지 (얇음 → 두꺼워짐)
-            SetStackWidth(rightPageStack, unreadFraction * maxPageStackWidth, isLeft: false);
-            SetStackWidth(leftPageStack, readFraction * maxPageStackWidth, isLeft: true);
+            SetStackWidth(rightPageStack, unreadFraction * maxPageStackWidth);
+            SetStackWidth(leftPageStack, readFraction * maxPageStackWidth);
         }
 
-        private void SetStackWidth(Transform stack, float width, bool isLeft)
+        private static void SetStackWidth(Transform stack, float width)
         {
-            if (stack == null) return;
+            if (stack == null)
+                return;
 
-            var s = stack.localScale;
-            s.x = Mathf.Max(width, 0.0005f); // 최소 0.5mm (완전히 사라지지 않도록)
-            stack.localScale = s;
-
-            // 스택이 페이지 가장자리에서 바깥쪽으로 자라도록 위치 보정
-            var pos = stack.localPosition;
-            var refRenderer = isLeft ? leftPageRenderer : rightPageRenderer;
-            if (refRenderer != null)
-            {
-                float halfPageWidth = refRenderer.transform.localScale.x * 0.5f;
-                float halfStackWidth = s.x * 0.5f;
-                pos.x = refRenderer.transform.localPosition.x
-                        + (isLeft ? -(halfPageWidth + halfStackWidth) : (halfPageWidth + halfStackWidth));
-            }
-            stack.localPosition = pos;
+            Vector3 scale = stack.localScale;
+            scale.x = Mathf.Max(width, 0.0005f);
+            stack.localScale = scale;
         }
 
         private Material GetMaterialForSpread(int index, int side)
         {
             if (pageMaterials == null || pageMaterials.Length == 0)
-            {
                 return null;
-            }
 
             int materialIndex = Mathf.Clamp(index * 2 + side, 0, pageMaterials.Length - 1);
             return pageMaterials[materialIndex];
         }
 
+        private Material GetMaterialForPageIndex(int pageIndex)
+        {
+            if (pageMaterials == null || pageMaterials.Length == 0)
+                return null;
+
+            int clampedIndex = Mathf.Clamp(pageIndex, 0, pageMaterials.Length - 1);
+            return pageMaterials[clampedIndex];
+        }
+
+        private PageFaceMaterials GetLeftPageFaceMaterials(int spread)
+        {
+            int frontIndex = spread * 2;
+            return new PageFaceMaterials
+            {
+                front = GetMaterialForPageIndex(frontIndex),
+                back = GetMaterialForPageIndex(frontIndex - 1)
+            };
+        }
+
+        private PageFaceMaterials GetRightPageFaceMaterials(int spread)
+        {
+            int frontIndex = spread * 2 + 1;
+            return new PageFaceMaterials
+            {
+                front = GetMaterialForPageIndex(frontIndex),
+                back = GetMaterialForPageIndex(frontIndex + 1)
+            };
+        }
+
         private int GetLastSpreadIndex()
         {
             if (pageMaterials == null || pageMaterials.Length == 0)
-            {
                 return 0;
-            }
 
             return Mathf.Max(0, (pageMaterials.Length - 1) / 2);
         }
@@ -484,9 +525,7 @@ namespace CodexGenerated.GrimoirePages
         private void SetTurningAngle(float angle)
         {
             if (turningPagePivot == null)
-            {
                 return;
-            }
 
             if (useCurledStrips && turningPageStrips != null && turningPageStrips.Length > 0)
             {
@@ -502,66 +541,188 @@ namespace CodexGenerated.GrimoirePages
         private void HideTurningPage()
         {
             SetTurningAngle(0f);
+            manualUnderlyingPageRevealed = false;
 
-            // turningPagePivot은 항상 0°에 표시 유지 (오른쪽 페이지 역할)
-            // → 다음 드래그 시작 시 갑자기 나타나는 현상 없음
-            var restingMat = GetMaterialForSpread(spreadIndex, 1);
+            PageFaceMaterials restingMaterials = GetRightPageFaceMaterials(spreadIndex);
+            ApplyFaceMaterials(turningPageRenderer, turningPageBackRenderer, restingMaterials);
+
             if (turningPageRenderer != null)
-            {
-                turningPageRenderer.sharedMaterial = restingMat;
                 turningPageRenderer.gameObject.SetActive(true);
-            }
-            if (useCurledStrips && turningPageRenderers != null)
-            {
-                foreach (Renderer r in turningPageRenderers)
-                {
-                    if (r == null) continue;
-                    r.sharedMaterial = restingMat;
-                    r.gameObject.SetActive(true);
-                }
-            }
-            if (turningPagePivot != null)
-                turningPagePivot.gameObject.SetActive(true);
+            if (turningPageBackRenderer != null)
+                turningPageBackRenderer.gameObject.SetActive(true);
 
-            // rightPageRenderer는 숨김: pivot(0°)이 같은 위치에 있으므로 Z-파이팅 방지
-            if (rightPageRenderer != null)
-                rightPageRenderer.gameObject.SetActive(false);
-        }
-
-        private void SetTurningPageVisible(bool turning, Material material)
-        {
-            // turningPageRenderer/Pivot은 항상 활성 유지
-            if (turningPageRenderer != null)
-            {
-                if (material != null)
-                    turningPageRenderer.sharedMaterial = material;
-                turningPageRenderer.gameObject.SetActive(true);
-            }
             if (useCurledStrips && turningPageRenderers != null)
             {
                 foreach (Renderer renderer in turningPageRenderers)
                 {
-                    if (renderer == null) continue;
-                    if (material != null) renderer.sharedMaterial = material;
+                    if (renderer == null)
+                        continue;
+
+                    SetRendererMaterial(renderer, restingMaterials.front);
                     renderer.gameObject.SetActive(true);
                 }
             }
+
             if (turningPagePivot != null)
                 turningPagePivot.gameObject.SetActive(true);
 
-            // rightPageRenderer: 드래그 중에만 표시 (pivot 뒤에서 서서히 드러나는 효과)
+            if (rightPageRenderer != null)
+                rightPageRenderer.gameObject.SetActive(false);
+            if (rightPageBackRenderer != null)
+                rightPageBackRenderer.gameObject.SetActive(false);
+        }
+
+        private void SetTurningPageVisible(bool turning, PageFaceMaterials materials)
+        {
+            ApplyFaceMaterials(turningPageRenderer, turningPageBackRenderer, materials);
+
+            if (turningPageRenderer != null)
+                turningPageRenderer.gameObject.SetActive(true);
+            if (turningPageBackRenderer != null)
+                turningPageBackRenderer.gameObject.SetActive(true);
+
+            if (useCurledStrips && turningPageRenderers != null)
+            {
+                foreach (Renderer renderer in turningPageRenderers)
+                {
+                    if (renderer == null)
+                        continue;
+
+                    SetRendererMaterial(renderer, materials.front);
+                    renderer.gameObject.SetActive(true);
+                }
+            }
+
+            if (turningPagePivot != null)
+                turningPagePivot.gameObject.SetActive(true);
+
             if (rightPageRenderer != null)
                 rightPageRenderer.gameObject.SetActive(turning);
+            if (rightPageBackRenderer != null)
+                rightPageBackRenderer.gameObject.SetActive(turning);
+        }
+
+        private void UpdateManualUnderlyingPageVisibility()
+        {
+            if (!isTurning)
+                return;
+
+            bool shouldReveal = manualTurnForward
+                ? currentTurnAngle >= manualRevealAngleThreshold
+                : currentTurnAngle <= 180f - manualRevealAngleThreshold;
+
+            if (shouldReveal == manualUnderlyingPageRevealed)
+                return;
+
+            manualUnderlyingPageRevealed = shouldReveal;
+
+            if (manualTurnForward)
+            {
+                if (rightPageRenderer != null)
+                    rightPageRenderer.gameObject.SetActive(shouldReveal);
+                if (rightPageBackRenderer != null)
+                    rightPageBackRenderer.gameObject.SetActive(shouldReveal);
+            }
+            else
+            {
+                if (leftPageRenderer != null)
+                    leftPageRenderer.gameObject.SetActive(shouldReveal);
+                if (leftPageBackRenderer != null)
+                    leftPageBackRenderer.gameObject.SetActive(shouldReveal);
+            }
         }
 
         private void EnsureCachedTransforms()
         {
             if (turningPagePivot != null)
-            {
                 pivotBaseRotation = turningPagePivot.localRotation;
-            }
 
             CacheStripTransforms();
+        }
+
+        private void EnsureBackRenderers()
+        {
+            leftPageBackRenderer = EnsureBackRenderer(leftPageRenderer, leftPageBackRenderer, "BackFace");
+            rightPageBackRenderer = EnsureBackRenderer(rightPageRenderer, rightPageBackRenderer, "BackFace");
+            turningPageBackRenderer = EnsureBackRenderer(turningPageRenderer, turningPageBackRenderer, "BackFace");
+        }
+
+        private Renderer EnsureBackRenderer(Renderer frontRenderer, Renderer backRenderer, string childName)
+        {
+            if (frontRenderer == null)
+                return null;
+
+            if (backRenderer != null)
+                return backRenderer;
+
+            Transform existing = frontRenderer.transform.Find(childName);
+            if (existing != null)
+            {
+                Renderer existingRenderer = existing.GetComponent<Renderer>();
+                if (existingRenderer != null)
+                    return existingRenderer;
+            }
+
+            GameObject backFace = new GameObject(childName);
+            backFace.layer = frontRenderer.gameObject.layer;
+            backFace.transform.SetParent(frontRenderer.transform, false);
+            backFace.transform.localPosition = new Vector3(0f, 0f, -0.0002f);
+            backFace.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            backFace.transform.localScale = Vector3.one;
+
+            MeshFilter sourceMeshFilter = frontRenderer.GetComponent<MeshFilter>();
+            if (sourceMeshFilter != null)
+            {
+                MeshFilter backMeshFilter = backFace.AddComponent<MeshFilter>();
+                backMeshFilter.sharedMesh = sourceMeshFilter.sharedMesh;
+            }
+
+            MeshRenderer backMeshRenderer = backFace.AddComponent<MeshRenderer>();
+            if (frontRenderer is MeshRenderer frontMeshRenderer)
+            {
+                backMeshRenderer.shadowCastingMode = frontMeshRenderer.shadowCastingMode;
+                backMeshRenderer.receiveShadows = frontMeshRenderer.receiveShadows;
+                backMeshRenderer.lightProbeUsage = frontMeshRenderer.lightProbeUsage;
+                backMeshRenderer.reflectionProbeUsage = frontMeshRenderer.reflectionProbeUsage;
+                backMeshRenderer.renderingLayerMask = frontMeshRenderer.renderingLayerMask;
+                backMeshRenderer.rendererPriority = frontMeshRenderer.rendererPriority;
+            }
+
+            return backMeshRenderer;
+        }
+
+        private void ApplyFaceMaterials(Renderer frontRenderer, Renderer backRenderer, PageFaceMaterials materials)
+        {
+            SetRendererMaterial(frontRenderer, materials.front);
+            SetRendererMaterial(backRenderer, materials.back);
+        }
+
+        private void SetRendererMaterial(Renderer renderer, Material sourceMaterial)
+        {
+            if (renderer == null)
+                return;
+
+            renderer.sharedMaterial = GetRenderablePageMaterial(sourceMaterial);
+        }
+
+        private Material GetRenderablePageMaterial(Material sourceMaterial)
+        {
+            if (sourceMaterial == null)
+                return null;
+
+            if (runtimePageMaterialCache.TryGetValue(sourceMaterial, out Material cached) && cached != null)
+                return cached;
+
+            Material materialInstance = new Material(sourceMaterial)
+            {
+                name = sourceMaterial.name + " (PageFace)"
+            };
+
+            if (materialInstance.HasProperty("_Cull"))
+                materialInstance.SetFloat("_Cull", 2f);
+
+            runtimePageMaterialCache[sourceMaterial] = materialInstance;
+            return materialInstance;
         }
 
         private void CacheStripTransforms()
@@ -579,9 +740,7 @@ namespace CodexGenerated.GrimoirePages
             {
                 Transform strip = turningPageStrips[i];
                 if (strip == null)
-                {
                     continue;
-                }
 
                 stripBasePositions[i] = strip.localPosition;
                 stripBaseRotations[i] = strip.localRotation;
@@ -591,9 +750,7 @@ namespace CodexGenerated.GrimoirePages
         private void UpdateCurlStrips(float angle)
         {
             if (turningPageStrips == null || stripBasePositions == null || turningPageStrips.Length == 0)
-            {
                 return;
-            }
 
             float midCurl = Mathf.Sin(Mathf.Clamp01(angle / 180f) * Mathf.PI) * curlAngle;
             int last = Mathf.Max(1, turningPageStrips.Length - 1);
@@ -602,9 +759,7 @@ namespace CodexGenerated.GrimoirePages
             {
                 Transform strip = turningPageStrips[i];
                 if (strip == null)
-                {
                     continue;
-                }
 
                 float normalized = i / (float)last;
                 float stripAngle = angle + (normalized - 0.5f) * midCurl;
