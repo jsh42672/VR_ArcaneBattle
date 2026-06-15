@@ -46,6 +46,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.GestureDetector
   leftHandTrackingEvents: {fileID: 0}
   rightHandTrackingEvents: {fileID: 0}
+  useSubsystemPollingFallback: 1
+  subsystemRefreshInterval: 0.5
+  eventFallbackDelay: 0.15
   rightFireGesture: {fileID: 11400000, guid: f82675f516dbf3a4c8b89549414b42aa, type: 2}
   rightIceGesture: {fileID: 11400000, guid: 844c60db6e0395f45a39f6ba58521e36, type: 2}
   rightThunderGesture: {fileID: 11400000, guid: 3ecf20e8b9e7ff940bba3120fc3ef2bb, type: 2}
@@ -64,12 +67,23 @@ MonoBehaviour:
   poseHoldDuration: 0.1
   poseLostGracePeriod: 0.2
   rightThunderShootArmWindowSeconds: 2
+  rightThunderShootPinkyCurlThreshold: 0.5
+  rightThunderChargeCompletenessThreshold: 0.85
+  leftThunderCompletenessThreshold: 0.75
+  rightIcePalmUpDotThreshold: 0.35
+  invertRightIcePalmDirection: 1
+  leftIcePalmUpDotThreshold: 0.35
+  invertLeftIcePalmDirection: 1
   combineDistance: 0.16
   pushVelocity: 0.45
   combinePushCooldown: 0.7
   showDebugLog: 0
   showPlayModeDebugOverlay: 1
   debugOverlayToggleKey: 96
+  showLeftGestureCandidateScores: 1
+  leftGestureCandidateLogInterval: 0.35
+  showLeftThunderDebugLogs: 1
+  leftThunderDebugScoreThreshold: 0.55
 --- !u!1 &315846769579203025
 GameObject:
   m_ObjectHideFlags: 0
@@ -229,7 +243,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b728a0fa6bad8b4da5c367dd9498e66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombinationChecker
-  gestureDetector: {fileID: 1033785992321785773}
+  gestureDetector: {fileID: 0}
   grimoireManager: {fileID: 0}
   combinationWindow: 0.5
   comboDeclarationWindow: 10
@@ -241,6 +255,10 @@ MonoBehaviour:
   actionModeController: {fileID: 7228272435660951318}
   focusModeController: {fileID: 0}
   failureFeedbackSeconds: 0.5
+  enableComboDebugLogs: 1
+  allowLeftElementDeclarationOutsideFocusForDebug: 0
+  showLeftThunderDeclarationDebugLogs: 1
+  enableComboElementStateLogs: 1
 --- !u!1 &773725086218851563
 GameObject:
   m_ObjectHideFlags: 0
@@ -286,83 +304,45 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.SpellCaster
   spellDatabase: {fileID: 11400000, guid: e9c13b5532da3dd4f9aa52adb5855b16, type: 2}
-  combinationChecker: {fileID: 5593802692192634154}
-  combatManager: {fileID: 6797048519037015535}
+  combinationChecker: {fileID: 0}
+  combatManager: {fileID: 0}
   voiceRecognizer: {fileID: 4950951774219458693}
-  feedbackManager: {fileID: 3798538256059102113}
-  gestureDetector: {fileID: 1033785992321785773}
-  focusModeController: {fileID: 0}
+  feedbackManager: {fileID: 0}
+  gestureDetector: {fileID: 0}
   grimoireManager: {fileID: 0}
+  focusModeController: {fileID: 0}
+  elementAuraManager: {fileID: 0}
+  leftElementAuraManager: {fileID: 0}
   leftHandSpawnPoint: {fileID: 0}
   rightHandSpawnPoint: {fileID: 0}
   headTransform: {fileID: 0}
   spellSpawnRoot: {fileID: 7503920473900970146}
-  elementAuraManager: {fileID: 0}
+  fireModule: {fileID: 0}
+  iceModule: {fileID: 0}
+  thunderModule: {fileID: 0}
+  allowCombinationSpellCasts: 1
   fallbackProjectileLifetime: 5
   useDebugPrimitiveProjectiles: 1
   debugProjectileScale: 1
-  allowCombinationSpellCasts: 1
-  ignoreVoiceDuringCombinationFocus: 1
-  voiceBoostClip: {fileID: 0}
-  voiceBoostDuration: 4
-  useCommonDummyAuras: 1
-  auraTimeFocusExemptLayerName: TimeFocusExempt
-  rightElementAuraOffset: {x: 0, y: 0, z: 0.08}
-  rightElementAuraScale: 0.18
-  rightFireAuraPrefab: {fileID: 1781949194303238870, guid: 4e35892e4c5444340a0e2189311808e5, type: 3}
-  rightFireballPrefab: {fileID: 4953716472387594226, guid: d8390420f07acce4583584b98d4b616a, type: 3}
-  rightFireExplosionPrefab: {fileID: 4973633160514221696, guid: fe409c9a94780ae4891ef6549b173ab0, type: 3}
-  rightFireExplosionMaterialOverride: {fileID: 2100000, guid: 11330edf7d0804b41b995fb1c66d755b, type: 2}
-  rightFireAuraColor: {r: 1, g: 0.35, b: 0.05, a: 1}
-  rightFireSpawnForwardOffset: 0.15
-  rightFireDownAngleDegrees: 0
-  rightFireProjectileScale: 0.01
-  rightFireProjectileSpeed: 13
-  rightFireRecoilVelocityThreshold: 0.5
-  rightFireCooldown: 0.25
-  rightFireAuraScale: 0.01
-  rightFireExplosionScale: 0.15
-  rightFireExplosionLifetime: 1.5
-  rightIceOrbPrefab: {fileID: 963729409512917249, guid: 674e9c56be5e01540b37f2d2ae2a9b36, type: 3}
-  rightIceProjectilePrefab: {fileID: 2512901619461213800, guid: 583f1c24395258d4c84e8e57b8e31f6d, type: 3}
-  rightIcePalmOffset: {x: 0, y: 0, z: 0.08}
-  rightIceOrbScale: 0.12
-  rightIceProjectileScale: 0.12
-  rightIceProjectileSpeed: 14
-  rightIceBallLifetime: 6
-  rightIceUseArcTrajectory: 1
-  rightIceArcVelocityMultiplier: 4
-  rightIceArcUpwardBoost: 1.4
-  rightIceMinArcLaunchSpeed: 20
-  rightIceMaxArcLaunchSpeed: 40
-  rightIceMinThrowSpeed: 1.5
-  rightIceLaunchCooldown: 1.2
-  rightIceVelocitySampleDuration: 0.12
-  rightThunderAuraPrefab: {fileID: 81519522541933398, guid: 2f401279b33e70e4aa8e7d49eaa08b69, type: 3}
-  rightThunderAuraAudioClip: {fileID: 8300000, guid: 4ad1c77def643fc4391a0b5ddebd63ad, type: 3}
-  rightThunderAuraOffset: {x: 0, y: 0, z: 0.08}
-  rightThunderAuraScale: 0.16
-  rightThunderRangeMeters: 20
-  rightThunderDamage: 16
-  rightThunderStatusDuration: 2.5
-  rightThunderChargeGraceSeconds: 0.4
-  rightThunderContinuousFireSeconds: 5
-  rightThunderShootPoseGraceSeconds: 0.2
-  rightThunderHitTickInterval: 0.25
-  rightThunderLaserWidth: 0.035
-  rightThunderHitCastRadius: 0.35
-  rightThunderLaserSpawnForwardOffset: 0
-  rightThunderLaserYawAngleDegrees: 0
-  rightThunderLaserDownAngleDegrees: 8
-  rightThunderHitMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  rightThunderLaserColor: {r: 1, g: 0.88, b: 0.15, a: 1}
-  showPrototypeArmedAura: 1
+  comboFireIceProjectilePrefab: {fileID: 0}
+  comboIceThunderProjectilePrefab: {fileID: 0}
+  comboThunderFireProjectilePrefab: {fileID: 0}
+  comboProjectileLifetime: 6
+  comboProjectileLightIntensity: 1.4
+  comboProjectileScale:
+    fireIce: 0.34
+    iceThunder: 0.36
+    thunderFire: 0.4
   showCombinationAura: 1
   combinationReadyAuraScale: 0.18
   combinationCompleteAuraScale: 0.42
   combinationCompleteAuraHoldSeconds: 3
+  combinationFeedbackSfxVolume: 0.85
+  enableComboDebugLogs: 1
+  voiceBoostClip: {fileID: 0}
+  voiceBoostDuration: 4
+  ignoreVoiceDuringCombinationFocus: 1
+  auraTimeFocusExemptLayerName: TimeFocusExempt
 --- !u!1 &786499673084682389
 GameObject:
   m_ObjectHideFlags: 0
@@ -1162,11 +1142,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.GrimoireManager
   grimoireCanvas: {fileID: 6029000591722988493}
-  grimoireUI: {fileID: 0}
+  grimoireUI: {fileID: 2660556325261535718}
   playerCamera: {fileID: 0}
   leftHandBookAnchor: {fileID: 0}
   gestureDetector: {fileID: 0}
   gestureRouter: {fileID: 0}
+  leftOvrHand: {fileID: 0}
+  rightOvrHand: {fileID: 0}
+  spellCasters:
+  - {fileID: 0}
+  sceneGrimoireCanvases: []
+  visualParkingAnchor: {fileID: 0}
   toggleAction: {fileID: -2793193389594146869, guid: 1d884ad9c3b0d19419ff27819852f67a, type: 3}
   spawnDistance: 0.5
   spawnHeightOffset: -0.2
@@ -1186,6 +1172,9 @@ MonoBehaviour:
   pageSwipeMaxDuration: 0.75
   pageSwipeCooldown: 0.35
   pageSwipeVerticalTolerance: 0.28
+  timeFocusController: {fileID: 0}
+  handPullMovement: {fileID: 0}
+  runtimeBookOverride: {fileID: 0}
   suppressMagicWhileOpen: 1
 --- !u!1 &3536803320364830460
 GameObject:
@@ -1296,6 +1285,18 @@ MonoBehaviour:
   pulseBossRenderers: 1
   hitPulseDuration: 0.22
   defaultHitPulseColor: {r: 1, g: 1, b: 1, a: 1}
+  chargeWarningColor: {r: 1, g: 0.5, b: 0.1, a: 1}
+  chargeWarningDuration: 3
+  weaknessColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  fireHitMaterial: {fileID: 0}
+  iceHitMaterial: {fileID: 0}
+  thunderHitMaterial: {fileID: 0}
+  noHpMaterial: {fileID: 0}
+  defaultBossElement: 3
+  screenHitDuration: 0.35
+  noHpThreshold: 0.3
+  noHpAlpha: 0.22
+  screenOverlayDistance: 0.32
 --- !u!1 &4086619101436748994
 GameObject:
   m_ObjectHideFlags: 0
@@ -1404,6 +1405,12 @@ MonoBehaviour:
   golemTarget: {fileID: 0}
   bossRoot: {fileID: 0}
   headTransform: {fileID: 0}
+  chargeVfxPrefab: {fileID: 0}
+  chargeVfxDuration: 3
+  weaknessVfxPrefab: {fileID: 0}
+  highAttackVfxPrefab: {fileID: 0}
+  midAttackVfxPrefab: {fileID: 0}
+  lowAttackVfxPrefab: {fileID: 0}
   enableAttackEffects: 1
   effectDurationMultiplier: 1.05
   bossForwardOffset: 0.35
@@ -1415,6 +1422,10 @@ MonoBehaviour:
   lowAttackColor: {r: 0.16, g: 0.74, b: 1, a: 0.88}
   successColor: {r: 0.18, g: 1, b: 0.52, a: 0.95}
   failColor: {r: 1, g: 0.12, b: 0.06, a: 0.95}
+  highAttackSfxClip: {fileID: 8300000, guid: 2e7d7263559b636499d4f7bee90dbfd2, type: 3}
+  middleAttackSfxClip: {fileID: 8300000, guid: 6734a4243ab3cf24b926b1e4aacc3e1d, type: 3}
+  lowAttackSfxClip: {fileID: 8300000, guid: 8a270fa3d83512446a6c6db4d064a66b, type: 3}
+  attackSfxVolume: 0.95
 --- !u!114 &6250145006332206009
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1904,6 +1915,7 @@ MonoBehaviour:
   grimoireManager: {fileID: 0}
   combinationFocusController: {fileID: 0}
   combinationChecker: {fileID: 5593802692192634154}
+  enableComboDebugLogs: 1
   handPullMovement: {fileID: 73947675474684479}
   spellCaster: {fileID: 3834600037732004715}
 --- !u!1 &8450910309949997187
@@ -1969,6 +1981,10 @@ MonoBehaviour:
   heightCorrectionDelay: 0.75
   minimumHeadHeight: 0.85
   fallbackHeadHeight: 1.45
+  pullLoopClip: {fileID: 8300000, guid: f3cc3884ff647d2499e029c58f02c9cb, type: 3}
+  pullLoopVolume: 0.55
+  minPullLoopPitch: 0.92
+  maxPullLoopPitch: 1.18
   showDebugLog: 0
 --- !u!1 &9137594104543385941
 GameObject:

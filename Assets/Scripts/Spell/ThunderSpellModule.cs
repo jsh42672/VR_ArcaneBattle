@@ -13,6 +13,9 @@ namespace ArcaneVR.Spell
         [Header("── 오라 프리팹 / 루프 사운드 ──")]
         [SerializeField] private GameObject auraPrefab;
         [SerializeField] private AudioClip auraAudioClip;
+        [SerializeField] private AudioClip beamLoopAudioClip;
+        [SerializeField] private float auraLoopVolume = 0.55f;
+        [SerializeField] private float beamLoopVolume = 0.8f;
 
         [Header("── 빔 설정 ──")]
         [SerializeField] private float rangeMeters = 20f;
@@ -49,7 +52,7 @@ namespace ArcaneVR.Spell
         private ElementAuraManager _auraManager;
 
         private GameObject _auraInstance;
-        private AudioSource _auraAudio;
+        private AudioSource _loopAudio;
         private AudioSource _sfxAudioSource;
         private Renderer _auraRenderer;
         private GameObject _beamInstance;
@@ -96,7 +99,9 @@ namespace ArcaneVR.Spell
                 _charged       = true;
                 _lastChargeTime = Time.time;
                 ShowAura();
-                PlayElementSfx(armSfxClip, ArcaneSpellSfxCue.ElementArm, armSfxVolume);
+                PlayLoopClip(auraAudioClip, auraLoopVolume);
+                if (armSfxClip != null || auraAudioClip == null)
+                    PlayElementSfx(armSfxClip, ArcaneSpellSfxCue.ElementArm, armSfxVolume);
             }
             else if (!requireChargeBeforeShoot || IsChargeAvailable())
             {
@@ -104,6 +109,8 @@ namespace ArcaneVR.Spell
                 ShowAura();
                 _lastShootTime = Time.time;
                 StartBeam();
+                PlayLoopClip(beamLoopAudioClip != null ? beamLoopAudioClip : auraAudioClip,
+                    beamLoopAudioClip != null ? beamLoopVolume : auraLoopVolume);
                 PlayElementSfx(castSfxClip, ArcaneSpellSfxCue.SpellCast, castSfxVolume);
             }
             else
@@ -118,6 +125,7 @@ namespace ArcaneVR.Spell
             _armed       = false;
             _isShootMode = false;
             _charged     = false;
+            StopLoopClip();
             HideAura();
             StopBeam();
         }
@@ -273,6 +281,8 @@ namespace ArcaneVR.Spell
         {
             _beamEndTime = -999f;
             _nextHitTime = -999f;
+            if (_isShootMode)
+                StopLoopClip();
             if (_beamInstance != null) Destroy(_beamInstance);
             _beamInstance = null;
             _beamLine     = null;
@@ -297,11 +307,6 @@ namespace ArcaneVR.Spell
             ApplyTimeFocusLayer(_auraInstance);
 
             _auraRenderer = _auraInstance.GetComponentInChildren<Renderer>();
-            _auraAudio    = _auraInstance.AddComponent<AudioSource>();
-            _auraAudio.playOnAwake = false;
-            _auraAudio.loop        = true;
-            _auraAudio.clip        = auraAudioClip;
-            if (auraAudioClip != null) _auraAudio.Play();
 
             UpdateAuraTransform();
         }
@@ -310,7 +315,6 @@ namespace ArcaneVR.Spell
         {
             if (_auraInstance != null) Destroy(_auraInstance);
             _auraInstance = null;
-            _auraAudio    = null;
             _auraRenderer = null;
         }
 
@@ -362,6 +366,42 @@ namespace ArcaneVR.Spell
             _sfxAudioSource.spatialBlend = 0f;
             _sfxAudioSource.dopplerLevel = 0f;
             return _sfxAudioSource;
+        }
+
+        private void PlayLoopClip(AudioClip clip, float volume)
+        {
+            if (clip == null)
+                return;
+
+            var audioSource = EnsureLoopAudioSource();
+            if (audioSource.clip != clip)
+                audioSource.clip = clip;
+
+            audioSource.volume = Mathf.Clamp01(volume);
+            if (!audioSource.isPlaying)
+                audioSource.Play();
+        }
+
+        private void StopLoopClip()
+        {
+            if (_loopAudio == null)
+                return;
+
+            _loopAudio.Stop();
+            _loopAudio.clip = null;
+        }
+
+        private AudioSource EnsureLoopAudioSource()
+        {
+            if (_loopAudio != null)
+                return _loopAudio;
+
+            _loopAudio = gameObject.AddComponent<AudioSource>();
+            _loopAudio.playOnAwake = false;
+            _loopAudio.loop = true;
+            _loopAudio.spatialBlend = 0f;
+            _loopAudio.dopplerLevel = 0f;
+            return _loopAudio;
         }
 
         private static Material CreateUnlitMaterial(Color color)

@@ -50,6 +50,12 @@ namespace ArcaneVR.Input
         [SerializeField] private float minimumHeadHeight = 0.85f;
         [SerializeField] private float fallbackHeadHeight = 1.45f;
 
+        [Header("Audio")]
+        [SerializeField] private AudioClip pullLoopClip;
+        [SerializeField] private float pullLoopVolume = 0.55f;
+        [SerializeField] private float minPullLoopPitch = 0.92f;
+        [SerializeField] private float maxPullLoopPitch = 1.18f;
+
         [Header("Debug")]
         [SerializeField] private bool showDebugLog;
 
@@ -63,6 +69,7 @@ namespace ArcaneVR.Input
         private string lastDebugMessage = "Idle";
         private float nextSubsystemRefreshTime;
         private bool heightCorrectionApplied;
+        private AudioSource pullLoopAudioSource;
 
         public bool IsPulling => activeHand != PullHand.None;
         public string ActiveHandName => activeHand.ToString();
@@ -134,6 +141,7 @@ namespace ArcaneVR.Input
             {
                 lastDebugMessage = "Waiting for XRHandSubsystem";
                 lastMoveDelta = Vector3.zero;
+                StopPullLoopAudio();
                 return;
             }
 
@@ -145,6 +153,7 @@ namespace ArcaneVR.Input
                 pendingMoveDelta = Vector3.zero;
                 lastMoveDelta = Vector3.zero;
                 lastDebugMessage = $"Pull locked: {MovementSuppressionReason}";
+                StopPullLoopAudio();
                 return;
             }
 
@@ -317,6 +326,7 @@ namespace ArcaneVR.Input
             {
                 lastMoveDelta = Vector3.zero;
                 previousHandTrackingPosition = currentHandTrackingPosition;
+                StopPullLoopAudio();
                 return;
             }
 
@@ -326,6 +336,7 @@ namespace ArcaneVR.Input
                 lastMoveDelta = Vector3.zero;
                 lastDebugMessage = $"Not pulling toward body: {activeHand}";
                 previousHandTrackingPosition = currentHandTrackingPosition;
+                StopPullLoopAudio();
                 return;
             }
 
@@ -351,6 +362,7 @@ namespace ArcaneVR.Input
 
             lastDebugMessage =
                 $"Pulling: {activeHand}, Move=({moveDelta.x:F3}, {moveDelta.y:F3}, {moveDelta.z:F3})";
+            UpdatePullLoopAudio(moveDelta.magnitude);
         }
 
         private void ApplyMoveDelta(Vector3 moveDelta)
@@ -367,6 +379,7 @@ namespace ArcaneVR.Input
             lastDebugMessage = $"Pull End: {activeHand}";
             lastMoveDelta = Vector3.zero;
             pendingMoveDelta = Vector3.zero;
+            StopPullLoopAudio();
 
             if (showDebugLog)
             {
@@ -374,6 +387,48 @@ namespace ArcaneVR.Input
             }
 
             activeHand = PullHand.None;
+        }
+
+        private void UpdatePullLoopAudio(float moveMagnitude)
+        {
+            if (pullLoopClip == null)
+                return;
+
+            var audioSource = EnsurePullLoopAudioSource();
+            if (audioSource.clip != pullLoopClip)
+                audioSource.clip = pullLoopClip;
+
+            audioSource.volume = Mathf.Clamp01(pullLoopVolume);
+            var normalized = Mathf.Clamp01(moveMagnitude / Mathf.Max(0.001f, maxMoveSpeed * Time.deltaTime));
+            audioSource.pitch = Mathf.Lerp(minPullLoopPitch, maxPullLoopPitch, normalized);
+
+            if (!audioSource.isPlaying)
+                audioSource.Play();
+        }
+
+        private void StopPullLoopAudio()
+        {
+            if (pullLoopAudioSource == null)
+                return;
+
+            pullLoopAudioSource.Stop();
+            pullLoopAudioSource.clip = null;
+        }
+
+        private AudioSource EnsurePullLoopAudioSource()
+        {
+            if (pullLoopAudioSource != null)
+                return pullLoopAudioSource;
+
+            pullLoopAudioSource = gameObject.GetComponent<AudioSource>();
+            if (pullLoopAudioSource == null)
+                pullLoopAudioSource = gameObject.AddComponent<AudioSource>();
+
+            pullLoopAudioSource.playOnAwake = false;
+            pullLoopAudioSource.loop = true;
+            pullLoopAudioSource.spatialBlend = 0f;
+            pullLoopAudioSource.dopplerLevel = 0f;
+            return pullLoopAudioSource;
         }
 
         private void ApplyHeightCorrectionIfNeeded()

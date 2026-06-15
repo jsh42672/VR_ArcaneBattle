@@ -65,6 +65,10 @@ namespace ArcaneVR.Boss
         [SerializeField] private float runAnimationSpeedMultiplier = 0.45f;
         [SerializeField] private float attackAnimationSpeedMultiplier = 0.72f;
         [SerializeField] private float attackControllerRestoreDelay = 1.15f;
+        [SerializeField] private AudioClip movementLoopClip;
+        [SerializeField] private float movementLoopVolume = 0.72f;
+        [SerializeField] private float minMovementPitch = 0.72f;
+        [SerializeField] private float maxMovementPitch = 1.35f;
 
         private RuntimeAnimatorController runController;
         private RuntimeAnimatorController attackController;
@@ -81,6 +85,7 @@ namespace ArcaneVR.Boss
         private bool animatorWasMoving;
         private Coroutine fallbackAttackMotionRoutine;
         private Vector3 prevDebugPosition;
+        private AudioSource movementLoopAudioSource;
 
         public string LastChaseStatus { get; private set; } = "Chase: idle";
         public bool IsChasing { get; private set; }
@@ -161,6 +166,7 @@ namespace ArcaneVR.Boss
         {
             Unsubscribe();
             IsChasing = false;
+            StopMovementLoopAudio();
             UpdateAnimator(false, 0f);
         }
 
@@ -285,6 +291,7 @@ namespace ArcaneVR.Boss
             if (!enableChase)
             {
                 LastChaseStatus = "Chase: disabled";
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
@@ -294,6 +301,7 @@ namespace ArcaneVR.Boss
                 LastChaseStatus = "Chase: player dead";
                 DistanceToTarget = -1f;
                 wasMoving = false;
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
@@ -305,12 +313,14 @@ namespace ArcaneVR.Boss
             {
                 DistanceToTarget = -1f;
                 LastChaseStatus = "Chase: no player";
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
 
             if (!CanMoveNow())
             {
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
@@ -335,6 +345,7 @@ namespace ArcaneVR.Boss
                     return;
 
                 LastChaseStatus = $"Chase: in range {distance:0.0}m";
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
@@ -344,6 +355,7 @@ namespace ArcaneVR.Boss
             if (speed <= 0.01f)
             {
                 LastChaseStatus = "Chase: stopped by status";
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
@@ -360,6 +372,7 @@ namespace ArcaneVR.Boss
             IsChasing = true;
             wasMoving = true;
             LastChaseStatus = $"Chase: moving {distance:0.0}m";
+            UpdateMovementLoopAudio(speed / Mathf.Max(0.01f, moveSpeed));
             UpdateAnimator(true, speed / Mathf.Max(0.01f, moveSpeed));
         }
 
@@ -380,6 +393,7 @@ namespace ArcaneVR.Boss
                 : BossAttackType.Middle;
             nextMeleeAttackTime = Time.time + meleeAttackCooldown;
             PauseChase(attackPauseDuration, "Chase: melee");
+            StopMovementLoopAudio();
             UpdateAnimator(false, 0f);
             PlayGenericAttackAnimation();
             PlayFallbackAttackMotion(attackType);
@@ -552,6 +566,50 @@ namespace ArcaneVR.Boss
                 combatManager = FindAnyObjectByType<CombatManager>();
 
             return combatManager != null && combatManager.IsPlayerDead;
+        }
+
+        private void UpdateMovementLoopAudio(float normalizedSpeed)
+        {
+            if (movementLoopClip == null)
+                return;
+
+            var audioSource = EnsureMovementLoopAudioSource();
+            if (audioSource.clip != movementLoopClip)
+                audioSource.clip = movementLoopClip;
+
+            audioSource.volume = Mathf.Clamp01(movementLoopVolume);
+            audioSource.pitch = Mathf.Lerp(minMovementPitch, maxMovementPitch, Mathf.Clamp01(normalizedSpeed));
+
+            if (!audioSource.isPlaying)
+                audioSource.Play();
+        }
+
+        private void StopMovementLoopAudio()
+        {
+            if (movementLoopAudioSource == null)
+                return;
+
+            movementLoopAudioSource.Stop();
+            movementLoopAudioSource.clip = null;
+        }
+
+        private AudioSource EnsureMovementLoopAudioSource()
+        {
+            if (movementLoopAudioSource != null)
+                return movementLoopAudioSource;
+
+            movementLoopAudioSource = GetComponent<AudioSource>();
+            if (movementLoopAudioSource == null)
+                movementLoopAudioSource = gameObject.AddComponent<AudioSource>();
+
+            movementLoopAudioSource.playOnAwake = false;
+            movementLoopAudioSource.loop = true;
+            movementLoopAudioSource.spatialBlend = 1f;
+            movementLoopAudioSource.rolloffMode = AudioRolloffMode.Linear;
+            movementLoopAudioSource.minDistance = 2f;
+            movementLoopAudioSource.maxDistance = 20f;
+            movementLoopAudioSource.dopplerLevel = 0f;
+            return movementLoopAudioSource;
         }
 
         private void FaceTarget(Vector3 direction)

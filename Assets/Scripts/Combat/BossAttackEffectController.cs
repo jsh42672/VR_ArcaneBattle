@@ -44,6 +44,10 @@ namespace ArcaneVR.Combat
         [SerializeField] private Color lowAttackColor = new Color(0.16f, 0.74f, 1f, 0.88f);
         [SerializeField] private Color successColor = new Color(0.18f, 1f, 0.52f, 0.95f);
         [SerializeField] private Color failColor = new Color(1f, 0.12f, 0.06f, 0.95f);
+        [SerializeField] private AudioClip highAttackSfxClip;
+        [SerializeField] private AudioClip middleAttackSfxClip;
+        [SerializeField] private AudioClip lowAttackSfxClip;
+        [SerializeField] private float attackSfxVolume = 0.95f;
 
         private BossPatternCombatBridge subscribedPatternBridge;
         private DodgeDetector subscribedDodgeDetector;
@@ -52,12 +56,14 @@ namespace ArcaneVR.Combat
         private GolemCombatTarget subscribedGolemTarget;
         private Coroutine activeAttackRoutine;
         private float lastResolveEffectTime = -999f;
+        private AudioSource attackAudioSource;
 
         public string LastEffectStatus { get; private set; } = "AttackFx: idle";
 
         private void Awake()
         {
             ResolveReferences();
+            EnsureAttackAudioSource();
         }
 
         private void OnEnable()
@@ -212,6 +218,7 @@ namespace ArcaneVR.Combat
         private void HandleAttackStarted(BossAttackType attackType, float duration)
         {
             Debug.Log($"[CenterFixed] EffectController.HandleAttackStarted | type={attackType} | dur={duration:0.0}s | enabled={enableAttackEffects}");
+            PlayAttackSfx(attackType);
 
             if (!enableAttackEffects)
                 return;
@@ -422,6 +429,43 @@ namespace ArcaneVR.Combat
             var origin = ResolveBossAttackOrigin(attackType);
             var vfxObj = Instantiate(prefab, origin, Quaternion.identity);
             Destroy(vfxObj, lifetime);
+        }
+
+        private void PlayAttackSfx(BossAttackType attackType)
+        {
+            var clip = attackType switch
+            {
+                BossAttackType.High => highAttackSfxClip,
+                BossAttackType.Middle => middleAttackSfxClip,
+                BossAttackType.Low => lowAttackSfxClip,
+                _ => null
+            };
+
+            if (clip == null)
+                return;
+
+            var audioSource = EnsureAttackAudioSource();
+            if (audioSource != null)
+                audioSource.PlayOneShot(clip, Mathf.Clamp01(attackSfxVolume));
+        }
+
+        private AudioSource EnsureAttackAudioSource()
+        {
+            if (attackAudioSource != null)
+                return attackAudioSource;
+
+            attackAudioSource = GetComponent<AudioSource>();
+            if (attackAudioSource == null)
+                attackAudioSource = gameObject.AddComponent<AudioSource>();
+
+            attackAudioSource.playOnAwake = false;
+            attackAudioSource.loop = false;
+            attackAudioSource.spatialBlend = 1f;
+            attackAudioSource.rolloffMode = AudioRolloffMode.Linear;
+            attackAudioSource.minDistance = 2f;
+            attackAudioSource.maxDistance = 18f;
+            attackAudioSource.dopplerLevel = 0f;
+            return attackAudioSource;
         }
 
         private void BuildAttackVisual(Transform root, BossAttackType attackType, Color color)

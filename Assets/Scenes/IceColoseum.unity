@@ -460,6 +460,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd72ecbc9c194762b054b79051b992fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_AllowLegacyRuntimeObjects: 0
+  m_EnableLegacyHud: 0
+  m_EnableLegacyProjectileFire: 0
+  m_EnableLegacyTarget: 0
+  m_HudRefreshInterval: 0.1
+  m_SubsystemRefreshInterval: 0.5
 --- !u!1001 &129779053
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -624,6 +630,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PortalTeleporter
   portalData: {fileID: 0}
   isExitPortal: 1
+  ambientLoopClip: {fileID: 8300000, guid: 3dc0e1f33d77a3743ab4977f08a68c53, type: 3}
+  ambientLoopVolume: 0.55
+  ambientMinDistance: 2
+  ambientMaxDistance: 14
 --- !u!23 &150917300
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1753,10 +1763,40 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.GrimoireManager
   grimoireCanvas: {fileID: 1342463286}
+  grimoireUI: {fileID: 1342463288}
   playerCamera: {fileID: 0}
+  leftHandBookAnchor: {fileID: 0}
+  gestureDetector: {fileID: 0}
+  gestureRouter: {fileID: 0}
+  leftOvrHand: {fileID: 0}
+  rightOvrHand: {fileID: 0}
+  spellCasters:
+  - {fileID: 0}
+  sceneGrimoireCanvases: []
+  visualParkingAnchor: {fileID: 0}
   toggleAction: {fileID: -2793193389594146869, guid: 1d884ad9c3b0d19419ff27819852f67a, type: 3}
   spawnDistance: 0.5
   spawnHeightOffset: -0.2
+  useRuntimeHandBook: 1
+  leftHandBookLocalPosition: {x: 0, y: 0.055, z: 0.085}
+  leftHandBookLocalEuler: {x: 70, y: 0, z: 0}
+  leftHandBookScale: 0.9
+  enableGestureControl: 1
+  requireLeftPalmFacingPlayer: 1
+  openPalmHoldDuration: 0.6
+  closeFistHoldDuration: 0.18
+  palmFacingDotThreshold: 0.5
+  toggleCooldown: 0.65
+  enableRightHandPageSwipe: 1
+  requireRightOpenPalmForPageSwipe: 1
+  pageSwipeDistance: 0.22
+  pageSwipeMaxDuration: 0.75
+  pageSwipeCooldown: 0.35
+  pageSwipeVerticalTolerance: 0.28
+  timeFocusController: {fileID: 0}
+  handPullMovement: {fileID: 0}
+  runtimeBookOverride: {fileID: 0}
+  suppressMagicWhileOpen: 1
 --- !u!4 &1264297839
 Transform:
   m_ObjectHideFlags: 0

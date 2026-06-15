@@ -7,8 +7,14 @@ public class PortalTeleporter : MonoBehaviour
 {
     public PortalData portalData;
     public bool isExitPortal = false;
+    [Header("Audio")]
+    [SerializeField] private AudioClip ambientLoopClip;
+    [SerializeField] [Range(0f, 1f)] private float ambientLoopVolume = 0.55f;
+    [SerializeField] private float ambientMinDistance = 2f;
+    [SerializeField] private float ambientMaxDistance = 14f;
     
     private Light portalLight;
+    private AudioSource ambientAudioSource;
     
     void Start()
     {
@@ -18,6 +24,8 @@ public class PortalTeleporter : MonoBehaviour
         {
             portalLight.color = portalData.glowColor;
         }
+
+        EnsureAmbientAudio();
         
         // Ensure trigger
         SphereCollider col = GetComponent<SphereCollider>();
@@ -27,6 +35,12 @@ public class PortalTeleporter : MonoBehaviour
         }
         col.isTrigger = true;
         col.radius = 2.5f;
+    }
+
+    void OnDisable()
+    {
+        if (ambientAudioSource != null)
+            ambientAudioSource.Stop();
     }
     
     void OnTriggerEnter(Collider other)
@@ -71,5 +85,28 @@ public class PortalTeleporter : MonoBehaviour
         
         // Load WorldMap
         SceneManager.LoadScene("World");
+    }
+
+    void EnsureAmbientAudio()
+    {
+        if (ambientLoopClip == null)
+            return;
+
+        ambientAudioSource = GetComponent<AudioSource>();
+        if (ambientAudioSource == null)
+            ambientAudioSource = gameObject.AddComponent<AudioSource>();
+
+        ambientAudioSource.playOnAwake = false;
+        ambientAudioSource.loop = true;
+        ambientAudioSource.clip = ambientLoopClip;
+        ambientAudioSource.volume = Mathf.Clamp01(ambientLoopVolume);
+        ambientAudioSource.spatialBlend = 1f;
+        ambientAudioSource.rolloffMode = AudioRolloffMode.Linear;
+        ambientAudioSource.minDistance = Mathf.Max(0.1f, ambientMinDistance);
+        ambientAudioSource.maxDistance = Mathf.Max(ambientAudioSource.minDistance + 0.1f, ambientMaxDistance);
+        ambientAudioSource.dopplerLevel = 0f;
+
+        if (!ambientAudioSource.isPlaying)
+            ambientAudioSource.Play();
     }
 }

@@ -538,9 +538,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd1d980a705e72f4c8ebd28420ed9db3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PortalTeleporter
-  worldSceneName: OPenWorld2
   portalData: {fileID: 0}
   isExitPortal: 1
+  ambientLoopClip: {fileID: 8300000, guid: 3dc0e1f33d77a3743ab4977f08a68c53, type: 3}
+  ambientLoopVolume: 0.55
+  ambientMinDistance: 2
+  ambientMaxDistance: 14
 --- !u!23 &150917300
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -926,7 +929,6 @@ MonoBehaviour:
   fireColor: {r: 1, g: 0.05, b: 0, a: 1}
   iceColor: {r: 0.45, g: 0.85, b: 1, a: 1}
   thunderColor: {r: 1, g: 0.95, b: 0, a: 1}
-  normalAuraScale: 0.12
   voiceBoostSizeMultiplier: 2.4
 --- !u!1 &427515333
 GameObject:
@@ -8680,14 +8682,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.ThunderSpellModule
   auraPrefab: {fileID: 4156153960950938525, guid: c61dd16abc7f72f4cbcc40d13ad2a74b, type: 3}
-  auraAudioClip: {fileID: 0}
+  auraAudioClip: {fileID: 8300000, guid: 5ea9c33a66114a84cb5f960042d02351, type: 3}
+  beamLoopAudioClip: {fileID: 8300000, guid: 44e60d039ea38fa429c059a116a06e79, type: 3}
+  auraLoopVolume: 0.55
+  beamLoopVolume: 0.8
   rangeMeters: 20
   damage: 16
   statusDuration: 2.5
   continuousFireSeconds: 1.5
   hitTickInterval: 0.25
   laserWidth: 0.08
-  aimEulerOffset: {x: 0, y: 10, z: 0}
   laserDownAngleDegrees: 8
   laserColor: {r: 1, g: 0.88, b: 0.15, a: 1}
   hitMask:
@@ -8700,7 +8704,7 @@ MonoBehaviour:
   auraScale: 0.03
   timeFocusExemptLayer: TimeFocusExempt
   armSfxClip: {fileID: 0}
-  castSfxClip: {fileID: 0}
+  castSfxClip: {fileID: 8300000, guid: 44e60d039ea38fa429c059a116a06e79, type: 3}
   armSfxVolume: 0.72
   castSfxVolume: 1
 --- !u!114 &1964649935
@@ -8733,10 +8737,14 @@ MonoBehaviour:
   auraOffset: {x: 0, y: 0, z: 0.08}
   auraScale: 0.03
   timeFocusExemptLayer: TimeFocusExempt
+  auraLoopClip: {fileID: 8300000, guid: 58c66ce0b55ed8f498209ee512a4abbd, type: 3}
+  auraLoopVolume: 0.55
   armSfxClip: {fileID: 0}
-  castSfxClip: {fileID: 0}
+  castSfxClip: {fileID: 8300000, guid: 8bf3a7dad82b68a448697551f5ce7398, type: 3}
+  impactSfxClip: {fileID: 8300000, guid: 54a6bd849749cf847b26f922df10da53, type: 3}
   armSfxVolume: 0.72
   castSfxVolume: 0.95
+  impactSfxVolume: 1
 --- !u!114 &1964649936
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8756,7 +8764,6 @@ MonoBehaviour:
   auraColor: {r: 1, g: 0.35, b: 0.05, a: 1}
   spawnForwardOffset: 0.15
   projectileSpeed: 13
-  aimEulerOffset: {x: 10, y: 0, z: 0}
   recoilVelocityThreshold: 0.5
   recoilResetThreshold: 0.15
   cooldown: 0.25
@@ -8767,10 +8774,14 @@ MonoBehaviour:
   auraOffset: {x: 0, y: 0, z: 0.08}
   auraScale: 0.03
   timeFocusExemptLayer: TimeFocusExempt
+  auraLoopClip: {fileID: 8300000, guid: 61c5334fce43ea941aed508bf30f8718, type: 3}
+  auraLoopVolume: 0.55
   armSfxClip: {fileID: 0}
-  castSfxClip: {fileID: 0}
+  castSfxClip: {fileID: 8300000, guid: 2027c3c72d167844c8dfa6ff7b4657a1, type: 3}
+  impactSfxClip: {fileID: 8300000, guid: 27a96ce946bb5ef4684da78c22c1981d, type: 3}
   armSfxVolume: 0.7
   castSfxVolume: 0.95
+  impactSfxVolume: 1
 --- !u!1 &2020540369
 GameObject:
   m_ObjectHideFlags: 0
@@ -9036,7 +9047,7 @@ MonoBehaviour:
   combinationFocus: {fileID: 0}
   playerRigRoot: {fileID: 3502794437237460367}
   playerCenterAnchor: {fileID: 1706532438}
-  pullSpeed: 3
+  pullDuration: 3
   arrivalThreshold: 0.3
 --- !u!114 &346613465383826127
 MonoBehaviour:
@@ -9311,13 +9322,14 @@ MonoBehaviour:
   applyMovementInLateUpdate: 1
   requirePullTowardBody: 0
   towardBodyDotThreshold: 0.25
-  requirePalmFacingDown: 1
-  pullPalmNormalLocalAxis: {x: 0, y: 1, z: 0}
-  palmFacingDownDotThreshold: 0.5
   autoCorrectLowHeadHeight: 1
   heightCorrectionDelay: 0.75
   minimumHeadHeight: 0.85
   fallbackHeadHeight: 1.45
+  pullLoopClip: {fileID: 8300000, guid: f3cc3884ff647d2499e029c58f02c9cb, type: 3}
+  pullLoopVolume: 0.55
+  minPullLoopPitch: 0.92
+  maxPullLoopPitch: 1.18
   showDebugLog: 0
 --- !u!114 &884017747205285966
 MonoBehaviour:
@@ -10144,6 +10156,10 @@ MonoBehaviour:
   runAnimationSpeedMultiplier: 0.45
   attackAnimationSpeedMultiplier: 0.72
   attackControllerRestoreDelay: 1.15
+  movementLoopClip: {fileID: 8300000, guid: db11e489791bdee4396428928db51980, type: 3}
+  movementLoopVolume: 0.72
+  minMovementPitch: 0.72
+  maxMovementPitch: 1.35
 --- !u!114 &3483821603137979082
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10172,9 +10188,13 @@ MonoBehaviour:
   chargeCounterDuration: 3
   responseWindowDuration: 1.25
   bossPerimeterAnchor: {fileID: 1397668525}
-  bossMoveSpeed: 5
+  bossArrivalDuration: 3
   centerFixedDuration: 12
   centerFixedStateLockDuration: 1.5
+  playerArrivalTimeout: 5
+  minimumAttackWindowAfterArrival: 27
+  centerFixedResponseWindowDuration: 5
+  centerFixedAttackGap: 2.5
   phaseOneHpRatio: 0.7
   phaseTwoHpRatio: 0.4
   finalPhaseHpRatio: 0.15
@@ -10295,7 +10315,7 @@ MonoBehaviour:
   feedbackManager: {fileID: 1381298483887622554}
   gestureDetector: {fileID: 4513273318433873931}
   grimoireManager: {fileID: 591499612}
-  focusModeController: {fileID: 0}
+  focusModeController: {fileID: 1030009992}
   elementAuraManager: {fileID: 357495573}
   leftElementAuraManager: {fileID: 0}
   leftHandSpawnPoint: {fileID: 1483082568}
@@ -10757,6 +10777,10 @@ MonoBehaviour:
   lowAttackColor: {r: 0.16, g: 0.74, b: 1, a: 0.88}
   successColor: {r: 0.18, g: 1, b: 0.52, a: 0.95}
   failColor: {r: 1, g: 0.12, b: 0.06, a: 0.95}
+  highAttackSfxClip: {fileID: 8300000, guid: 2e7d7263559b636499d4f7bee90dbfd2, type: 3}
+  middleAttackSfxClip: {fileID: 8300000, guid: 6734a4243ab3cf24b926b1e4aacc3e1d, type: 3}
+  lowAttackSfxClip: {fileID: 8300000, guid: 8a270fa3d83512446a6c6db4d064a66b, type: 3}
+  attackSfxVolume: 0.95
 --- !u!1001 &5674676024207069885
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -4285,7 +4285,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.ThunderSpellModule
   auraPrefab: {fileID: 4156153960950938525, guid: c61dd16abc7f72f4cbcc40d13ad2a74b, type: 3}
-  auraAudioClip: {fileID: 0}
+  auraAudioClip: {fileID: 8300000, guid: 5ea9c33a66114a84cb5f960042d02351, type: 3}
+  beamLoopAudioClip: {fileID: 8300000, guid: 44e60d039ea38fa429c059a116a06e79, type: 3}
+  auraLoopVolume: 0.55
+  beamLoopVolume: 0.8
   rangeMeters: 20
   damage: 16
   statusDuration: 2.5
@@ -4303,6 +4306,10 @@ MonoBehaviour:
   auraOffset: {x: 0, y: 0, z: 0.08}
   auraScale: 0.16
   timeFocusExemptLayer: TimeFocusExempt
+  armSfxClip: {fileID: 0}
+  castSfxClip: {fileID: 8300000, guid: 44e60d039ea38fa429c059a116a06e79, type: 3}
+  armSfxVolume: 0.72
+  castSfxVolume: 1
 --- !u!114 &562696182
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4333,6 +4340,14 @@ MonoBehaviour:
   auraOffset: {x: 0, y: 0, z: 0.08}
   auraScale: 0.18
   timeFocusExemptLayer: TimeFocusExempt
+  auraLoopClip: {fileID: 8300000, guid: 58c66ce0b55ed8f498209ee512a4abbd, type: 3}
+  auraLoopVolume: 0.55
+  armSfxClip: {fileID: 0}
+  castSfxClip: {fileID: 8300000, guid: 8bf3a7dad82b68a448697551f5ce7398, type: 3}
+  impactSfxClip: {fileID: 8300000, guid: 54a6bd849749cf847b26f922df10da53, type: 3}
+  armSfxVolume: 0.72
+  castSfxVolume: 0.95
+  impactSfxVolume: 1
 --- !u!114 &562696183
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4362,6 +4377,14 @@ MonoBehaviour:
   auraOffset: {x: 0, y: 0, z: 0.08}
   auraScale: 0.18
   timeFocusExemptLayer: TimeFocusExempt
+  auraLoopClip: {fileID: 8300000, guid: 61c5334fce43ea941aed508bf30f8718, type: 3}
+  auraLoopVolume: 0.55
+  armSfxClip: {fileID: 0}
+  castSfxClip: {fileID: 8300000, guid: 2027c3c72d167844c8dfa6ff7b4657a1, type: 3}
+  impactSfxClip: {fileID: 8300000, guid: 27a96ce946bb5ef4684da78c22c1981d, type: 3}
+  armSfxVolume: 0.7
+  castSfxVolume: 0.95
+  impactSfxVolume: 1
 --- !u!1 &623882251
 GameObject:
   m_ObjectHideFlags: 0
