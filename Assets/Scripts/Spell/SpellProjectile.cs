@@ -22,6 +22,19 @@ namespace ArcaneVR.Spell
         private CombatManager combatManager;
         private bool hasHit;
         private float destroyAfterSeconds = 3f;
+        private AudioClip impactAudioClip;
+        private float impactAudioVolume = 1f;
+
+        public void SetLifetime(float seconds)
+        {
+            destroyAfterSeconds = Mathf.Max(0f, seconds);
+        }
+
+        public void ConfigureImpactAudio(AudioClip clip, float volume = 1f)
+        {
+            impactAudioClip = clip;
+            impactAudioVolume = Mathf.Clamp01(volume);
+        }
 
         public void Initialize(
             SpellId newSpellId,
@@ -111,6 +124,7 @@ namespace ArcaneVR.Spell
             {
                 hasHit = true;
                 spellTarget.OnHit(GetHitData());
+                PlayImpactAudio(other.ClosestPoint(transform.position));
                 Destroy(gameObject);
                 return;
             }
@@ -121,6 +135,7 @@ namespace ArcaneVR.Spell
             {
                 hasHit = true;
                 Debug.Log($"[HIT TestTarget] {element} | {statusEffect} | DMG:{damage}");
+                PlayImpactAudio(other.ClosestPoint(transform.position));
                 Destroy(gameObject);
                 return;
             }
@@ -138,7 +153,31 @@ namespace ArcaneVR.Spell
             else if (combatManager != null)
                 combatManager.ApplyBossHit(this);
 
+            PlayImpactAudio(other.ClosestPoint(transform.position));
             Destroy(gameObject);
+        }
+
+        private void PlayImpactAudio(Vector3 position)
+        {
+            if (impactAudioClip == null)
+                return;
+
+            var audioObject = new GameObject($"{element}_ImpactSfx");
+            audioObject.transform.position = position;
+
+            var audioSource = audioObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.loop = false;
+            audioSource.clip = impactAudioClip;
+            audioSource.volume = impactAudioVolume;
+            audioSource.spatialBlend = 1f;
+            audioSource.rolloffMode = AudioRolloffMode.Linear;
+            audioSource.minDistance = 1.2f;
+            audioSource.maxDistance = 18f;
+            audioSource.dopplerLevel = 0f;
+            audioSource.Play();
+
+            Destroy(audioObject, Mathf.Max(0.2f, impactAudioClip.length + 0.1f));
         }
     }
 }

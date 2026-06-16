@@ -13,20 +13,20 @@ namespace ArcaneVR.Input
         public const float defaultSlowTimeScale = 0.05f;
         public const float defaultGrayscaleSaturation = -100f;
 
-        [Header("Time")]
+        [Header("── 시간 배속 ──")]
         [SerializeField, Range(0.01f, 1f)] private float slowTimeScale = defaultSlowTimeScale;
 
-        [Header("Visual")]
+        [Header("── 화면 연출 ──")]
         [SerializeField] private bool enableGrayscale = true;
         [SerializeField, Range(-100f, 0f)] private float grayscaleSaturation = defaultGrayscaleSaturation;
         [SerializeField] private float grayscaleVolumePriority = 250f;
 
-        [Header("Post Process Exempt Rendering")]
+        [Header("── 포스트프로세스 제외 렌더링 ──")]
         [SerializeField] private bool enableExemptOverlayCamera = true;
         [SerializeField] private string exemptLayerName = "TimeFocusExempt";
         [SerializeField] private Camera baseCameraOverride;
 
-        [Header("Audio")]
+        [Header("── 사운드 ──")]
         [SerializeField] private bool enableTickSound = true;
         [SerializeField] private AudioClip tickLoopClip;
         [SerializeField, Range(0f, 1f)] private float tickVolume = 0.85f;

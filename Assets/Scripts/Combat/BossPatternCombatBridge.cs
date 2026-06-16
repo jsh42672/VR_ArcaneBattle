@@ -32,6 +32,10 @@ namespace ArcaneVR.Combat
         {
             ResolveReferences();
 
+            var listenerCount = OnAttackResponseWindowStarted?.GetInvocationList().Length ?? 0;
+            Debug.Log($"[CenterFixed] Bridge.BeginAttackResponseWindow | type={attackType} | dur={duration:0.0}s | listeners={listenerCount}" +
+                      $" | dodge={(dodgeDetector == null ? "NULL" : "OK")} | barrier={(barrierController == null ? "NULL" : "OK")}");
+
             if (attackType == BossAttackType.Low)
             {
                 barrierController?.BeginResponseWindow(attackType, duration);

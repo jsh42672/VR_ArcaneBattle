@@ -1,3 +1,4 @@
+using ArcaneVR.Combat;
 using UnityEngine;
 using UnityEngine.VFX;
 
@@ -7,7 +8,9 @@ public class WristAuraController : MonoBehaviour
     [Header("References")]
     public VisualEffect auraVFX;
     public Light auraLight;
-    public MonoBehaviour skeleton; 
+    public MonoBehaviour skeleton;
+    [Tooltip("비워두면 씬에서 자동 탐색")]
+    public CombatManager combatManager;
 
     [Header("Mana Settings")]
     [Range(0f, 1f)] public float ManaPct = 1f;
@@ -28,8 +31,31 @@ public class WristAuraController : MonoBehaviour
     void Start()
     {
         if (auraVFX == null) auraVFX = GetComponent<VisualEffect>();
+
+        if (combatManager == null)
+            combatManager = FindObjectOfType<CombatManager>();
+
+        if (combatManager != null)
+        {
+            combatManager.OnManaChanged += HandleManaChanged;
+            ManaPct = combatManager.MaxMana > 0f
+                ? Mathf.Clamp01(combatManager.CurrentMana / combatManager.MaxMana)
+                : 1f;
+        }
+
         _smoothedMana = ManaPct;
         ApplyMana(_smoothedMana);
+    }
+
+    void OnDestroy()
+    {
+        if (combatManager != null)
+            combatManager.OnManaChanged -= HandleManaChanged;
+    }
+
+    private void HandleManaChanged(float current, float max)
+    {
+        ManaPct = max > 0f ? Mathf.Clamp01(current / max) : 0f;
     }
 
     void Update()

@@ -26,6 +26,11 @@ namespace ArcaneVR.Boss
             ChangeState(BossState.Charging);
         }
 
+        public void EnterCenterFixed()
+        {
+            ChangeState(BossState.CenterFixed);
+        }
+
         public void EnterDefense()
         {
             ChangeState(BossState.Defense);

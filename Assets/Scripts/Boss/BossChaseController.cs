@@ -9,6 +9,14 @@ namespace ArcaneVR.Boss
     [DefaultExecutionOrder(120)]
     public class BossChaseController : MonoBehaviour
     {
+        private const string ChaseDebugTag = "[BossChaseDebug]";
+        [Header("디버그 / 테스트")]
+        [Tooltip("체크하면 골렘이 움직이거나 공격하지 않습니다.\n씬 오브젝트를 비활성화하지 않고도 조용히 디버그할 수 있습니다.")]
+        [SerializeField] private bool debugFreeze;
+        [SerializeField] private bool enableChaseDebugLogs = true;
+
+        public bool DebugFreeze { get => debugFreeze; set => debugFreeze = value; }
+
         [Header("References")]
         [SerializeField] private GolemCombatTarget golemTarget;
         [SerializeField] private BossAI bossAI;
@@ -20,12 +28,12 @@ namespace ArcaneVR.Boss
 
         [Header("Chase")]
         [SerializeField] private bool enableChase = true;
-        [SerializeField] private float moveSpeed = 8.4f;
+        [SerializeField] private float moveSpeed = 4.2f;
         [SerializeField] private float stoppingDistance = 8.2f;
         [SerializeField] private float resumeDistance = 9.3f;
         [SerializeField] private float maxChaseDistance = 250f;
         [SerializeField] private float rotationSpeed = 720f;
-        [SerializeField] private float visualYawOffsetDegrees = 180f;
+        [SerializeField] private float visualYawOffsetDegrees = 0f;
         [SerializeField] private bool keepGrounded = true;
         [SerializeField] private float groundProbeUpDistance = 4f;
         [SerializeField] private float groundProbeDownDistance = 20f;
@@ -34,6 +42,7 @@ namespace ArcaneVR.Boss
         [Header("Melee Attack")]
         [SerializeField] private bool attackWhenInRange = true;
         [SerializeField] private float attackRange = 9.3f;
+        [SerializeField] private float meleeStartDistance = 6.9f;
         [SerializeField] private float meleeAttackCooldown = 3.1f;
         [SerializeField] private float attackPauseDuration = 1.75f;
         [SerializeField] private bool enableAttackResponsePatterns;
@@ -47,19 +56,30 @@ namespace ArcaneVR.Boss
         [SerializeField] private float lowAttackWeight = 0.32f;
 
         [Header("Animation")]
+        [SerializeField] private string idleControllerResourcePath = "ArcaneVR/ThunderGolemIdleController";
+        [SerializeField] private string walkControllerResourcePath = "ArcaneVR/ThunderGolemWalkController";
         [SerializeField] private string runControllerResourcePath = "ArcaneVR/ThunderGolemRunController";
         [SerializeField] private string attackControllerResourcePath = "ArcaneVR/ThunderGolemAttackController";
         [SerializeField] private string speedParameter = "Speed";
         [SerializeField] private string moveSpeedParameter = "MoveSpeed";
         [SerializeField] private string movingParameter = "IsMoving";
-        [SerializeField] private string runStateName = "Armature|Armature|Armature|Armature|running|baselayer";
-        [SerializeField] private string fallbackRunStateName = "Run";
-        [SerializeField] private string genericAttackStateName = "Armature|Armature|Armature|Armature|Triple_Combo_Attack|baselayer";
+        [SerializeField] private string idleStateName = "OneHand_Up_Idle";
+        [SerializeField] private string walkStateName = "OneHand_Up_Walk_B_InPlace";
+        [SerializeField] private string runStateName = "OneHand_Up_Run_F_InPlace";
+        [SerializeField] private string fallbackRunStateName = "OneHand_Up_Run_F_InPlace";
+        [SerializeField] private string genericAttackStateName = "OneHand_Up_Attack_B_1";
         [SerializeField] private float animationCrossFadeDuration = 0.1f;
+        [SerializeField] private float walkAnimationSpeedMultiplier = 1f;
         [SerializeField] private float runAnimationSpeedMultiplier = 0.45f;
         [SerializeField] private float attackAnimationSpeedMultiplier = 0.72f;
         [SerializeField] private float attackControllerRestoreDelay = 1.15f;
+        [SerializeField] private AudioClip movementLoopClip;
+        [SerializeField] private float movementLoopVolume = 0.72f;
+        [SerializeField] private float minMovementPitch = 0.72f;
+        [SerializeField] private float maxMovementPitch = 1.35f;
 
+        private RuntimeAnimatorController idleController;
+        private RuntimeAnimatorController walkController;
         private RuntimeAnimatorController runController;
         private RuntimeAnimatorController attackController;
         private RuntimeAnimatorController controllerBeforeRun;
@@ -72,13 +92,32 @@ namespace ArcaneVR.Boss
         private bool usingRunController;
         private bool usingAttackController;
         private bool wasMoving;
+        private bool wasUsingRunAnimation;
         private bool animatorWasMoving;
         private Coroutine fallbackAttackMotionRoutine;
+        private Vector3 prevDebugPosition;
+        private AudioSource movementLoopAudioSource;
+        private string lastDetailedChaseReason;
 
         public string LastChaseStatus { get; private set; } = "Chase: idle";
         public bool IsChasing { get; private set; }
         public float DistanceToTarget { get; private set; } = -1f;
         public bool IsInAttackRange => DistanceToTarget >= 0f && DistanceToTarget <= attackRange;
+        private bool ShouldUsePatternAttackResponses => enableAttackResponsePatterns &&
+                                                        stateMachine != null &&
+                                                        stateMachine.IsPatternAttackPhaseActive;
+
+        public void CancelFallbackAttackMotion()
+        {
+            if (fallbackAttackMotionRoutine != null)
+            {
+                StopCoroutine(fallbackAttackMotionRoutine);
+                fallbackAttackMotionRoutine = null;
+            }
+
+            if (bossAnimator != null)
+                bossAnimator.applyRootMotion = false;
+        }
 
         public static BossChaseController EnsureForTarget(GolemCombatTarget target)
         {
@@ -98,7 +137,7 @@ namespace ArcaneVR.Boss
         public void ApplyPresentationDefaults()
         {
             enableChase = true;
-            moveSpeed = 8.4f;
+            moveSpeed = 4.2f;
             stoppingDistance = Mathf.Max(stoppingDistance, 8.2f);
             resumeDistance = Mathf.Max(resumeDistance, stoppingDistance + 1.0f);
             maxChaseDistance = Mathf.Max(maxChaseDistance, 250f);
@@ -106,8 +145,9 @@ namespace ArcaneVR.Boss
             visualYawOffsetDegrees = 0f;
             runAnimationSpeedMultiplier = 0.45f;
             attackRange = Mathf.Max(attackRange, 9.3f);
+            meleeStartDistance = Mathf.Min(Mathf.Max(4.5f, meleeStartDistance), attackRange - 0.25f);
             meleeHitRange = Mathf.Max(meleeHitRange, attackRange + 0.5f);
-            enableAttackResponsePatterns = true;
+            enableAttackResponsePatterns = false;
             meleeAttackCooldown = Mathf.Min(meleeAttackCooldown, 2.75f);
             attackPauseDuration = Mathf.Min(attackPauseDuration, 1.35f);
         }
@@ -142,6 +182,7 @@ namespace ArcaneVR.Boss
         {
             Unsubscribe();
             IsChasing = false;
+            StopMovementLoopAudio();
             UpdateAnimator(false, 0f);
         }
 
@@ -174,6 +215,12 @@ namespace ArcaneVR.Boss
 
             if (bossAnimator == null)
                 bossAnimator = ResolveAnimator();
+
+            if (idleController == null && !string.IsNullOrEmpty(idleControllerResourcePath))
+                idleController = Resources.Load<RuntimeAnimatorController>(idleControllerResourcePath);
+
+            if (walkController == null && !string.IsNullOrEmpty(walkControllerResourcePath))
+                walkController = Resources.Load<RuntimeAnimatorController>(walkControllerResourcePath);
 
             if (runController == null && !string.IsNullOrEmpty(runControllerResourcePath))
                 runController = Resources.Load<RuntimeAnimatorController>(runControllerResourcePath);
@@ -232,22 +279,43 @@ namespace ArcaneVR.Boss
 
         private void HandleBarrierStarted(float duration)
         {
-            PauseChase(Mathf.Min(duration, 2.5f), "Chase: barrier");
+            LogChaseDebug($"barrier started without chase pause | duration={duration:0.00}s");
         }
 
         private void PauseChase(float duration, string status)
         {
             chasePausedUntilTime = Mathf.Max(chasePausedUntilTime, Time.time + Mathf.Max(0f, duration));
             LastChaseStatus = status;
+            LogChaseDebug($"{status} | pause={Mathf.Max(0f, duration):0.00}s | until={chasePausedUntilTime:0.00}s");
         }
 
         private void UpdateChase()
         {
             IsChasing = false;
 
+            if (debugFreeze)
+            {
+                // DebugFreeze 중 위치 변경 감지 (골렘 순간이동 원인 추적)
+                var debugRoot = movementRoot != null ? movementRoot : transform;
+                if (prevDebugPosition != Vector3.zero)
+                {
+                    var debugDelta = Vector3.Distance(debugRoot.position, prevDebugPosition);
+                    if (debugDelta > 0.05f)
+                        Debug.LogWarning($"[CenterFixed] 골렘 위치 변경 감지 (DebugFreeze 중) | delta={debugDelta:0.00}m | pos={debugRoot.position} | prev={prevDebugPosition} | applyRootMotion={bossAnimator?.applyRootMotion} | time={Time.time:0.0}s");
+                }
+                prevDebugPosition = debugRoot.position;
+
+                LastChaseStatus = "Chase: 디버그 정지";
+                UpdateAnimator(false, 0f);
+                return;
+            }
+            prevDebugPosition = Vector3.zero;
+
             if (!enableChase)
             {
                 LastChaseStatus = "Chase: disabled";
+                LogChaseDebug("enableChase=false");
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
@@ -255,8 +323,10 @@ namespace ArcaneVR.Boss
             if (IsPlayerDead())
             {
                 LastChaseStatus = "Chase: player dead";
+                LogChaseDebug("combatManager reports player dead");
                 DistanceToTarget = -1f;
                 wasMoving = false;
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
@@ -268,12 +338,15 @@ namespace ArcaneVR.Boss
             {
                 DistanceToTarget = -1f;
                 LastChaseStatus = "Chase: no player";
+                LogChaseDebug("target transform missing");
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
 
             if (!CanMoveNow())
             {
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
@@ -287,19 +360,26 @@ namespace ArcaneVR.Boss
             if (distance > maxChaseDistance)
             {
                 LastChaseStatus = $"Chase: far closing {distance:0.0}m";
+                LogChaseDebug($"distance={distance:0.00} > maxChaseDistance={maxChaseDistance:0.00}");
             }
 
+            var effectiveMeleeStartDistance = GetEffectiveMeleeStartDistance();
             var stopDistance = wasMoving ? stoppingDistance : resumeDistance;
             if (distance <= stopDistance)
             {
                 FaceTarget(toTarget);
-                wasMoving = false;
-                if (TryStartMeleeAttack(distance))
-                    return;
+                if (distance <= effectiveMeleeStartDistance)
+                {
+                    wasMoving = false;
+                    if (TryStartMeleeAttack(distance))
+                        return;
 
-                LastChaseStatus = $"Chase: in range {distance:0.0}m";
-                UpdateAnimator(false, 0f);
-                return;
+                    LastChaseStatus = $"Chase: in melee range {distance:0.0}m";
+                    LogChaseDebug($"in melee range but attack blocked | distance={distance:0.00} | meleeStart={effectiveMeleeStartDistance:0.00} | cooldownRemaining={Mathf.Max(0f, nextMeleeAttackTime - Time.time):0.00}s | pauseRemaining={Mathf.Max(0f, chasePausedUntilTime - Time.time):0.00}s");
+                    StopMovementLoopAudio();
+                    UpdateAnimator(false, 0f);
+                    return;
+                }
             }
 
             var speedMultiplier = golemTarget != null ? golemTarget.MovementSpeedMultiplier : 1f;
@@ -307,12 +387,17 @@ namespace ArcaneVR.Boss
             if (speed <= 0.01f)
             {
                 LastChaseStatus = "Chase: stopped by status";
+                LogChaseDebug($"speed={speed:0.00}, speedMultiplier={speedMultiplier:0.00}");
+                StopMovementLoopAudio();
                 UpdateAnimator(false, 0f);
                 return;
             }
 
             var direction = toTarget.normalized;
-            var delta = direction * Mathf.Min(speed * Time.deltaTime, Mathf.Max(0f, distance - stoppingDistance));
+            var desiredDistance = distance <= stopDistance
+                ? effectiveMeleeStartDistance
+                : stoppingDistance;
+            var delta = direction * Mathf.Min(speed * Time.deltaTime, Mathf.Max(0f, distance - desiredDistance));
             var nextPosition = root.position + delta;
             if (keepGrounded)
                 nextPosition = SnapToGround(nextPosition);
@@ -322,31 +407,39 @@ namespace ArcaneVR.Boss
 
             IsChasing = true;
             wasMoving = true;
-            LastChaseStatus = $"Chase: moving {distance:0.0}m";
+            LastChaseStatus = distance <= stopDistance
+                ? $"Chase: closing for melee {distance:0.0}m"
+                : $"Chase: moving {distance:0.0}m";
+            LogChaseDebug($"status={LastChaseStatus} | distance={distance:0.00} | stopDistance={stopDistance:0.00} | meleeStart={effectiveMeleeStartDistance:0.00} | desiredDistance={desiredDistance:0.00} | pausedRemaining={Mathf.Max(0f, chasePausedUntilTime - Time.time):0.00}s");
+            UpdateMovementLoopAudio(speed / Mathf.Max(0.01f, moveSpeed));
             UpdateAnimator(true, speed / Mathf.Max(0.01f, moveSpeed));
         }
 
         public bool TryStartMeleeAttack(float distance)
         {
-            if (!attackWhenInRange ||
+            if (debugFreeze ||
+                !attackWhenInRange ||
                 IsPlayerDead() ||
-                distance > attackRange ||
+                distance > GetEffectiveMeleeStartDistance() ||
                 Time.time < nextMeleeAttackTime ||
                 !CanStartAttackNow())
             {
                 return false;
             }
 
-            var attackType = enableAttackResponsePatterns
+            var usePatternAttackResponses = ShouldUsePatternAttackResponses;
+            var attackType = usePatternAttackResponses
                 ? PickMeleeAttackType()
                 : BossAttackType.Middle;
             nextMeleeAttackTime = Time.time + meleeAttackCooldown;
             PauseChase(attackPauseDuration, "Chase: melee");
+            StopMovementLoopAudio();
             UpdateAnimator(false, 0f);
+            LogChaseDebug($"melee attack started | distance={distance:0.00} | meleeStart={GetEffectiveMeleeStartDistance():0.00} | attackRange={attackRange:0.00} | cooldown={meleeAttackCooldown:0.00}s");
             PlayGenericAttackAnimation();
             PlayFallbackAttackMotion(attackType);
 
-            if (enableAttackResponsePatterns)
+            if (usePatternAttackResponses)
             {
                 if (stateMachine != null)
                     stateMachine.TriggerAttackNow(attackType);
@@ -354,9 +447,7 @@ namespace ArcaneVR.Boss
                     patternBridge?.BeginAttackResponseWindow(attackType);
             }
 
-            LastChaseStatus = enableAttackResponsePatterns
-                ? $"Chase: {attackType} melee"
-                : "Chase: generic melee";
+            LastChaseStatus = "Chase: generic melee";
             return true;
         }
 
@@ -375,15 +466,17 @@ namespace ArcaneVR.Boss
         {
             var root = movementRoot != null ? movementRoot : transform;
             var origin = root.position;
+            Debug.Log($"[CenterFixed] FallbackAttackMotion 시작 | type={attackType} | debugFreeze={debugFreeze} | bossState={bossAI?.CurrentState} | pos={origin} | time={Time.time:0.0}s");
             var forward = target != null ? target.position - root.position : root.forward;
             forward.y = 0f;
             if (forward.sqrMagnitude < 0.0001f)
                 forward = transform.forward;
             forward.Normalize();
 
-            var lift = enableAttackResponsePatterns && attackType == BossAttackType.High
+            var usePatternAttackResponses = ShouldUsePatternAttackResponses;
+            var lift = usePatternAttackResponses && attackType == BossAttackType.High
                 ? 0.22f
-                : enableAttackResponsePatterns && attackType == BossAttackType.Low
+                : usePatternAttackResponses && attackType == BossAttackType.Low
                     ? -0.1f
                     : 0f;
             var windup = origin - forward * Mathf.Max(0f, attackWindupDistance) + Vector3.up * lift;
@@ -399,9 +492,6 @@ namespace ArcaneVR.Boss
 
         private void TryApplyGenericMeleeDamage()
         {
-            if (enableAttackResponsePatterns)
-                return;
-
             if (!applyGenericMeleeDamage)
                 return;
 
@@ -456,8 +546,10 @@ namespace ArcaneVR.Boss
             if (golemTarget != null && !golemTarget.CanAct)
                 return false;
 
-            if (!enableAttackResponsePatterns)
-                return bossAI == null || bossAI.CurrentState != BossState.Dead;
+            if (!ShouldUsePatternAttackResponses)
+                return bossAI == null ||
+                       (bossAI.CurrentState != BossState.Dead &&
+                        bossAI.CurrentState != BossState.CenterFixed);
 
             if (bossAI == null)
                 return true;
@@ -486,11 +578,15 @@ namespace ArcaneVR.Boss
             }
 
             if (Time.time < chasePausedUntilTime)
+            {
+                LogChaseDebug($"movement blocked by chase pause | remaining={chasePausedUntilTime - Time.time:0.00}s");
                 return false;
+            }
 
             if (golemTarget != null && !golemTarget.CanAct)
             {
                 LastChaseStatus = "Chase: target cannot act";
+                LogChaseDebug("golemTarget.CanAct=false");
                 return false;
             }
 
@@ -500,9 +596,10 @@ namespace ArcaneVR.Boss
             switch (bossAI.CurrentState)
             {
                 case BossState.Dead:
-                case BossState.Defense:
+                case BossState.CenterFixed:
                 case BossState.Weakness:
                     LastChaseStatus = $"Chase: state {bossAI.CurrentState}";
+                    LogChaseDebug($"movement blocked by boss state {bossAI.CurrentState}");
                     return false;
                 default:
                     return true;
@@ -515,6 +612,50 @@ namespace ArcaneVR.Boss
                 combatManager = FindAnyObjectByType<CombatManager>();
 
             return combatManager != null && combatManager.IsPlayerDead;
+        }
+
+        private void UpdateMovementLoopAudio(float normalizedSpeed)
+        {
+            if (movementLoopClip == null)
+                return;
+
+            var audioSource = EnsureMovementLoopAudioSource();
+            if (audioSource.clip != movementLoopClip)
+                audioSource.clip = movementLoopClip;
+
+            audioSource.volume = Mathf.Clamp01(movementLoopVolume);
+            audioSource.pitch = Mathf.Lerp(minMovementPitch, maxMovementPitch, Mathf.Clamp01(normalizedSpeed));
+
+            if (!audioSource.isPlaying)
+                audioSource.Play();
+        }
+
+        private void StopMovementLoopAudio()
+        {
+            if (movementLoopAudioSource == null)
+                return;
+
+            movementLoopAudioSource.Stop();
+            movementLoopAudioSource.clip = null;
+        }
+
+        private AudioSource EnsureMovementLoopAudioSource()
+        {
+            if (movementLoopAudioSource != null)
+                return movementLoopAudioSource;
+
+            movementLoopAudioSource = GetComponent<AudioSource>();
+            if (movementLoopAudioSource == null)
+                movementLoopAudioSource = gameObject.AddComponent<AudioSource>();
+
+            movementLoopAudioSource.playOnAwake = false;
+            movementLoopAudioSource.loop = true;
+            movementLoopAudioSource.spatialBlend = 1f;
+            movementLoopAudioSource.rolloffMode = AudioRolloffMode.Linear;
+            movementLoopAudioSource.minDistance = 2f;
+            movementLoopAudioSource.maxDistance = 20f;
+            movementLoopAudioSource.dopplerLevel = 0f;
+            return movementLoopAudioSource;
         }
 
         private void FaceTarget(Vector3 direction)
@@ -602,8 +743,10 @@ namespace ArcaneVR.Boss
                 return;
             }
 
+            var useRunAnimation = ShouldUseRunAnimation(normalizedSpeed);
+            var movementSpeedMultiplier = useRunAnimation ? runAnimationSpeedMultiplier : walkAnimationSpeedMultiplier;
             var animationDrive = moving
-                ? Mathf.Clamp(normalizedSpeed * Mathf.Max(0.05f, runAnimationSpeedMultiplier), 0.15f, 0.8f)
+                ? Mathf.Clamp(normalizedSpeed * Mathf.Max(0.05f, movementSpeedMultiplier), 0.15f, 1.15f)
                 : 0f;
             bossAnimator.speed = moving ? animationDrive : 1f;
 
@@ -613,76 +756,77 @@ namespace ArcaneVR.Boss
 
             if (moving)
             {
-                EnsureRunControllerIfNeeded();
-                if (!animatorWasMoving)
-                    PlayRunAnimation();
+                EnsureMovementControllerIfNeeded(useRunAnimation);
+                if (!animatorWasMoving || wasUsingRunAnimation != useRunAnimation)
+                    PlayMovementAnimation(useRunAnimation);
             }
-            else if (usingRunController)
+            else
             {
-                if (bossAnimator.runtimeAnimatorController == runController)
-                    bossAnimator.runtimeAnimatorController = controllerBeforeRun;
-
+                EnsureIdleControllerIfNeeded();
+                TryCrossFade(idleStateName);
                 controllerBeforeRun = null;
                 usingRunController = false;
             }
 
             animatorWasMoving = moving;
+            wasUsingRunAnimation = moving && useRunAnimation;
         }
 
-        private void PlayRunAnimation()
+        private void PlayMovementAnimation(bool useRunAnimation)
         {
+            if (!useRunAnimation && TryCrossFade(walkStateName))
+                return;
+
             if (TryCrossFade(runStateName))
                 return;
 
             if (TryCrossFade(fallbackRunStateName))
                 return;
 
-            TryCrossFade("Walk");
+            if (!useRunAnimation && TryCrossFade("Walk"))
+                return;
+
+            TryCrossFade("Run");
         }
 
-        private void EnsureRunControllerIfNeeded()
+        private void EnsureMovementControllerIfNeeded(bool useRunAnimation)
         {
-            if (bossAnimator == null || runController == null)
+            if (bossAnimator == null)
                 return;
 
-            if (bossAnimator.runtimeAnimatorController == runController)
-            {
-                usingRunController = true;
-                return;
-            }
-
-            if (CanPlayRunState())
+            var desiredController = useRunAnimation ? runController : walkController;
+            if (desiredController == null || bossAnimator.runtimeAnimatorController == desiredController)
                 return;
 
             controllerBeforeRun = bossAnimator.runtimeAnimatorController;
             usingRunController = true;
-            bossAnimator.runtimeAnimatorController = runController;
+            bossAnimator.runtimeAnimatorController = desiredController;
         }
 
-        private bool CanPlayRunState()
+        private void EnsureIdleControllerIfNeeded()
         {
-            return HasAnimatorState(runStateName) ||
-                   HasAnimatorState(fallbackRunStateName) ||
-                   HasAnimatorState("Walk");
+            if (bossAnimator == null)
+                return;
+
+            if (idleController != null && bossAnimator.runtimeAnimatorController != idleController)
+            {
+                bossAnimator.runtimeAnimatorController = idleController;
+                return;
+            }
+
+            if (controllerBeforeRun != null &&
+                bossAnimator.runtimeAnimatorController != controllerBeforeRun)
+            {
+                bossAnimator.runtimeAnimatorController = controllerBeforeRun;
+            }
         }
 
-        private bool HasAnimatorState(string stateName)
+        private bool ShouldUseRunAnimation(float normalizedSpeed)
         {
-            if (string.IsNullOrEmpty(stateName) ||
-                bossAnimator == null ||
-                bossAnimator.runtimeAnimatorController == null)
-            {
-                return false;
-            }
+            if (bossAI != null && bossAI.CurrentState == BossState.Charging)
+                return true;
 
-            var stateHash = Animator.StringToHash(stateName);
-            for (var layer = 0; layer < bossAnimator.layerCount; layer++)
-            {
-                if (bossAnimator.HasState(layer, stateHash))
-                    return true;
-            }
-
-            return false;
+            return normalizedSpeed > 1.05f;
         }
 
         private bool TryCrossFade(string stateName)
@@ -722,7 +866,11 @@ namespace ArcaneVR.Boss
                 usingAttackController = true;
             }
 
-            restoreAttackControllerAtTime = Time.time + Mathf.Max(0.1f, attackControllerRestoreDelay);
+            var attackDuration = Mathf.Max(
+                0.1f,
+                attackControllerRestoreDelay,
+                GetAttackStateDuration(genericAttackStateName));
+            restoreAttackControllerAtTime = Time.time + attackDuration;
 
             if (TryCrossFade(genericAttackStateName) || TryCrossFade("Attack"))
                 return;
@@ -734,6 +882,43 @@ namespace ArcaneVR.Boss
         private bool IsAttackAnimationActive()
         {
             return restoreAttackControllerAtTime > 0f && Time.time < restoreAttackControllerAtTime;
+        }
+
+        private float GetEffectiveMeleeStartDistance()
+        {
+            var cappedByAttackRange = Mathf.Min(attackRange, meleeStartDistance);
+            return Mathf.Min(cappedByAttackRange, Mathf.Max(0.5f, stoppingDistance - 0.25f));
+        }
+
+        private void LogChaseDebug(string message)
+        {
+            if (!enableChaseDebugLogs || lastDetailedChaseReason == message)
+                return;
+
+            lastDetailedChaseReason = message;
+            Debug.Log($"{ChaseDebugTag} {message}");
+        }
+
+        private float GetAttackStateDuration(string stateName)
+        {
+            if (bossAnimator == null || bossAnimator.runtimeAnimatorController == null)
+                return 0f;
+
+            foreach (var clip in bossAnimator.runtimeAnimatorController.animationClips)
+            {
+                if (clip == null)
+                    continue;
+
+                if (!string.Equals(clip.name, stateName, System.StringComparison.Ordinal) &&
+                    !string.Equals(clip.name.Replace(" ", "_"), stateName, System.StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                return clip.length / Mathf.Max(0.05f, attackAnimationSpeedMultiplier);
+            }
+
+            return 0f;
         }
 
         private void RestoreAttackControllerIfNeeded()

@@ -732,6 +732,11 @@ MonoBehaviour:
   m_EnableLegacyTarget: 0
   m_HudRefreshInterval: 0.1
   m_SubsystemRefreshInterval: 0.5
+--- !u!4 &11435022 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
 --- !u!21 &44783810
 Material:
   serializedVersion: 8
@@ -848,12 +853,39 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.63, b: 0.02, a: 1}
-    - _Color: {r: 1, g: 0.63, b: 0.02, a: 1}
+    - _BaseColor: {r: 0.42, g: 0.42, b: 0.42, a: 1}
+    - _Color: {r: 0.41999996, g: 0.41999996, b: 0.41999996, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+--- !u!1 &57590038 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6389328464957222476, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &57590040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 57590038}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdcdb0b9a984ba94daf7aadd46e2c331, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.TimeStopSystems
+  timeFocusController: {fileID: 0}
+  comboShootWindowSeconds: 6
+  leftGrimoireGesture: {fileID: 0}
+  rightPageTurnGesture: {fileID: 0}
+  grimoireManager: {fileID: 0}
+  combinationFocusController: {fileID: 0}
+  combinationChecker: {fileID: 0}
+  enableComboDebugLogs: 1
+  handPullMovement: {fileID: 0}
+  spellCaster: {fileID: 0}
 --- !u!1 &94115754
 GameObject:
   m_ObjectHideFlags: 0
@@ -1236,11 +1268,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.TimeStopSystems
   timeFocusController: {fileID: 1153104597}
   comboShootWindowSeconds: 6
-  leftGrimoireGesture: {fileID: 453387468}
-  rightPageTurnGesture: {fileID: 1339708614}
+  leftGrimoireGesture: {fileID: 0}
+  rightPageTurnGesture: {fileID: 0}
   grimoireManager: {fileID: 0}
   combinationFocusController: {fileID: 316886274}
   combinationChecker: {fileID: 1428252387}
+  enableComboDebugLogs: 1
   handPullMovement: {fileID: 1016462461}
   spellCaster: {fileID: 522477930}
 --- !u!21 &119937958
@@ -1359,8 +1392,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -1865,8 +1898,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -1987,8 +2020,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0.015, g: 0.018, b: 0.02, a: 1}
-    - _Color: {r: 0.015, g: 0.018, b: 0.02, a: 1}
+    - _BaseColor: {r: 0.34, g: 0.34, b: 0.34, a: 1}
+    - _Color: {r: 0.33999997, g: 0.33999997, b: 0.33999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -2443,6 +2476,52 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &287572826
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 287572828}
+  - component: {fileID: 287572827}
+  m_Layer: 0
+  m_Name: _Disposable_SpellDiagnostics
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &287572827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 287572826}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65b6170fad15e28408079067f2601492, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Diagnostics.SpellPrototypeDiagnostics
+  logState: 1
+  logInterval: 0.5
+--- !u!4 &287572828
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 287572826}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &292867131
 GameObject:
   m_ObjectHideFlags: 0
@@ -2671,8 +2750,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.75, b: 0.42, a: 1}
-    - _Color: {r: 0, g: 0.75, b: 0.41999996, a: 1}
+    - _BaseColor: {r: 0.55, g: 0.16, b: 0.16, a: 1}
+    - _Color: {r: 0.54999995, g: 0.15999997, b: 0.15999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -3146,8 +3225,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -3288,110 +3367,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1887117900}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &453387465
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 453387466}
-  - component: {fileID: 453387467}
-  - component: {fileID: 453387468}
-  m_Layer: 0
-  m_Name: Left Hand Gestures
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &453387466
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 453387465}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1106619364}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &453387467
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 453387465}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.XRHandTrackingEvents
-  m_Handedness: 1
-  m_UpdateType: 1
-  m_PoseUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  m_JointsUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  m_TrackingAcquired:
-    m_PersistentCalls:
-      m_Calls: []
-  m_TrackingLost:
-    m_PersistentCalls:
-      m_Calls: []
-  m_TrackingChanged:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &453387468
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 453387465}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b3d74a477d8c6349a6eafec0050f431, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.LeftGrimoireGesture
-  handTrackingEvents: {fileID: 453387467}
-  grimoireShape: {fileID: 11400000, guid: 6c4acf4e830f130418267b136dfb3d47, type: 2}
-  wristTransform: {fileID: 1888764782}
-  gestureDetector: {fileID: 522477927}
-  grimoirePrefab: {fileID: 3525381110756386426, guid: 303ff02cc82d59644aa9d5fd1ab194ae, type: 3}
-  positionOffset: {x: 0, y: -0.1, z: 0.1}
-  rotationOffset: {x: 180, y: 0, z: 0}
-  grimoireScale: 0.6
-  renderAfterTimeFocusPostProcess: 1
-  timeFocusExemptLayerName: TimeFocusExempt
-  requirePalmUp: 1
-  palmNormalLocalAxis: {x: 0, y: -1, z: 0}
-  palmUpDotThreshold: 0.45
-  poseHoldDuration: 0.15
-  poseLostGracePeriod: 0.8
-  debugLog: 1
-  debugDetectionDetails: 1
-  debugLogInterval: 0.5
-  onGrimoireAppear:
-    m_PersistentCalls:
-      m_Calls: []
-  onGrimoireDisappear:
-    m_PersistentCalls:
-      m_Calls: []
-  onNextPage:
-    m_PersistentCalls:
-      m_Calls: []
-  onPreviousPage:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!1 &474116855
 GameObject:
   m_ObjectHideFlags: 0
@@ -3581,6 +3556,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
+      propertyPath: showDebugLog
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: rightIceGesture
       value: 
       objectReference: {fileID: 11400000, guid: 844c60db6e0395f45a39f6ba58521e36, type: 2}
@@ -3619,11 +3598,11 @@ PrefabInstance:
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: leftHandTrackingEvents
       value: 
-      objectReference: {fileID: 453387467}
+      objectReference: {fileID: 0}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: rightHandTrackingEvents
       value: 
-      objectReference: {fileID: 1339708613}
+      objectReference: {fileID: 0}
     - target: {fileID: 6022282759692248258, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
       propertyPath: rightThunderShootGesture
       value: 
@@ -3910,6 +3889,502 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d8b5c9e20147ee44973f3ce01d740da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.CombatManager
+--- !u!1001 &562696171
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: playerCamera
+      value: 
+      objectReference: {fileID: 2020363679}
+    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: gestureDetector
+      value: 
+      objectReference: {fileID: 562696178}
+    - target: {fileID: 504006132975589490, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftHandBookAnchor
+      value: 
+      objectReference: {fileID: 1888764782}
+    - target: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: movementRoot
+      value: 
+      objectReference: {fileID: 11435022}
+    - target: {fileID: 823537292506523935, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: xrOriginRoot
+      value: 
+      objectReference: {fileID: 11435022}
+    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1.56508
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 3.5148
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: iceModule
+      value: 
+      objectReference: {fileID: 562696182}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: fireModule
+      value: 
+      objectReference: {fileID: 562696183}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: combatManager
+      value: 
+      objectReference: {fileID: 522477931}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: headTransform
+      value: 
+      objectReference: {fileID: 2020363679}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: thunderModule
+      value: 
+      objectReference: {fileID: 562696181}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: feedbackManager
+      value: 
+      objectReference: {fileID: 562696172}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: gestureDetector
+      value: 
+      objectReference: {fileID: 562696178}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: voiceRecognizer
+      value: 
+      objectReference: {fileID: 562696176}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: combinationChecker
+      value: 
+      objectReference: {fileID: 1428252387}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: elementAuraManager
+      value: 
+      objectReference: {fileID: 1032187177}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftHandSpawnPoint
+      value: 
+      objectReference: {fileID: 1888764782}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: focusModeController
+      value: 
+      objectReference: {fileID: 316886274}
+    - target: {fileID: 3805601017506533272, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightHandSpawnPoint
+      value: 
+      objectReference: {fileID: 220932870}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftIce
+      value: 
+      objectReference: {fileID: 11400000, guid: 17551065c8457334590e46e64a60a468, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftFire
+      value: 
+      objectReference: {fileID: 11400000, guid: 2964163fa2815c54db8d0606a2e510cc, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftBarrier
+      value: 
+      objectReference: {fileID: 11400000, guid: 97109207ab2388b4c83ccb932ade1df0, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftCombine
+      value: 
+      objectReference: {fileID: 11400000, guid: d1e6e41e39b30e3448269b1c1bfe862c, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftThunder
+      value: 
+      objectReference: {fileID: 11400000, guid: 5c9e50234a8d9474183c66e65bf9d69c, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightBarrier
+      value: 
+      objectReference: {fileID: 11400000, guid: d7eee17c4b496774d9c14fd427de460b, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightCombine
+      value: 
+      objectReference: {fileID: 11400000, guid: 74f763f5d9a4dad47850581a1e03543a, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: showDebugLog
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightIceGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 844c60db6e0395f45a39f6ba58521e36, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftCombineShoot
+      value: 
+      objectReference: {fileID: 11400000, guid: 51932134eea09454c881e47a07b42847, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightFireGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: f82675f516dbf3a4c8b89549414b42aa, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightCombineShoot
+      value: 
+      objectReference: {fileID: 11400000, guid: df632af86a1aeba408d4242706f6ad1e, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftGrimoireGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 6c4acf4e830f130418267b136dfb3d47, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightThunderGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 3ecf20e8b9e7ff940bba3120fc3ef2bb, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightPageTurnGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: 29801e08c3939ec408ba61b76553ee29, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: leftHandTrackingEvents
+      value: 
+      objectReference: {fileID: 906048824}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightHandTrackingEvents
+      value: 
+      objectReference: {fileID: 1748501510}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightThunderShootGesture
+      value: 
+      objectReference: {fileID: 11400000, guid: f56abda03f495f041874ee1fc40fa6cf, type: 2}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightIcePalmUpDotThreshold
+      value: 0.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: rightThunderShootArmWindowSeconds
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6472235527627391572, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_Name
+      value: ArcanePlayerRig
+      objectReference: {fileID: 0}
+    - target: {fileID: 7229132849027019042, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5716984459049516542, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 3502794436296230600, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 755217608}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5674676024876359516, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 562696180}
+    - targetCorrespondingSourceObject: {fileID: 5674676024876359512, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1361770600}
+    - targetCorrespondingSourceObject: {fileID: 5674676024876359514, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 562696179}
+    - targetCorrespondingSourceObject: {fileID: 6389328464957222476, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 57590040}
+    - targetCorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 562696183}
+    - targetCorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 562696182}
+    - targetCorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 562696181}
+  m_SourcePrefab: {fileID: 100100000, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+--- !u!114 &562696172 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1381298484821246685, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a5cd75a996c58c4a8552413355bf9c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.UI.FeedbackManager
+--- !u!1 &562696173 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5674676024876359512, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &562696174 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5674676024876359514, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &562696175 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5674676024876359516, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &562696176 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 899937633458037016, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04f075b95df886e4f8a3399635bc0f0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.VoiceRecognizer
+--- !u!1 &562696177 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7812331015066718106, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &562696178 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4513273319366716236, guid: 1961f9e77762ae546a3070a14748c880, type: 3}
+  m_PrefabInstance: {fileID: 562696171}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3c0ec330ef622488b5184eeed75a90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.GestureDetector
+--- !u!114 &562696179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 562696174}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
+--- !u!114 &562696180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 562696175}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
+--- !u!114 &562696181
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 562696177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e8556c3ee5008b4d9160f82154c22a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.ThunderSpellModule
+  auraPrefab: {fileID: 4156153960950938525, guid: c61dd16abc7f72f4cbcc40d13ad2a74b, type: 3}
+  auraAudioClip: {fileID: 8300000, guid: 5ea9c33a66114a84cb5f960042d02351, type: 3}
+  beamLoopAudioClip: {fileID: 8300000, guid: 44e60d039ea38fa429c059a116a06e79, type: 3}
+  auraLoopVolume: 0.55
+  beamLoopVolume: 0.8
+  rangeMeters: 20
+  damage: 16
+  statusDuration: 2.5
+  continuousFireSeconds: 1.5
+  hitTickInterval: 0.25
+  laserWidth: 0.08
+  laserDownAngleDegrees: 8
+  laserColor: {r: 1, g: 0.95, b: 0, a: 1}
+  hitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  requireChargeBeforeShoot: 0
+  chargeGraceSeconds: 2
+  shootPoseGraceSeconds: 0.8
+  auraOffset: {x: 0, y: 0, z: 0.08}
+  auraScale: 0.16
+  timeFocusExemptLayer: TimeFocusExempt
+  armSfxClip: {fileID: 0}
+  castSfxClip: {fileID: 8300000, guid: 44e60d039ea38fa429c059a116a06e79, type: 3}
+  armSfxVolume: 0.72
+  castSfxVolume: 1
+--- !u!114 &562696182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 562696177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dca7cdf7af8afb4aae7d1ca4aed8f36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.IceSpellModule
+  iceOrbPrefab: {fileID: 1941437992822523389, guid: c461a44335507824f8a3ffff0f4cc106, type: 3}
+  iceProjectilePrefab: {fileID: 8004682883012916878, guid: 3cd8b890ee0072948b8dee010bbfa22f, type: 3}
+  palmOffset: {x: 0, y: 0, z: 0.08}
+  orbScale: 0.12
+  projectileScale: 0.12
+  projectileSpeed: 14
+  projectileLifetime: 6
+  minThrowSpeed: 1.5
+  launchCooldown: 1.2
+  velocitySampleDuration: 0.12
+  useArcTrajectory: 1
+  arcVelocityMultiplier: 4
+  arcUpwardBoost: 1.4
+  minArcLaunchSpeed: 20
+  maxArcLaunchSpeed: 40
+  auraOffset: {x: 0, y: 0, z: 0.08}
+  auraScale: 0.18
+  timeFocusExemptLayer: TimeFocusExempt
+  auraLoopClip: {fileID: 8300000, guid: 58c66ce0b55ed8f498209ee512a4abbd, type: 3}
+  auraLoopVolume: 0.55
+  armSfxClip: {fileID: 0}
+  castSfxClip: {fileID: 8300000, guid: 8bf3a7dad82b68a448697551f5ce7398, type: 3}
+  impactSfxClip: {fileID: 8300000, guid: 54a6bd849749cf847b26f922df10da53, type: 3}
+  armSfxVolume: 0.72
+  castSfxVolume: 0.95
+  impactSfxVolume: 1
+--- !u!114 &562696183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 562696177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a2ce6b15895d0b41843e9708d80889e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.FireSpellModule
+  fireballPrefab: {fileID: 9063237886566245057, guid: 10af0ea56284fed49afe2b8e47b7f6b0, type: 3}
+  explosionPrefab: {fileID: 5535791897657902596, guid: 29a001dc43e248e43b3aa25450f03c68, type: 3}
+  explosionMaterialOverride: {fileID: 0}
+  auraPrefab: {fileID: 5535613235947910843, guid: f3795f8738e545649b344413c78979f5, type: 3}
+  auraColor: {r: 1, g: 0.05, b: 0, a: 1}
+  spawnForwardOffset: 0.15
+  projectileSpeed: 13
+  recoilVelocityThreshold: 0.35
+  recoilResetThreshold: 0.15
+  cooldown: 0.25
+  projectileScale: 0.18
+  explosionScale: 0.15
+  explosionLifetime: 1.5
+  projectileLifetime: 5
+  auraOffset: {x: 0, y: 0, z: 0.08}
+  auraScale: 0.18
+  timeFocusExemptLayer: TimeFocusExempt
+  auraLoopClip: {fileID: 8300000, guid: 61c5334fce43ea941aed508bf30f8718, type: 3}
+  auraLoopVolume: 0.55
+  armSfxClip: {fileID: 0}
+  castSfxClip: {fileID: 8300000, guid: 2027c3c72d167844c8dfa6ff7b4657a1, type: 3}
+  impactSfxClip: {fileID: 8300000, guid: 27a96ce946bb5ef4684da78c22c1981d, type: 3}
+  armSfxVolume: 0.7
+  castSfxVolume: 0.95
+  impactSfxVolume: 1
 --- !u!1 &623882251
 GameObject:
   m_ObjectHideFlags: 0
@@ -4354,8 +4829,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 820007943}
-  - {fileID: 1106619364}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 11435022}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!21 &764380890
 Material:
@@ -4473,8 +4947,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.63, b: 0.02, a: 1}
-    - _Color: {r: 1, g: 0.63, b: 0.02, a: 1}
+    - _BaseColor: {r: 0.42, g: 0.42, b: 0.42, a: 1}
+    - _Color: {r: 0.41999996, g: 0.41999996, b: 0.41999996, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -4759,8 +5233,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -4881,8 +5355,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -5039,8 +5513,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.63, b: 0.02, a: 1}
-    - _Color: {r: 1, g: 0.63, b: 0.02, a: 1}
+    - _BaseColor: {r: 0.42, g: 0.42, b: 0.42, a: 1}
+    - _Color: {r: 0.41999996, g: 0.41999996, b: 0.41999996, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -5050,6 +5524,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 141466980049140221, guid: b3ed8a0a703ebd34a9e44ed3d9f1fcf6, type: 3}
   m_PrefabInstance: {fileID: 1677496440}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &906048824 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 639686448, guid: b3ed8a0a703ebd34a9e44ed3d9f1fcf6, type: 3}
+  m_PrefabInstance: {fileID: 1677496440}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &923607992
 GameObject:
   m_ObjectHideFlags: 0
@@ -5752,7 +6237,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1025119505
 Transform:
   m_ObjectHideFlags: 0
@@ -5887,8 +6372,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -5945,9 +6430,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Spell.ElementAuraManager
   auraParticles: {fileID: 1908345890}
   timeFocusExemptLayerName: TimeFocusExempt
-  fireColor: {r: 1, g: 0.45, b: 0.05, a: 1}
+  fireColor: {r: 1, g: 0.05, b: 0, a: 1}
   iceColor: {r: 0.05, g: 0.8, b: 1, a: 1}
-  thunderColor: {r: 1, g: 0.88, b: 0.15, a: 1}
+  thunderColor: {r: 1, g: 0.95, b: 0, a: 1}
+  voiceBoostSizeMultiplier: 2.4
 --- !u!1 &1051556533
 GameObject:
   m_ObjectHideFlags: 0
@@ -6035,39 +6521,6 @@ Transform:
   - {fileID: 1832774964}
   - {fileID: 655971746}
   m_Father: {fileID: 1607984679}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1106619363
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1106619364}
-  m_Layer: 0
-  m_Name: XR Hands Gesture System
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1106619364
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1106619363}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1339708610}
-  - {fileID: 453387466}
-  m_Father: {fileID: 755217608}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1132536063
 GameObject:
@@ -6375,8 +6828,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.63, b: 0.02, a: 1}
-    - _Color: {r: 1, g: 0.63, b: 0.02, a: 1}
+    - _BaseColor: {r: 0.42, g: 0.42, b: 0.42, a: 1}
+    - _Color: {r: 0.41999996, g: 0.41999996, b: 0.41999996, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -6497,8 +6950,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -6891,8 +7344,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -6941,8 +7394,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e96206c1ee3d664da3b1c4f0269ee9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.CombineGestureDetector
-  leftHandTrackingEvents: {fileID: 453387467}
-  rightHandTrackingEvents: {fileID: 1339708613}
+  leftHandTrackingEvents: {fileID: 906048824}
+  rightHandTrackingEvents: {fileID: 1748501510}
   leftCombineShape: {fileID: 11400000, guid: d1e6e41e39b30e3448269b1c1bfe862c, type: 2}
   rightCombineShape: {fileID: 11400000, guid: 74f763f5d9a4dad47850581a1e03543a, type: 2}
   poseHoldDuration: 0.15
@@ -7063,8 +7516,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -7185,8 +7638,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -7307,8 +7760,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -7392,251 +7845,50 @@ Material:
     - _SoftParticleFadeParams: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!1 &1339708609
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1339708610}
-  - component: {fileID: 1339708613}
-  - component: {fileID: 1339708612}
-  - component: {fileID: 1339708611}
-  - component: {fileID: 1339708614}
-  - component: {fileID: 1339708615}
-  m_Layer: 0
-  m_Name: Right Hand Gestures
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1339708610
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1339708609}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1106619364}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1339708611
+--- !u!114 &1361770600
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1339708609}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a56a8f8ed99c98d4ca449e0ec2ec4728, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.RightIceGesture
-  handTrackingEvents: {fileID: 1339708613}
-  snowShape: {fileID: 11400000, guid: 844c60db6e0395f45a39f6ba58521e36, type: 2}
-  blockedByShape: {fileID: 11400000, guid: f56abda03f495f041874ee1fc40fa6cf, type: 2}
-  wristTransform: {fileID: 220932870}
-  poseLostGracePeriod: 0.5
-  iceOrbPrefab: {fileID: 963729409512917249, guid: 674e9c56be5e01540b37f2d2ae2a9b36, type: 3}
-  orbScale: 0.12
-  palmOffset: {x: 0, y: 0, z: 0.08}
-  iceProjectilePrefab: {fileID: 2512901619461213800, guid: 583f1c24395258d4c84e8e57b8e31f6d, type: 3}
-  projectileScale: 0.12
-  projectileSpeed: 14
-  iceBallLifetime: 6
-  useArcTrajectory: 1
-  arcVelocityMultiplier: 4
-  arcUpwardBoost: 1.4
-  minArcLaunchSpeed: 20
-  maxArcLaunchSpeed: 40
-  minThrowSpeed: 1.5
-  launchCooldown: 1.2
-  velocitySampleDuration: 0.12
-  debugLog: 0
-  tuningFeedback: 1
-  tuningLogInterval: 0.5
-  onGrab:
-    m_PersistentCalls:
-      m_Calls: []
-  onRelease:
-    m_PersistentCalls:
-      m_Calls: []
-  onThrow:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &1339708612
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1339708609}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eddf06b0618c18c4da95f8c0191b5e50, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.RightFireGesture
-  handTrackingEvents: {fileID: 1339708613}
-  gunShape: {fileID: 11400000, guid: f82675f516dbf3a4c8b89549414b42aa, type: 2}
-  wristTransform: {fileID: 220932870}
-  auraPrefab: {fileID: 1781949194303238870, guid: 4e35892e4c5444340a0e2189311808e5, type: 3}
-  fireballPrefab: {fileID: 4953716472387594226, guid: d8390420f07acce4583584b98d4b616a, type: 3}
-  fireAuraColor: {r: 1, g: 0.35, b: 0.05, a: 1}
-  explosionPrefab: {fileID: 4973633160514221696, guid: fe409c9a94780ae4891ef6549b173ab0, type: 3}
-  explosionScale: 0.15
-  explosionLifetime: 1.5
-  explosionMaterialOverride: {fileID: 2100000, guid: 11330edf7d0804b41b995fb1c66d755b, type: 2}
-  spawnForwardOffset: 0.15
-  projectileScale: 0.01
-  projectileSpeed: 13
-  projectileEulerOffset: {x: 0, y: 0, z: 0}
-  recoilVelocityThreshold: 0.5
-  cooldown: 0.25
-  auraScale: 0.01
-  debugLog: 0
-  onShot:
-    m_PersistentCalls:
-      m_Calls: []
-  onPoseStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onPoseEnd:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &1339708613
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1339708609}
+  m_GameObject: {fileID: 562696173}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Unity.XR.Hands::UnityEngine.XR.Hands.XRHandTrackingEvents
-  m_Handedness: 2
-  m_UpdateType: 1
-  m_PoseUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  m_JointsUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  m_TrackingAcquired:
-    m_PersistentCalls:
-      m_Calls: []
-  m_TrackingLost:
-    m_PersistentCalls:
-      m_Calls: []
-  m_TrackingChanged:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &1339708614
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1339708609}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d833cf2b8d70d447989c2d205dafdf8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.RightPageTurnGesture
-  handTrackingEvents: {fileID: 1339708613}
-  wristTransform: {fileID: 220932870}
-  leftGrimoireGesture: {fileID: 453387468}
-  swipeDistance: 0.18
-  swipeMaxDuration: 0.6
-  swipeVerticalTolerance: 0.2
-  swipeCooldown: 0.4
-  debugLog: 1
-  onNextPage:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 453387468}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: NextPage
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onPreviousPage:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 453387468}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: PreviousPage
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &1339708615
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1339708609}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 32b701a3cb3a84145a9c9af5b9598f23, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Input.RightThunderGesture
-  handTrackingEvents: {fileID: 1339708613}
-  thunderShape: {fileID: 11400000, guid: 3ecf20e8b9e7ff940bba3120fc3ef2bb, type: 2}
-  thunderShootShape: {fileID: 11400000, guid: f56abda03f495f041874ee1fc40fa6cf, type: 2}
-  wristTransform: {fileID: 220932870}
-  auraPrefab: {fileID: 81519522541933398, guid: 2f401279b33e70e4aa8e7d49eaa08b69, type: 3}
-  auraAudioClip: {fileID: 8300000, guid: 4ad1c77def643fc4391a0b5ddebd63ad, type: 3}
-  auraOffset: {x: 0, y: 0, z: 0.08}
-  auraScale: 0.16
-  rangeMeters: 20
-  damage: 16
-  statusDuration: 2.5
-  chargeGraceSeconds: 0.4
-  continuousFireSeconds: 5
-  shootPoseGraceSeconds: 0.2
-  hitTickInterval: 0.25
-  laserWidth: 0.035
-  laserDownAngleDegrees: 8
-  hitMask:
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
     serializedVersion: 2
-    m_Bits: 4294967295
-  laserColor: {r: 1, g: 0.88, b: 0.15, a: 1}
-  debugLog: 0
-  tuningFeedback: 1
-  tuningLogInterval: 0.5
-  chargeFeedbackColor: {r: 1, g: 0.88, b: 0.15, a: 0.9}
-  shootFeedbackColor: {r: 0.35, g: 0.95, b: 1, a: 1}
-  onAuraStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onAuraEnd:
-    m_PersistentCalls:
-      m_Calls: []
-  onShot:
-    m_PersistentCalls:
-      m_Calls: []
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!114 &1428252387 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8536111531490673972, guid: 852a7e9ea07714442a6e0711916e40c4, type: 3}
@@ -8302,8 +8554,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -8455,8 +8707,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -8610,8 +8862,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -8830,8 +9082,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -9156,8 +9408,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -9167,6 +9419,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2321527512367231968, guid: 3f7511fbc40ae7a4b89c3298a3de199d, type: 3}
   m_PrefabInstance: {fileID: 717457397}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1748501510 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 513866637, guid: 3f7511fbc40ae7a4b89c3298a3de199d, type: 3}
+  m_PrefabInstance: {fileID: 717457397}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b9cf54c47f40ee9c3eb30ea8eb89b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1788265699
 GameObject:
   m_ObjectHideFlags: 0
@@ -9507,8 +9770,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -16201,11 +16464,11 @@ GameObject:
   - component: {fileID: 2020363680}
   m_Layer: 0
   m_Name: Main Camera
-  m_TagString: MainCamera
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2020363679
 Transform:
   m_ObjectHideFlags: 0
@@ -16525,8 +16788,8 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0, g: 0.55, b: 0.75, a: 1}
-    - _Color: {r: 0, g: 0.54999995, b: 0.75, a: 1}
+    - _BaseColor: {r: 0.19, g: 0.19, b: 0.19, a: 1}
+    - _Color: {r: 0.18999997, g: 0.18999997, b: 0.18999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -16718,9 +16981,10 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 755217608}
   - {fileID: 1607760747}
   - {fileID: 1025119505}
   - {fileID: 1032187176}
   - {fileID: 279724327}
   - {fileID: 1728095645}
+  - {fileID: 562696171}
+  - {fileID: 287572828}

@@ -81,7 +81,7 @@ namespace ArcaneVR.Spell
                 20f,
                 StatusEffect.Stagger,
                 2.5f,
-                continuousFireSeconds: 5f,
+                continuousFireSeconds: 1.5f,
                 rangeMeters: 20f),
                 overwriteExistingValues);
 

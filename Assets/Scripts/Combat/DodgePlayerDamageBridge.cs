@@ -1,3 +1,4 @@
+using ArcaneVR.Input;
 using UnityEngine;
 
 namespace ArcaneVR.Combat

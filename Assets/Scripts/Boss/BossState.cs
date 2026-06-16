@@ -8,6 +8,7 @@ namespace ArcaneVR.Boss
         Idle,
         Defense,
         Charging,
+        CenterFixed,
         Weakness,
         Dead
     }

@@ -91,6 +91,13 @@ namespace ArcaneVR.Input
             for (var i = 0; i < condition.targets.Length; i++)
             {
                 var target = condition.targets[i];
+                if (target.shapeType == XRFingerShapeType.Unspecified)
+                {
+                    scoreSum += 0f;
+                    validCount++;
+                    continue;
+                }
+
                 if (!TryGetFingerShapeValue(target.shapeType, fingerShape, out var value))
                     continue;
 
@@ -123,6 +130,18 @@ namespace ArcaneVR.Input
             for (var i = 0; i < condition.targets.Length; i++)
             {
                 var target = condition.targets[i];
+                if (target.shapeType == XRFingerShapeType.Unspecified)
+                {
+                    if (found && 0f >= worstScore)
+                        continue;
+
+                    found = true;
+                    worstTarget = target;
+                    worstValue = 0f;
+                    worstScore = 0f;
+                    continue;
+                }
+
                 if (!TryGetFingerShapeValue(target.shapeType, fingerShape, out var value))
                     continue;
 

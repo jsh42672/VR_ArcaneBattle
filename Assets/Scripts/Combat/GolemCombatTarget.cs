@@ -55,13 +55,16 @@ namespace ArcaneVR.Combat
         [SerializeField] private float currentHealth = 300f;
         [SerializeField, Range(0f, 1f)] private float barrierDamageMultiplier = 0.2f;
         [SerializeField] private float weakDamageMultiplier = 1.5f;
-        [SerializeField] private float weakDuration = 5f;
+        [SerializeField] private float weakDuration = 4f;
         [SerializeField] private float staggerDuration = 2.5f;
         [SerializeField] private float slowDuration = 3f;
         [SerializeField] private float burnDuration = 4f;
         [SerializeField] private float defaultChargeCounterDuration = 3f;
         [SerializeField] private float defaultBarrierDuration = 8f;
+        [SerializeField] private float steamBurstPushDistance = 1.8f;
+        [SerializeField] private float steamBurstPushDuration = 0.35f;
         [SerializeField] private bool enableDebugLogs = false;
+        [SerializeField] private bool enableComboDebugLogs = true;
 
         public event Action<float, float> OnHealthChanged;
         public event Action<string> OnCombatCueChanged;
@@ -77,6 +80,7 @@ namespace ArcaneVR.Combat
         private Coroutine staggerRoutine;
         private Coroutine slowRoutine;
         private Coroutine burnRoutine;
+        private Coroutine pushRoutine;
         private Coroutine barrierRoutine;
         private Coroutine chargeRoutine;
         private float cueHoldUntilTime;
@@ -137,19 +141,33 @@ namespace ArcaneVR.Combat
 
             var resolvedChargeCounter = IsChargeCounterWindowOpen && hitData.IncludesElement(ElementType.Thunder);
             var brokeBarrier = IsBarrierActive &&
-                               hitData.IncludesElement(ElementType.Ice) &&
-                               hitData.IncludesElement(ElementType.Thunder);
+                               hitData.spellId == SpellId.Combo_IceThunder;
             var triggeredOverload = hitData.spellId == SpellId.Combo_ThunderFire && IsWeakExposed;
+            var triggeredSteamBurst = hitData.spellId == SpellId.Combo_FireIce;
 
             if (resolvedChargeCounter)
                 ResolveChargeCounterSuccess();
 
             if (brokeBarrier)
+            {
+                LogCombo($"Barrier break triggered by {hitData.spellId}.");
                 BreakBarrier("BARRIER BREAK");
+            }
+
+            if (triggeredSteamBurst)
+            {
+                LogCombo($"Steam burst push triggered. distance={steamBurstPushDistance:0.00}, duration={steamBurstPushDuration:0.00}.");
+                StartSteamBurstPush();
+            }
 
             ApplyStatus(hitData);
+            if (triggeredSteamBurst)
+                SetCue("STEAM BURST", 1.1f, true);
             if (triggeredOverload)
+            {
+                LogCombo($"Overload triggered while weak. spell={hitData.spellId}.");
                 SetCue("OVERLOAD", 1.1f, true);
+            }
 
             var rawDamage = Mathf.Max(0f, hitData.damage);
             var finalDamage = CalculateDamage(hitData);
@@ -240,7 +258,7 @@ namespace ArcaneVR.Combat
                 damage *= weakDamageMultiplier;
 
             if (hitData.spellId == SpellId.Combo_ThunderFire && IsWeakExposed)
-                damage *= 1.35f;
+                damage *= 2.0f;
 
             return damage;
         }
@@ -298,6 +316,17 @@ namespace ArcaneVR.Combat
                 Debug.Log($"[{nameof(GolemCombatTarget)}] Stagger start duration:{duration:0.00}s", this);
 
             staggerRoutine = StartCoroutine(TimedStagger(Mathf.Max(0.1f, duration)));
+        }
+
+        private void StartSteamBurstPush()
+        {
+            if (steamBurstPushDistance <= 0f)
+                return;
+
+            if (pushRoutine != null)
+                StopCoroutine(pushRoutine);
+
+            pushRoutine = StartCoroutine(SteamBurstPushRoutine());
         }
 
         private void StartSlow(float duration)
@@ -384,6 +413,29 @@ namespace ArcaneVR.Combat
             NotifyStatusChanged();
         }
 
+        private IEnumerator SteamBurstPushRoutine()
+        {
+            var duration = Mathf.Max(0.05f, steamBurstPushDuration);
+            var start = transform.position;
+            var pushDirection = -transform.forward;
+            pushDirection.y = 0f;
+            if (pushDirection.sqrMagnitude < 0.001f)
+                pushDirection = -Vector3.forward;
+
+            var end = start + pushDirection.normalized * steamBurstPushDistance;
+            var elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                var t = Mathf.Clamp01(elapsed / duration);
+                transform.position = Vector3.Lerp(start, end, Mathf.SmoothStep(0f, 1f, t));
+                yield return null;
+            }
+
+            transform.position = end;
+            pushRoutine = null;
+        }
+
         private IEnumerator TimedSlow(float duration)
         {
             IsSlowed = true;
@@ -453,6 +505,12 @@ namespace ArcaneVR.Combat
         private void NotifyStatusChanged()
         {
             OnElementStatusChanged?.Invoke(GetStatusSnapshot());
+        }
+
+        private void LogCombo(string message)
+        {
+            if (enableComboDebugLogs)
+                Debug.Log($"[ComboMagicTest] {message}", this);
         }
     }
 }

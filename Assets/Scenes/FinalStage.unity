@@ -460,6 +460,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd72ecbc9c194762b054b79051b992fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_AllowLegacyRuntimeObjects: 0
+  m_EnableLegacyHud: 0
+  m_EnableLegacyProjectileFire: 0
+  m_EnableLegacyTarget: 0
+  m_HudRefreshInterval: 0.1
+  m_SubsystemRefreshInterval: 0.5
 --- !u!1 &150917298
 GameObject:
   m_ObjectHideFlags: 0
@@ -494,6 +500,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PortalTeleporter
   portalData: {fileID: 0}
   isExitPortal: 1
+  ambientLoopClip: {fileID: 8300000, guid: 3dc0e1f33d77a3743ab4977f08a68c53, type: 3}
+  ambientLoopVolume: 0.55
+  ambientMinDistance: 2
+  ambientMaxDistance: 14
 --- !u!23 &150917300
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -960,6 +970,18 @@ PrefabInstance:
     - target: {fileID: 6054116177500201882, guid: 839484b281bb6d148a096a55c175ce6e, type: 3}
       propertyPath: shockwaveScaleMultiplier
       value: 1.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 9190657712933609941, guid: 839484b281bb6d148a096a55c175ce6e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9190657712933609941, guid: 839484b281bb6d148a096a55c175ce6e, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9190657712933609941, guid: 839484b281bb6d148a096a55c175ce6e, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

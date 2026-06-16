@@ -12,12 +12,12 @@ namespace ArcaneVR.Spell
         [SerializeField] private ParticleSystem auraParticles;
         [SerializeField] private string timeFocusExemptLayerName = "TimeFocusExempt";
 
-        [Header("Element Colors")]
-        [SerializeField] private Color fireColor    = new Color(1.00f, 0.42f, 0.04f, 1f); // deep orange
+        [Header("── 속성별 오라 색상 ──")]
+        [SerializeField] private Color fireColor    = new Color(1.00f, 0.05f, 0.00f, 1f); // intense red
         [SerializeField] private Color iceColor     = new Color(0.45f, 0.85f, 1.00f, 1f); // sky blue
-        [SerializeField] private Color thunderColor = new Color(1.00f, 0.95f, 0.10f, 1f); // bright yellow
+        [SerializeField] private Color thunderColor = new Color(1.00f, 0.95f, 0.00f, 1f); // clear yellow
 
-        [Header("Voice Boost")]
+        [Header("── 보이스 강화 반영 ──")]
         [SerializeField] private float voiceBoostSizeMultiplier = 2.4f;
 
         private Transform _followTarget;
@@ -27,6 +27,7 @@ namespace ArcaneVR.Spell
         private float _baseStartSizeMultiplier = 1f;
         private ElementType _currentElement = ElementType.None;
         private Material _materialInstance;
+        private ParticleSystemRenderer _particleRenderer;
 
         public bool IsShowing => _isShowing && !_suppressed;
 
@@ -126,12 +127,12 @@ namespace ArcaneVR.Spell
 
         private void SetupParticleMaterial()
         {
-            var psr = auraParticles.GetComponent<ParticleSystemRenderer>();
-            if (psr == null) return;
+            _particleRenderer = auraParticles.GetComponent<ParticleSystemRenderer>();
+            if (_particleRenderer == null) return;
 
             // Create an owned material instance so we never mutate the shared asset
-            _materialInstance = new Material(psr.sharedMaterial != null
-                ? psr.sharedMaterial
+            _materialInstance = new Material(_particleRenderer.sharedMaterial != null
+                ? _particleRenderer.sharedMaterial
                 : new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit")));
 
             // Additive blending → overlapping particles brighten, creating a glow
@@ -143,7 +144,7 @@ namespace ArcaneVR.Spell
             // Assign a procedural soft-circle texture so particles render round, not square
             _materialInstance.SetTexture("_BaseMap", CreateSoftCircleTexture(64));
 
-            psr.material = _materialInstance;
+            _particleRenderer.sharedMaterial = _materialInstance;
         }
 
         private void ApplyBoostSize()
@@ -168,11 +169,30 @@ namespace ArcaneVR.Spell
             var main = auraParticles.main;
             main.startColor = new ParticleSystem.MinMaxGradient(color);
 
-            if (_materialInstance == null) return;
-            if (_materialInstance.HasProperty("_BaseColor"))
-                _materialInstance.SetColor("_BaseColor", color);
-            if (_materialInstance.HasProperty("_EmissionColor"))
-                _materialInstance.SetColor("_EmissionColor", color * 2.5f);
+            if (_materialInstance == null)
+                SetupParticleMaterial();
+
+            ApplyMaterialColor(_materialInstance, color);
+
+            if (_particleRenderer != null && _materialInstance != null)
+                _particleRenderer.sharedMaterial = _materialInstance;
+        }
+
+        private static void ApplyMaterialColor(Material material, Color color)
+        {
+            if (material == null) return;
+
+            if (material.HasProperty("_BaseColor"))
+                material.SetColor("_BaseColor", color);
+            if (material.HasProperty("_Color"))
+                material.SetColor("_Color", color);
+            if (material.HasProperty("_TintColor"))
+                material.SetColor("_TintColor", color);
+            if (material.HasProperty("_EmissionColor"))
+            {
+                material.EnableKeyword("_EMISSION");
+                material.SetColor("_EmissionColor", color * 2.5f);
+            }
         }
 
         private void ApplyTimeFocusExemptLayer()

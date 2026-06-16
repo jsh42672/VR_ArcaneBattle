@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using ArcaneVR.Boss;
 using ArcaneVR.Combat;
 using ArcaneVR.Core;
 using ArcaneVR.Input;
@@ -9,138 +7,108 @@ using UnityEngine;
 namespace ArcaneVR.Spell
 {
     /// <summary>
-    /// XR gesture driven spell caster. GestureDetector owns recognition; this
-    /// component owns dummy spell spawning, projectile parenting, and hit data.
+    /// 마법 발동 조율자. 제스처 이벤트를 받아 속성 모듈에 위임하고,
+    /// 조합 마법과 음성 부스트를 직접 처리한다.
+    /// FindAnyObjectByType 런타임 탐색을 사용하지 않는다.
     /// </summary>
     public class SpellCaster : MonoBehaviour
     {
-        [Header("Core")]
+        [System.Serializable]
+        private struct ComboProjectileVisualScale
+        {
+            public float fireIce;
+            public float iceThunder;
+            public float thunderFire;
+        }
+
+        [Header("── 핵심 시스템 참조 ──")]
         [SerializeField] private SpellDatabase spellDatabase;
         [SerializeField] private CombinationChecker combinationChecker;
         [SerializeField] private CombatManager combatManager;
         [SerializeField] private VoiceRecognizer voiceRecognizer;
         [SerializeField] private FeedbackManager feedbackManager;
         [SerializeField] private GestureDetector gestureDetector;
-        [SerializeField] private CombinationFocusModeController focusModeController;
         [SerializeField] private GrimoireManager grimoireManager;
+        [SerializeField] private CombinationFocusModeController focusModeController;
+        [SerializeField] private ElementAuraManager elementAuraManager;
+        [SerializeField] private ElementAuraManager leftElementAuraManager;
+
+        [Header("── 손 / 머리 기준 Transform ──")]
         [SerializeField] private Transform leftHandSpawnPoint;
         [SerializeField] private Transform rightHandSpawnPoint;
         [SerializeField] private Transform headTransform;
         [SerializeField] private Transform spellSpawnRoot;
-        [SerializeField] private ElementAuraManager elementAuraManager;
 
-        [Header("General Casting")]
+        [Header("── 속성 모듈 ──")]
+        [SerializeField] private FireSpellModule fireModule;
+        [SerializeField] private IceSpellModule iceModule;
+        [SerializeField] private ThunderSpellModule thunderModule;
+
+        [Header("── 조합 마법 / 피드백 ──")]
+        [SerializeField] private bool allowCombinationSpellCasts = true;
         [SerializeField] private float fallbackProjectileLifetime = 5f;
         [SerializeField] private bool useDebugPrimitiveProjectiles = true;
         [SerializeField] private float debugProjectileScale = 1f;
-        [SerializeField] private bool allowCombinationSpellCasts = true;
-        [SerializeField] private bool ignoreVoiceDuringCombinationFocus = true;
-
-        [Header("Voice Boost")]
-        [SerializeField] private AudioClip voiceBoostClip;
-        [SerializeField] private float voiceBoostDuration = 4f;
-
-        [Header("Common Dummy Auras")]
-        [SerializeField] private bool useCommonDummyAuras = true;
-        [SerializeField] private string auraTimeFocusExemptLayerName = "TimeFocusExempt";
-        [SerializeField] private Vector3 rightElementAuraOffset = new Vector3(0f, 0f, 0.08f);
-        [SerializeField] private float rightElementAuraScale = 0.18f;
-
-        [Header("Right Fire Dummy")]
-        [SerializeField] private GameObject rightFireAuraPrefab;
-        [SerializeField] private GameObject rightFireballPrefab;
-        [SerializeField] private GameObject rightFireExplosionPrefab;
-        [SerializeField] private Material rightFireExplosionMaterialOverride;
-        [SerializeField] private Color rightFireAuraColor = new Color(1f, 0.35f, 0.05f, 1f);
-        [SerializeField] private float rightFireSpawnForwardOffset = 0.15f;
-        [SerializeField] private float rightFireDownAngleDegrees = 0f;
-        [SerializeField] private float rightFireProjectileScale = 0.01f;
-        [SerializeField] private float rightFireProjectileSpeed = 13f;
-        [SerializeField] private float rightFireRecoilVelocityThreshold = 0.5f;
-        [SerializeField] private float rightFireCooldown = 0.25f;
-        [SerializeField] private float rightFireAuraScale = 0.01f;
-        [SerializeField] private float rightFireExplosionScale = 0.15f;
-        [SerializeField] private float rightFireExplosionLifetime = 1.5f;
-
-        [Header("Right Ice Dummy")]
-        [SerializeField] private GameObject rightIceOrbPrefab;
-        [SerializeField] private GameObject rightIceProjectilePrefab;
-        [SerializeField] private Vector3 rightIcePalmOffset = new Vector3(0f, 0f, 0.08f);
-        [SerializeField] private float rightIceOrbScale = 0.12f;
-        [SerializeField] private float rightIceProjectileScale = 0.12f;
-        [SerializeField] private float rightIceProjectileSpeed = 14f;
-        [SerializeField] private float rightIceBallLifetime = 6f;
-        [SerializeField] private bool rightIceUseArcTrajectory = true;
-        [SerializeField] private float rightIceArcVelocityMultiplier = 4f;
-        [SerializeField] private float rightIceArcUpwardBoost = 1.4f;
-        [SerializeField] private float rightIceMinArcLaunchSpeed = 20f;
-        [SerializeField] private float rightIceMaxArcLaunchSpeed = 40f;
-        [SerializeField] private float rightIceMinThrowSpeed = 1.5f;
-        [SerializeField] private float rightIceLaunchCooldown = 1.2f;
-        [SerializeField] private float rightIceVelocitySampleDuration = 0.12f;
-
-        [Header("Right Thunder Dummy")]
-        [SerializeField] private GameObject rightThunderAuraPrefab;
-        [SerializeField] private AudioClip rightThunderAuraAudioClip;
-        [SerializeField] private Vector3 rightThunderAuraOffset = new Vector3(0f, 0f, 0.08f);
-        [SerializeField] private float rightThunderAuraScale = 0.16f;
-        [SerializeField] private float rightThunderRangeMeters = 20f;
-        [SerializeField] private float rightThunderDamage = 16f;
-        [SerializeField] private float rightThunderStatusDuration = 2.5f;
-        [SerializeField] private float rightThunderChargeGraceSeconds = 0.4f;
-        [SerializeField] private float rightThunderContinuousFireSeconds = 5f;
-        [SerializeField] private float rightThunderShootPoseGraceSeconds = 0.2f;
-        [SerializeField] private float rightThunderHitTickInterval = 0.25f;
-        [SerializeField] private float rightThunderLaserWidth = 0.035f;
-        [SerializeField] private float rightThunderLaserSpawnForwardOffset = 0f;
-        [SerializeField] private float rightThunderLaserYawAngleDegrees = 0f;
-        [SerializeField] private float rightThunderLaserDownAngleDegrees = 8f;
-        [SerializeField] private LayerMask rightThunderHitMask = ~0;
-        [SerializeField] private Color rightThunderLaserColor = new Color(1f, 0.88f, 0.15f, 1f);
-
-        [Header("Feedback")]
-        [SerializeField] private bool showPrototypeArmedAura = true;
+        [SerializeField] private GameObject comboFireIceProjectilePrefab;
+        [SerializeField] private GameObject comboIceThunderProjectilePrefab;
+        [SerializeField] private GameObject comboThunderFireProjectilePrefab;
+        [SerializeField] private float comboProjectileLifetime = 6f;
+        [SerializeField] private float comboProjectileLightIntensity = 1.4f;
+        [SerializeField] private ComboProjectileVisualScale comboProjectileScale = new ComboProjectileVisualScale
+        {
+            fireIce = 0.34f,
+            iceThunder = 0.36f,
+            thunderFire = 0.4f
+        };
         [SerializeField] private bool showCombinationAura = true;
         [SerializeField] private float combinationReadyAuraScale = 0.18f;
         [SerializeField] private float combinationCompleteAuraScale = 0.42f;
         [SerializeField] private float combinationCompleteAuraHoldSeconds = 3f;
+        [SerializeField] private float combinationFeedbackSfxVolume = 0.85f;
+        [SerializeField] private bool enableComboDebugLogs = true;
 
-        private readonly Queue<(float time, Vector3 pos)> rightIceSamples = new Queue<(float time, Vector3 pos)>();
-        private string currentRightGesture = string.Empty;
-        private Vector3 previousRightTrackingPosition;
-        private bool hasPreviousRightTrackingPosition;
-        private float rightFireLastShotTime = -999f;
-        private float rightIceLastLaunchTime = -999f;
-        private GameObject rightFireAuraInstance;
-        private GameObject rightIceAuraInstance;
-        private GameObject rightIceOrbInstance;
-        private GameObject rightThunderAuraInstance;
-        private AudioSource rightThunderAuraAudioSource;
-        private GameObject rightThunderBeamInstance;
-        private LineRenderer rightThunderBeamLine;
-        private Renderer rightThunderAuraRenderer;
-        private float rightThunderBeamEndTime = -999f;
-        private float rightThunderNextHitTime = -999f;
-        private float rightThunderLastChargeTime = -999f;
-        private float rightThunderLastShootTime = -999f;
-        private bool rightThunderCharged;
-        private GameObject combinationAuraRoot;
-        private SpellId currentCombinationAuraSpell = SpellId.None;
-        private bool combinationAuraCompleted;
-        private float combinationAuraUntilTime = -999f;
-        private float lastCastTime = -999f;
-        private SpellId lastCastSpellId = SpellId.None;
-        private ElementType lastCastElement = ElementType.None;
-        private float lastManaCost;
-        private string lastCastStatus = "Cast: idle";
-        private string lastManaCostStatus = "Cost: idle";
-        private string lastVoiceBoostStatus = "VoiceLink: idle";
-        private bool isVoiceBoostActive;
-        private float voiceBoostExpiry = -999f;
-        private AudioSource voiceBoostAudioSource;
+        [Header("── 음성 부스트 ──")]
+        [SerializeField] private AudioClip voiceBoostClip;
+        [SerializeField] private float voiceBoostDuration = 4f;
+        [SerializeField] private bool ignoreVoiceDuringCombinationFocus = true;
+
+        [Header("── 타임 포커스 제외 레이어 ──")]
+        [SerializeField] private string auraTimeFocusExemptLayerName = "TimeFocusExempt";
+
+        // ── 내부 상태 ─────────────────────────────────────────────────────────
+
+        private string _currentRightGesture = string.Empty;
+        private string _currentLeftGesture = string.Empty;
+        private Vector3 _prevTrackingPos;
+        private bool _hasPrevTrackingPos;
+
+        // 조합 오라 피드백
+        private GameObject _combinationAuraRoot;
+        private ElementAuraManager _runtimeLeftAuraManager;
+        private SpellId _combinationAuraSpell = SpellId.None;
+        private bool _combinationAuraCompleted;
+        private float _combinationAuraUntilTime = -999f;
+
+        // 음성 부스트
+        private bool _isVoiceBoostActive;
+        private float _voiceBoostExpiry = -999f;
+        private AudioSource _voiceBoostAudio;
+        private AudioSource _comboFeedbackAudio;
         private AudioClip _cachedBoostTone;
-        private bool isCastingSuppressed;
-        private string castingSuppressionSource = string.Empty;
+
+        // 캐스팅 억제
+        private bool _isCastingSuppressed;
+        private string _suppressionSource;
+
+        // 마지막 캐스트 기록 (디버그용)
+        private SpellId _lastCastSpellId = SpellId.None;
+        private ElementType _lastCastElement = ElementType.None;
+        private float _lastManaCost;
+        private string _lastCastStatus    = "대기";
+        private string _lastManaCostStatus = "마나: 대기";
+        private string _lastVoiceBoostStatus = "음성: 비활성";
+
+        // ── 공개 속성 (UI/디버그용) ───────────────────────────────────────────
 
         public SpellDatabase Database
         {
@@ -148,37 +116,46 @@ namespace ArcaneVR.Spell
             set => spellDatabase = value;
         }
 
-        public string PrototypeDebugStatus { get; private set; } = "CAST: waiting";
-        public string LastCastStatus => lastCastStatus;
-        public string LastManaCostStatus => lastManaCostStatus;
-        public string LastVoiceBoostStatus => lastVoiceBoostStatus;
-        public SpellId LastCastSpellId => lastCastSpellId;
-        public ElementType LastCastElement => lastCastElement;
-        public float LastManaCost => lastManaCost;
-        public ElementType PrototypeArmedElement => ResolveElement(currentRightGesture);
-        public bool IsCastingSuppressed => isCastingSuppressed;
-        public bool IsPrototypeArmed => !string.IsNullOrEmpty(currentRightGesture);
-        public bool IsPrototypeVoiceBoosted => isVoiceBoostActive;
-        public float PrototypeLastForwardSpeed { get; private set; }
+        public string PrototypeDebugStatus { get; private set; } = "대기";
+        public string LastCastStatus       => _lastCastStatus;
+        public string LastManaCostStatus   => _lastManaCostStatus;
+        public string LastVoiceBoostStatus => _lastVoiceBoostStatus;
+        public SpellId LastCastSpellId     => _lastCastSpellId;
+        public ElementType LastCastElement => _lastCastElement;
+        public float LastManaCost          => _lastManaCost;
+        public bool IsCastingSuppressed    => _isCastingSuppressed;
+        public bool IsPrototypeArmed       => !string.IsNullOrEmpty(_currentRightGesture);
+        public bool IsPrototypeVoiceBoosted => _isVoiceBoostActive;
+
         public string PrototypeArmStatus => IsPrototypeArmed
-            ? $"Arm {PrototypeArmedElement} gesture:{currentRightGesture} speed:{PrototypeLastForwardSpeed:0.00}"
-            : lastCastStatus;
+            ? $"준비 {PrototypeArmedElement} 제스처:{_currentRightGesture}"
+            : _lastCastStatus;
+
+        public ElementType PrototypeArmedElement => GestureNameToElement(_currentRightGesture);
+
+        // ── Unity 콜백 ────────────────────────────────────────────────────────
 
         private void Awake()
         {
-            ResolveReferences();
+            EnsureSceneReferences();
+            InitModules();
+        }
+
+        private void OnValidate()
+        {
+            EnsureSceneReferences();
         }
 
         private void OnEnable()
         {
-            ResolveReferences();
+            InitModules();
             SubscribeGestureDetector();
 
             if (combinationChecker != null)
             {
                 combinationChecker.OnCombinationSuccess += HandleCombinationSuccess;
-                combinationChecker.OnComboReadyChanged += HandleComboReadyChanged;
-                combinationChecker.OnCombinationFail += HandleCombinationFail;
+                combinationChecker.OnComboReadyChanged  += HandleComboReadyChanged;
+                combinationChecker.OnCombinationFail    += HandleCombinationFail;
             }
 
             if (voiceRecognizer != null)
@@ -192,42 +169,103 @@ namespace ArcaneVR.Spell
             if (combinationChecker != null)
             {
                 combinationChecker.OnCombinationSuccess -= HandleCombinationSuccess;
-                combinationChecker.OnComboReadyChanged -= HandleComboReadyChanged;
-                combinationChecker.OnCombinationFail -= HandleCombinationFail;
+                combinationChecker.OnComboReadyChanged  -= HandleComboReadyChanged;
+                combinationChecker.OnCombinationFail    -= HandleCombinationFail;
             }
 
             if (voiceRecognizer != null)
                 voiceRecognizer.OnVoiceCommand -= HandleVoiceCommand;
 
-            ClearRightGestureState();
-            StopThunderBeam();
-            HideRightFireAura();
-            HideRightIceOrb();
-            HideRightThunderAura();
+            DisarmAllModules();
+            HideLeftElementAura();
+            StopCombinationAuraFeedback();
         }
 
         private void Update()
         {
-            ResolveReferences();
             UpdateRightGestureAttack();
             UpdateCombinationAuraFeedback();
             UpdateTimeFocusVisibility();
             UpdateVoiceBoost();
         }
 
+        // ── 공개 메서드 ───────────────────────────────────────────────────────
+
         public void SetCastingSuppressed(bool suppressed, string source)
         {
-            isCastingSuppressed = suppressed;
-            castingSuppressionSource = suppressed ? (string.IsNullOrWhiteSpace(source) ? "unknown" : source) : string.Empty;
-            if (suppressed)
-                lastCastStatus = $"Blocked: {castingSuppressionSource}";
+            _isCastingSuppressed = suppressed;
+            _suppressionSource   = suppressed ? (string.IsNullOrWhiteSpace(source) ? "unknown" : source) : string.Empty;
+            if (suppressed) _lastCastStatus = $"차단: {_suppressionSource}";
         }
 
-        public void ConfigureGesturePrototype(GestureDetector detector, OVRHand hand, Transform spawnPoint, Transform spawnRoot)
+        public bool Cast(SpellId spellId)
         {
-            ConfigureGesturePrototype(detector, null, hand, spawnPoint, spawnRoot);
+            if (!IsCombinationCastAllowed(spellId))
+            {
+                _lastCastStatus    = $"조합 잠김: {SpellHitData.GetDisplayName(spellId)}";
+                _lastManaCostStatus = "마나: 조합 잠김";
+                return false;
+            }
+
+            if (spellDatabase == null)
+            {
+                _lastCastStatus = $"차단: SpellDatabase 없음 ({spellId})";
+                return false;
+            }
+
+            var data = spellDatabase.Get(spellId);
+            if (data == null)
+            {
+                _lastCastStatus = $"차단: 데이터 없음 ({spellId})";
+                return false;
+            }
+
+            if (combatManager != null && !combatManager.TryConsumeMana(data.manaCost))
+            {
+                RecordCastBlocked(spellId, data.element, data.manaCost,
+                    $"마나 부족 {combatManager.CurrentMana:0.#}/{data.manaCost:0.#}");
+                return false;
+            }
+
+            var spawnPos  = ResolveCastOrigin(spellId);
+            var direction = ResolveAimDirection(spawnPos);
+            spawnPos += direction * 0.25f;
+
+            var element = data.element;
+            if (combinationChecker != null && IsSingleSpell(spellId) && combinationChecker.CurrentElement != ElementType.None)
+                element = combinationChecker.CurrentElement;
+
+            if (SpellHitData.IsComboSpellId(spellId))
+                LogCombo($"Casting {spellId}: origin={spawnPos}, direction={direction}, damage={data.damage:0.##}.");
+
+            var projectileObj = CreateProjectileObject(data, element, spawnPos, Quaternion.LookRotation(direction, Vector3.up));
+            ParentToSpellRoot(projectileObj);
+
+            var projectile = projectileObj.GetComponent<SpellProjectile>();
+            if (projectile == null)
+                projectile = projectileObj.AddComponent<SpellProjectile>();
+            projectile.Initialize(spellId, element, data.damage, data.projectileSpeed,
+                data.statusEffect, data.statusDuration, direction, combatManager,
+                data.statusMagnitude, data.statusTickInterval);
+            var projectileLifetime = ResolveProjectileLifetime(data);
+            projectile.SetLifetime(projectileLifetime);
+
+            RememberCast(element, spellId, data.manaCost,
+                combatManager != null ? $"마나 소비 {data.manaCost:0.#}" : "마나: CombatManager 없음");
+
+            _lastCastStatus = SpellHitData.IsComboSpellId(spellId)
+                ? $"발동: {SpellHitData.GetDisplayName(spellId)}"
+                : $"발동: {element} {spellId}";
+
+            Destroy(projectileObj, projectileLifetime);
+            feedbackManager?.OnSpellCast(spellId);
+            if (SpellHitData.IsComboSpellId(spellId))
+                StartCombinationAuraFeedback(spellId, true);
+
+            return true;
         }
 
+        // GestureSpellPrototypeBootstrap 등 런타임 바인딩 경로용 (레거시 호환)
         public void ConfigureGesturePrototype(
             GestureDetector detector,
             GestureEventRouter router,
@@ -237,686 +275,332 @@ namespace ArcaneVR.Spell
         {
             UnsubscribeGestureDetector();
             gestureDetector = detector;
-            rightHandSpawnPoint = spawnPoint != null ? spawnPoint : rightHandSpawnPoint;
-            spellSpawnRoot = spawnRoot != null ? spawnRoot : spellSpawnRoot;
+            if (spawnPoint != null) rightHandSpawnPoint = spawnPoint;
+            if (spawnRoot  != null) spellSpawnRoot      = spawnRoot;
+            InitModules();
             SubscribeGestureDetector();
         }
 
-        private void ResolveReferences()
+        // ── 초기화 ────────────────────────────────────────────────────────────
+
+        private void EnsureSceneReferences()
         {
-            if (spellDatabase == null)
-                spellDatabase = Resources.Load<SpellDatabase>("ArcaneVR/SpellDatabase");
-            if (gestureDetector == null)
-                gestureDetector = FindAnyObjectByType<GestureDetector>();
-            if (combinationChecker == null)
-                combinationChecker = FindAnyObjectByType<CombinationChecker>();
-            if (combatManager == null)
-                combatManager = FindAnyObjectByType<CombatManager>();
-            if (voiceRecognizer == null)
-                voiceRecognizer = FindAnyObjectByType<VoiceRecognizer>();
-            if (feedbackManager == null)
-                feedbackManager = FindAnyObjectByType<FeedbackManager>();
-            if (focusModeController == null)
-                focusModeController = FindAnyObjectByType<CombinationFocusModeController>();
-            if (grimoireManager == null)
-                grimoireManager = FindAnyObjectByType<GrimoireManager>();
-            if (headTransform == null && Camera.main != null)
-                headTransform = Camera.main.transform;
-            if (rightHandSpawnPoint == null)
-                rightHandSpawnPoint = GameObject.Find("R_Wrist")?.transform;
-            if (leftHandSpawnPoint == null)
-                leftHandSpawnPoint = GameObject.Find("L_Wrist")?.transform;
+            var rigRoot = ResolveRigRoot();
+
+            if (combinationChecker == null || !SharesRig(combinationChecker.transform, rigRoot))
+                combinationChecker = FindRigComponent<CombinationChecker>(rigRoot);
+
+            if (combatManager == null || !SharesRig(combatManager.transform, rigRoot))
+                combatManager = FindRigComponent<CombatManager>(rigRoot);
+
+            if (feedbackManager == null || !SharesRig(feedbackManager.transform, rigRoot))
+                feedbackManager = FindRigComponent<FeedbackManager>(rigRoot);
+
+            if (gestureDetector == null || !SharesRig(gestureDetector.transform, rigRoot))
+                gestureDetector = FindRigComponent<GestureDetector>(rigRoot);
+
+            if (grimoireManager == null || !SharesRig(grimoireManager.transform, rigRoot))
+                grimoireManager = FindRigComponent<GrimoireManager>(rigRoot);
+
+            if (focusModeController == null || !SharesRig(focusModeController.transform, rigRoot))
+                focusModeController = FindRigComponent<CombinationFocusModeController>(rigRoot);
+
+            if (headTransform == null || !headTransform.gameObject.activeInHierarchy)
+                headTransform = ArcanePlayerRigResolver.FindHeadTransform(rightHandSpawnPoint != null ? rightHandSpawnPoint : leftHandSpawnPoint);
+
+            if (headTransform != null)
+            {
+                leftHandSpawnPoint = ResolveHandReference(leftHandSpawnPoint, true);
+                rightHandSpawnPoint = ResolveHandReference(rightHandSpawnPoint, false);
+            }
         }
+
+        private Transform ResolveHandReference(Transform current, bool isLeft)
+        {
+            if (current != null &&
+                current.gameObject.activeInHierarchy &&
+                ArcanePlayerRigResolver.ShareResolvedRig(current, headTransform))
+            {
+                return current;
+            }
+
+            return ArcanePlayerRigResolver.FindHandTransform(isLeft, headTransform) ?? current;
+        }
+
+        private Transform ResolveRigRoot()
+        {
+            if (headTransform != null)
+                return headTransform.root;
+
+            if (transform.root != null && transform.root.name == "ArcanePlayerRig")
+                return transform.root;
+
+            var ovrRig = GetComponentInParent<OVRCameraRig>(true);
+            if (ovrRig != null && ovrRig.transform.root != null)
+                return ovrRig.transform.root;
+
+            var fallbackHead = ArcanePlayerRigResolver.FindHeadTransform(transform);
+            return fallbackHead != null ? fallbackHead.root : transform.root;
+        }
+
+        private static T FindRigComponent<T>(Transform rigRoot) where T : Component
+        {
+            if (rigRoot != null)
+            {
+                var scoped = rigRoot.GetComponentInChildren<T>(true);
+                if (scoped != null)
+                    return scoped;
+            }
+
+            return FindAnyObjectByType<T>();
+        }
+
+        private static bool SharesRig(Transform candidate, Transform rigRoot)
+        {
+            return candidate != null &&
+                   rigRoot != null &&
+                   candidate.root == rigRoot;
+        }
+
+        private void InitModules()
+        {
+            fireModule?.Init(rightHandSpawnPoint, spellSpawnRoot, headTransform, spellDatabase, elementAuraManager);
+            iceModule?.Init(rightHandSpawnPoint, spellSpawnRoot, headTransform, spellDatabase, elementAuraManager);
+            thunderModule?.Init(rightHandSpawnPoint, spellSpawnRoot, headTransform, spellDatabase, elementAuraManager);
+        }
+
+        // ── 제스처 구독 ───────────────────────────────────────────────────────
 
         private void SubscribeGestureDetector()
         {
-            if (gestureDetector == null)
-                return;
-
+            if (gestureDetector == null) return;
             gestureDetector.OnGestureConfirmed -= HandleGestureConfirmed;
             gestureDetector.OnGestureConfirmed += HandleGestureConfirmed;
-            gestureDetector.OnGestureCleared -= HandleGestureCleared;
-            gestureDetector.OnGestureCleared += HandleGestureCleared;
+            gestureDetector.OnGestureCleared   -= HandleGestureCleared;
+            gestureDetector.OnGestureCleared   += HandleGestureCleared;
         }
 
         private void UnsubscribeGestureDetector()
         {
-            if (gestureDetector == null)
-                return;
-
+            if (gestureDetector == null) return;
             gestureDetector.OnGestureConfirmed -= HandleGestureConfirmed;
-            gestureDetector.OnGestureCleared -= HandleGestureCleared;
+            gestureDetector.OnGestureCleared   -= HandleGestureCleared;
         }
 
         private void HandleGestureConfirmed(bool isLeft, string gestureName, PoseType _)
         {
+            if (gestureName != "Fire" && gestureName != "Ice" &&
+                gestureName != "Thunder" && gestureName != "ThunderShoot")
+                return;
+
             if (isLeft)
+            {
+                _currentLeftGesture = gestureName;
+                PrototypeDebugStatus = $"Left ready {gestureName}";
+                ShowLeftElementAura(gestureName);
                 return;
+            }
 
-            if (gestureName != "Fire" &&
-                gestureName != "Ice" &&
-                gestureName != "Thunder" &&
-                gestureName != "ThunderShoot")
-                return;
+            _currentRightGesture = gestureName;
+            _hasPrevTrackingPos  = false;
+            PrototypeDebugStatus = $"준비: {gestureName}";
 
-            currentRightGesture = gestureName;
-            hasPreviousRightTrackingPosition = false;
-            PrototypeDebugStatus = $"CAST: armed {gestureName}";
+            // 모듈 전환
+            fireModule?.Disarm();
+            iceModule?.Disarm();
+            thunderModule?.Disarm();
 
             if (gestureName == "Fire")
-                ShowRightFireAura();
+                fireModule?.Arm();
+            else if (gestureName == "Ice")
+                iceModule?.Arm();
             else
-                HideRightFireAura();
-
-            if (gestureName == "Ice")
-            {
-                ShowRightElementAura(ElementType.Ice);
-                ShowRightIceOrb();
-            }
-            else
-            {
-                HideRightIceAura();
-                HideRightIceOrb();
-            }
-
-            if (gestureName == "Thunder" || gestureName == "ThunderShoot")
-            {
-                if (gestureName == "Thunder")
-                {
-                    rightThunderCharged = true;
-                    rightThunderLastChargeTime = Time.time;
-                    ShowRightThunderAura();
-                }
-                else if (IsRightThunderChargeAvailable())
-                {
-                    ShowRightThunderAura();
-                    rightThunderLastShootTime = Time.time;
-                    StartThunderBeam();
-                }
-                else
-                {
-                    PrototypeDebugStatus = "CAST Thunder: shoot ignored, no charge";
-                    HideRightThunderAura();
-                    StopThunderBeam();
-                }
-            }
-            else
-            {
-                rightThunderCharged = false;
-                HideRightThunderAura();
-                StopThunderBeam();
-            }
+                thunderModule?.Arm(gestureName);
         }
 
         private void HandleGestureCleared(bool isLeft, string gestureName)
         {
-            if (isLeft || gestureName != currentRightGesture)
+            if (isLeft)
+            {
+                if (gestureName == _currentLeftGesture)
+                {
+                    _currentLeftGesture = string.Empty;
+                    HideLeftElementAura();
+
+                    LogCombo($"Left gesture cleared: {gestureName}.");
+                }
+
+                return;
+            }
+
+            if (gestureName != _currentRightGesture) return;
+            if (gestureName == "ThunderShoot" && thunderModule != null && thunderModule.IsBeamActive)
                 return;
 
-            ClearRightGestureState();
-        }
+            var keepIceAuraVisible = gestureName == "Ice" &&
+                                     iceModule != null &&
+                                     iceModule.HasActiveProjectile;
 
-        private void ClearRightGestureState()
-        {
-            currentRightGesture = string.Empty;
-            hasPreviousRightTrackingPosition = false;
-            PrototypeLastForwardSpeed = 0f;
-            PrototypeDebugStatus = "CAST: waiting";
+            DisarmAllModules();
+            _currentRightGesture = string.Empty;
+            _hasPrevTrackingPos  = false;
+            PrototypeDebugStatus = "대기";
             DeactivateVoiceBoost();
-            elementAuraManager?.Hide();
-            HideRightFireAura();
-            HideRightIceAura();
-            HideRightIceOrb();
-            HideRightThunderAura();
-            StopThunderBeam();
-            rightThunderCharged = false;
+            if (!keepIceAuraVisible)
+                elementAuraManager?.Hide();
         }
 
-        private void UpdateRightGestureAttack()
+        private void DisarmAllModules()
         {
-            if (isCastingSuppressed || string.IsNullOrEmpty(currentRightGesture))
-                return;
+            fireModule?.Disarm();
+            iceModule?.Disarm();
+            thunderModule?.Disarm();
+        }
 
-            var spawnPoint = ResolveRightSpawnPoint();
+        private ElementAuraManager ResolveLeftAuraManager()
+        {
+            if (leftElementAuraManager != null && leftElementAuraManager != elementAuraManager)
+                return leftElementAuraManager;
+
+            if (_runtimeLeftAuraManager != null)
+                return _runtimeLeftAuraManager;
+
+            if (elementAuraManager == null)
+                return null;
+
+            var sourceObject = elementAuraManager.gameObject;
+            var clone = Instantiate(sourceObject, sourceObject.transform.parent);
+            clone.name = $"{sourceObject.name}_LeftRuntime";
+            clone.hideFlags = HideFlags.DontSave;
+
+            _runtimeLeftAuraManager = clone.GetComponent<ElementAuraManager>();
+            leftElementAuraManager = _runtimeLeftAuraManager;
+            return _runtimeLeftAuraManager;
+        }
+
+        private void ShowLeftElementAura(string gestureName)
+        {
+            var element = GestureNameToElement(gestureName);
+            if (element == ElementType.None)
+            {
+                LogCombo($"Left aura skipped: non-element gesture={gestureName}.");
+                return;
+            }
+
+            if (leftHandSpawnPoint == null)
+            {
+                LogCombo($"Left aura skipped: missing left hand spawn point, gesture={gestureName}.");
+                return;
+            }
+
+            var auraManager = ResolveLeftAuraManager();
+            if (auraManager == null)
+            {
+                LogCombo($"Left aura skipped: missing aura manager, gesture={gestureName}.");
+                return;
+            }
+
+            auraManager.Show(element, leftHandSpawnPoint);
+            LogCombo($"Left aura shown: element={element}, gesture={gestureName}, target={leftHandSpawnPoint.name}.");
+        }
+
+        private void HideLeftElementAura()
+        {
+            ResolveLeftAuraManager()?.Hide();
+        }
+
+        // ── 매 프레임 갱신 ────────────────────────────────────────────────────
+
+private void UpdateRightGestureAttack()
+        {
+            if (_isCastingSuppressed || string.IsNullOrEmpty(_currentRightGesture)) return;
+
+            var spawnPoint = rightHandSpawnPoint != null ? rightHandSpawnPoint : (Transform)null;
             if (spawnPoint == null || Time.deltaTime <= 0f)
             {
-                PrototypeDebugStatus = "CAST: no XR spawn point";
+                PrototypeDebugStatus = "No spawn point";
                 return;
             }
 
-            var currentTrackingPosition = ResolveTrackingPosition(spawnPoint.position);
-            if (!hasPreviousRightTrackingPosition)
+            var currentPos = ResolveTrackingPosition(spawnPoint.position);
+            if (!_hasPrevTrackingPos)
             {
-                previousRightTrackingPosition = currentTrackingPosition;
-                hasPreviousRightTrackingPosition = true;
+                _prevTrackingPos = currentPos;
+                _hasPrevTrackingPos = true;
                 return;
             }
 
-            var trackingVelocity = (currentTrackingPosition - previousRightTrackingPosition) / Time.deltaTime;
-            previousRightTrackingPosition = currentTrackingPosition;
-            var cameraForward = headTransform != null ? headTransform.forward : transform.forward;
-            PrototypeLastForwardSpeed = Vector3.Dot(ToWorldVector(trackingVelocity), cameraForward);
+            var localVelocity = (currentPos - _prevTrackingPos) / Time.deltaTime;
+            _prevTrackingPos = currentPos;
+            var worldVelocity = ToWorldVector(localVelocity);
 
-            if (currentRightGesture == "Fire")
-                UpdateFireDummy(spawnPoint, trackingVelocity);
-            else if (currentRightGesture == "Ice")
-                UpdateIceDummy(spawnPoint, currentTrackingPosition, trackingVelocity);
-            else if (currentRightGesture == "Thunder")
-                UpdateThunderCharge(spawnPoint);
-            else if (currentRightGesture == "ThunderShoot")
-                UpdateThunderShoot(spawnPoint);
-        }
-
-        private void UpdateFireDummy(Transform spawnPoint, Vector3 trackingVelocity)
-        {
-            UpdateFireAuraTransform(spawnPoint);
-            var upSpeed = Vector3.Dot(ToWorldVector(trackingVelocity), Vector3.up);
-            PrototypeDebugStatus = $"CAST Fire up:{upSpeed:0.00}/{rightFireRecoilVelocityThreshold:0.00}";
-            if (upSpeed < rightFireRecoilVelocityThreshold ||
-                Time.time - rightFireLastShotTime <= rightFireCooldown)
+            if (_currentRightGesture == "Fire")
             {
-                return;
-            }
-
-            rightFireLastShotTime = Time.time;
-            FireRightFireProjectile(spawnPoint);
-        }
-
-        private void UpdateIceDummy(Transform spawnPoint, Vector3 trackingPosition, Vector3 trackingVelocity)
-        {
-            UpdateIceOrbTransform(spawnPoint);
-            rightIceSamples.Enqueue((Time.time, trackingPosition));
-            while (rightIceSamples.Count > 0 && rightIceSamples.Peek().time < Time.time - rightIceVelocitySampleDuration)
-                rightIceSamples.Dequeue();
-
-            if (rightIceSamples.Count < 2 || Time.time - rightIceLastLaunchTime <= rightIceLaunchCooldown)
-                return;
-
-            var oldest = rightIceSamples.Peek();
-            var dt = Mathf.Max(0.001f, Time.time - oldest.time);
-            var localVelocity = (trackingPosition - oldest.pos) / dt;
-            var forwardSpeed = Vector3.Dot(ToWorldVector(localVelocity), headTransform != null ? headTransform.forward : transform.forward);
-            PrototypeDebugStatus = $"CAST Ice throw:{forwardSpeed:0.00}/{rightIceMinThrowSpeed:0.00}";
-            if (forwardSpeed < rightIceMinThrowSpeed)
-                return;
-
-            LaunchRightIceProjectile(spawnPoint, ToWorldVector(localVelocity));
-        }
-
-        private void UpdateThunderCharge(Transform spawnPoint)
-        {
-            rightThunderCharged = true;
-            rightThunderLastChargeTime = Time.time;
-            UpdateThunderAuraTransform(spawnPoint);
-
-            // If a beam is still within its end time (arm-window expired while beam was active),
-            // sustain it rather than stopping it prematurely.
-            if (rightThunderBeamLine != null && Time.time < rightThunderBeamEndTime)
-            {
-                rightThunderLastShootTime = Time.time; // prevent grace-period cutoff in UpdateThunderBeam
-                UpdateThunderBeam();
-                PrototypeDebugStatus = "CAST Thunder: beam sustain";
-            }
-            else
-            {
-                StopThunderBeam();
-                PrototypeDebugStatus = "CAST Thunder: charged";
-            }
-        }
-
-        private void UpdateThunderShoot(Transform spawnPoint)
-        {
-            if (!IsRightThunderChargeAvailable())
-            {
-                StopThunderBeam();
-                PrototypeDebugStatus = "CAST Thunder: waiting for charge";
-                return;
-            }
-
-            rightThunderLastShootTime = Time.time;
-            UpdateThunderBeam();
-        }
-
-        private void FireRightFireProjectile(Transform spawnPoint)
-        {
-            var direction = ResolveAimDirection(spawnPoint.position);
-            direction = ApplyDownAngle(direction, rightFireDownAngleDegrees);
-            var origin = spawnPoint.position + direction * rightFireSpawnForwardOffset;
-            var fireData = GetSpellData(SpellId.Single_Pointer);
-            var projectile = rightFireballPrefab != null
-                ? Instantiate(rightFireballPrefab, origin, Quaternion.LookRotation(direction))
-                : CreatePrototypeProjectileObject(ElementType.Fire, origin, Quaternion.LookRotation(direction));
-
-            ParentToSpellRoot(projectile);
-            if (projectile.TryGetComponent<FireballProjectile>(out var fireball))
-            {
-                fireball.ConfigureLaunch(rightFireProjectileSpeed, rightFireProjectileScale);
-                fireball.ConfigureImpact(
-                    rightFireExplosionPrefab,
-                    rightFireExplosionScale,
-                    rightFireExplosionLifetime,
-                    rightFireExplosionMaterialOverride);
-                fireball.ConfigureHitData(
-                    SpellId.Single_Pointer,
-                    fireData?.damage ?? 10f,
-                    fireData?.statusEffect ?? StatusEffect.Burn,
-                    fireData?.statusDuration ?? 3f,
-                    fireData?.statusMagnitude ?? 2f,
-                    fireData?.statusTickInterval ?? 1f);
-            }
-            else
-            {
-                var speed = fireData?.projectileSpeed > 0f ? fireData.projectileSpeed : rightFireProjectileSpeed;
-                InitializePrototypeProjectile(
-                    projectile,
-                    SpellId.Single_Pointer,
-                    ElementType.Fire,
-                    fireData?.statusEffect ?? StatusEffect.Burn,
-                    fireData?.damage ?? 10f,
-                    fireData?.statusDuration ?? 3f,
-                    speed,
-                    direction);
-            }
-
-            lastCastStatus = "Cast: Fire dummy";
-            RememberCast(ElementType.Fire, SpellId.Single_Pointer, 0f, "Cost: dummy");
-            Destroy(projectile, fallbackProjectileLifetime);
-        }
-
-        private void ShowRightFireAura()
-        {
-            if (!showPrototypeArmedAura) return;
-
-            if (elementAuraManager != null)
-            {
-                elementAuraManager.Show(ElementType.Fire, ResolveRightSpawnPoint());
-                return;
-            }
-
-            if (rightFireAuraInstance != null) return;
-            var spawnPoint = ResolveRightSpawnPoint();
-            if (spawnPoint == null) return;
-
-            if (useCommonDummyAuras)
-            {
-                rightFireAuraInstance = CreateRightElementAuraObject("RightFireAura_Dummy", ElementType.Fire, rightElementAuraScale);
-            }
-            else if (rightFireAuraPrefab != null)
-            {
-                rightFireAuraInstance = Instantiate(rightFireAuraPrefab, spawnPoint.position, spawnPoint.rotation);
-                rightFireAuraInstance.transform.localScale = Vector3.one * rightFireAuraScale;
-                if (rightFireAuraInstance.TryGetComponent<WristAuraController>(out var aura))
+                PrototypeDebugStatus = $"Fire ready up:{Vector3.Dot(worldVelocity, Vector3.up):0.00}";
+                if (fireModule != null && fireModule.Tick(worldVelocity))
                 {
-                    aura.auraColor = rightFireAuraColor;
-                    aura.skeleton = null;
-                    aura.ManaPct = 1f;
+                    RememberCast(ElementType.Fire, SpellId.Single_Pointer, 0f, "Mana: dummy");
+                    _lastCastStatus = "Cast: Fire dummy";
                 }
             }
-
-            if (rightFireAuraInstance == null) return;
-            ParentToSpellRoot(rightFireAuraInstance);
-            ApplyTimeFocusExemptLayer(rightFireAuraInstance);
-            UpdateFireAuraTransform(spawnPoint);
-        }
-
-        private void UpdateFireAuraTransform(Transform spawnPoint)
-        {
-            if (rightFireAuraInstance != null)
-                rightFireAuraInstance.transform.SetPositionAndRotation(
-                    spawnPoint.position + spawnPoint.rotation * rightElementAuraOffset,
-                    spawnPoint.rotation);
-        }
-
-        private void HideRightFireAura()
-        {
-            if (rightFireAuraInstance != null)
-                Destroy(rightFireAuraInstance);
-            rightFireAuraInstance = null;
-        }
-
-        private void ShowRightIceOrb()
-        {
-            if (rightIceOrbInstance != null)
-                Destroy(rightIceOrbInstance);
-
-            var spawnPoint = ResolveRightSpawnPoint();
-            if (spawnPoint == null)
-                return;
-
-            var pos = spawnPoint.TransformPoint(rightIcePalmOffset);
-            rightIceOrbInstance = rightIceOrbPrefab != null
-                ? Instantiate(rightIceOrbPrefab, pos, Quaternion.identity)
-                : CreateFallbackSphere("IceOrb", pos, rightIceOrbScale, GetElementColor(ElementType.Ice));
-            ParentToSpellRoot(rightIceOrbInstance);
-            rightIceOrbInstance.transform.localScale = Vector3.one * rightIceOrbScale;
-            rightIceSamples.Clear();
-        }
-
-        private void UpdateIceOrbTransform(Transform spawnPoint)
-        {
-            UpdateRightElementAuraTransform(rightIceAuraInstance, spawnPoint);
-            if (rightIceOrbInstance == null) return;
-            var timeStopped = Time.timeScale < 0.5f;
-            rightIceOrbInstance.SetActive(!timeStopped);
-            if (!timeStopped)
-                rightIceOrbInstance.transform.position = spawnPoint.TransformPoint(rightIcePalmOffset);
-        }
-
-        private void HideRightIceOrb()
-        {
-            if (rightIceOrbInstance != null)
-                Destroy(rightIceOrbInstance);
-            rightIceOrbInstance = null;
-            rightIceSamples.Clear();
-        }
-
-        private void ShowRightElementAura(ElementType element)
-        {
-            if (!showPrototypeArmedAura) return;
-
-            if (elementAuraManager != null)
+            else if (_currentRightGesture == "Ice")
             {
-                elementAuraManager.Show(element, ResolveRightSpawnPoint());
-                return;
+                PrototypeDebugStatus = "Ice ready";
+                if (iceModule != null && iceModule.Tick(currentPos))
+                {
+                    RememberCast(ElementType.Ice, SpellId.Single_Wave, 0f, "Mana: dummy");
+                    _lastCastStatus = "Cast: Ice dummy";
+                }
             }
-
-            var spawnPoint = ResolveRightSpawnPoint();
-            if (spawnPoint == null) return;
-
-            var aura = element switch
+            else if (_currentRightGesture == "Thunder")
             {
-                ElementType.Fire    => rightFireAuraInstance,
-                ElementType.Ice     => rightIceAuraInstance,
-                ElementType.Thunder => rightThunderAuraInstance,
-                _                   => null
-            };
-
-            if (aura == null)
-            {
-                aura = CreateRightElementAuraObject($"Right{element}Aura_Dummy", element, rightElementAuraScale);
-                ParentToSpellRoot(aura);
-                ApplyTimeFocusExemptLayer(aura);
+                PrototypeDebugStatus = "Thunder charging";
+                if (thunderModule != null && thunderModule.Tick())
+                {
+                    RememberCast(ElementType.Thunder, SpellId.Single_Strike, 0f, "Mana: dummy");
+                    _lastCastStatus = "Cast: Thunder dummy";
+                }
             }
-
-            if (element == ElementType.Fire)       rightFireAuraInstance    = aura;
-            else if (element == ElementType.Ice)   rightIceAuraInstance     = aura;
-            else if (element == ElementType.Thunder) rightThunderAuraInstance = aura;
-
-            UpdateRightElementAuraTransform(aura, spawnPoint);
-        }
-
-        private GameObject CreateRightElementAuraObject(string name, ElementType element, float scale)
-        {
-            if (useCommonDummyAuras)
+            else if (_currentRightGesture == "ThunderShoot")
             {
-                var aura = ElementAuraDummy.Create(name, GetElementColor(element), scale, auraTimeFocusExemptLayerName);
-                return aura.gameObject;
+                PrototypeDebugStatus = "Thunder firing";
+                if (thunderModule != null && thunderModule.Tick())
+                {
+                    RememberCast(ElementType.Thunder, SpellId.Single_Strike, 0f, "Mana: dummy");
+                    _lastCastStatus = "Cast: Thunder dummy";
+                }
+                else if (thunderModule == null || !thunderModule.IsBeamActive)
+                {
+                    thunderModule?.Disarm();
+                    _currentRightGesture = string.Empty;
+                    _hasPrevTrackingPos = false;
+                    PrototypeDebugStatus = "Idle";
+                }
             }
-
-            return CreateFallbackSphere(name, Vector3.zero, scale, GetElementColor(element));
         }
 
-        private void UpdateRightElementAuraTransform(GameObject aura, Transform spawnPoint)
+        private void UpdateTimeFocusVisibility()
         {
-            if (aura == null || spawnPoint == null)
-                return;
+            var grimoireOpen = grimoireManager != null && grimoireManager.IsOpen;
+            elementAuraManager?.SetSuppressed(grimoireOpen);
+            ResolveLeftAuraManager()?.SetSuppressed(grimoireOpen);
 
-            aura.transform.SetPositionAndRotation(
-                spawnPoint.position + spawnPoint.rotation * rightElementAuraOffset,
-                spawnPoint.rotation);
+            var timeStopped = grimoireOpen || (focusModeController != null && focusModeController.IsFocusActive);
+            iceModule?.SetOrbVisible(!timeStopped);
         }
 
-        private void HideRightIceAura()
-        {
-            if (rightIceAuraInstance != null)
-                Destroy(rightIceAuraInstance);
-            rightIceAuraInstance = null;
-        }
-
-        private void LaunchRightIceProjectile(Transform spawnPoint, Vector3 worldVelocity)
-        {
-            rightIceLastLaunchTime = Time.time;
-            var launchPos = spawnPoint.TransformPoint(rightIcePalmOffset);
-            var fallbackForward = headTransform != null ? headTransform.forward : transform.forward;
-            var direction = worldVelocity.sqrMagnitude > 0.01f ? worldVelocity.normalized : fallbackForward.normalized;
-            var launchVelocity = rightIceUseArcTrajectory
-                ? ComputeIceArcVelocity(worldVelocity, fallbackForward)
-                : direction * rightIceProjectileSpeed;
-
-            var projectile = rightIceProjectilePrefab != null
-                ? Instantiate(rightIceProjectilePrefab, launchPos, Quaternion.LookRotation(direction))
-                : CreatePrototypeProjectileObject(ElementType.Ice, launchPos, Quaternion.LookRotation(direction));
-            ParentToSpellRoot(projectile);
-            projectile.transform.localScale = Vector3.one * rightIceProjectileScale;
-
-            var iceData = GetSpellData(SpellId.Single_Wave);
-            InitializePrototypeProjectile(
-                projectile,
-                SpellId.Single_Wave,
-                ElementType.Ice,
-                iceData?.statusEffect ?? StatusEffect.Slow,
-                iceData?.damage ?? 8f,
-                iceData?.statusDuration ?? 3f,
-                rightIceUseArcTrajectory ? 0f : rightIceProjectileSpeed,
-                direction);
-
-            var rb = projectile.GetComponent<Rigidbody>() ?? projectile.AddComponent<Rigidbody>();
-            rb.isKinematic = false;
-            rb.useGravity = rightIceUseArcTrajectory;
-            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            rb.linearVelocity = launchVelocity;
-
-            HideRightIceOrb();
-            HideRightIceAura();
-            lastCastStatus = "Cast: Ice dummy";
-            RememberCast(ElementType.Ice, SpellId.Single_Wave, 0f, "Cost: dummy");
-            Destroy(projectile, rightIceBallLifetime);
-        }
-
-        private Vector3 ComputeIceArcVelocity(Vector3 throwVelocity, Vector3 cameraForward)
-        {
-            var baseVelocity = throwVelocity.sqrMagnitude > 0.01f
-                ? throwVelocity * Mathf.Max(0.1f, rightIceArcVelocityMultiplier)
-                : cameraForward.normalized * rightIceMinArcLaunchSpeed;
-
-            baseVelocity += Vector3.up * rightIceArcUpwardBoost;
-            var speed = baseVelocity.magnitude;
-            if (speed < rightIceMinArcLaunchSpeed && baseVelocity.sqrMagnitude > 0.001f)
-                baseVelocity = baseVelocity.normalized * rightIceMinArcLaunchSpeed;
-            else if (speed > rightIceMaxArcLaunchSpeed)
-                baseVelocity = baseVelocity.normalized * rightIceMaxArcLaunchSpeed;
-
-            return baseVelocity;
-        }
-
-        private void ShowRightThunderAura()
-        {
-            if (!showPrototypeArmedAura) return;
-
-            if (elementAuraManager != null)
-            {
-                elementAuraManager.Show(ElementType.Thunder, ResolveRightSpawnPoint());
-                return;
-            }
-
-            if (rightThunderAuraInstance != null) return;
-            var spawnPoint = ResolveRightSpawnPoint();
-            if (spawnPoint == null) return;
-
-            if (useCommonDummyAuras)
-            {
-                rightThunderAuraInstance = CreateRightElementAuraObject("RightThunderAura_Dummy", ElementType.Thunder, rightElementAuraScale);
-            }
-            else
-            {
-                rightThunderAuraInstance = rightThunderAuraPrefab != null
-                    ? Instantiate(rightThunderAuraPrefab)
-                    : CreateFallbackSphere("ThunderAura_Dummy", spawnPoint.position, rightThunderAuraScale, rightThunderLaserColor);
-                rightThunderAuraInstance.transform.localScale = Vector3.one * rightThunderAuraScale;
-            }
-
-            ParentToSpellRoot(rightThunderAuraInstance);
-            ApplyTimeFocusExemptLayer(rightThunderAuraInstance);
-            rightThunderAuraRenderer = rightThunderAuraInstance.GetComponentInChildren<Renderer>();
-            rightThunderAuraAudioSource = rightThunderAuraInstance.AddComponent<AudioSource>();
-            rightThunderAuraAudioSource.playOnAwake = false;
-            rightThunderAuraAudioSource.loop = true;
-            rightThunderAuraAudioSource.clip = rightThunderAuraAudioClip;
-            if (rightThunderAuraAudioClip != null)
-                rightThunderAuraAudioSource.Play();
-            UpdateThunderAuraTransform(spawnPoint);
-        }
-
-        private void UpdateThunderAuraTransform(Transform spawnPoint)
-        {
-            if (rightThunderAuraInstance == null)
-                return;
-
-            rightThunderAuraInstance.transform.SetPositionAndRotation(
-                spawnPoint.position + spawnPoint.rotation * (useCommonDummyAuras ? rightElementAuraOffset : rightThunderAuraOffset),
-                spawnPoint.rotation);
-
-            if (rightThunderAuraRenderer != null)
-                ApplyMaterialColor(rightThunderAuraRenderer.material, rightThunderLaserColor);
-        }
-
-        private void HideRightThunderAura()
-        {
-            if (rightThunderAuraInstance != null)
-                Destroy(rightThunderAuraInstance);
-            rightThunderAuraInstance = null;
-            rightThunderAuraAudioSource = null;
-            rightThunderAuraRenderer = null;
-        }
-
-        private void StartThunderBeam()
-        {
-            var duration = rightThunderContinuousFireSeconds;
-            var dbData = GetSpellData(SpellId.Single_Strike);
-            if (dbData != null && dbData.continuousFireSeconds > 0f)
-                duration = dbData.continuousFireSeconds;
-
-            rightThunderBeamEndTime = Time.time + Mathf.Max(0f, duration);
-            rightThunderNextHitTime = -999f;
-        }
-
-        private bool IsRightThunderChargeAvailable()
-        {
-            return rightThunderCharged ||
-                   Time.time - rightThunderLastChargeTime <= Mathf.Max(0f, rightThunderChargeGraceSeconds);
-        }
-
-        private void UpdateThunderBeam()
-        {
-            var spawnPoint = ResolveRightSpawnPoint();
-            if (spawnPoint == null)
-                return;
-
-            UpdateThunderAuraTransform(spawnPoint);
-            if (Time.time - rightThunderLastShootTime > Mathf.Max(0f, rightThunderShootPoseGraceSeconds) &&
-                currentRightGesture != "ThunderShoot")
-            {
-                StopThunderBeam();
-                return;
-            }
-
-            if (Time.time > rightThunderBeamEndTime)
-            {
-                StopThunderBeam();
-                return;
-            }
-
-            var direction = spawnPoint.forward.sqrMagnitude > 0.001f
-                ? spawnPoint.forward.normalized
-                : (headTransform != null ? headTransform.forward : transform.forward).normalized;
-            direction = ApplyYawAngle(direction, rightThunderLaserYawAngleDegrees);
-            direction = ApplyDownAngle(direction, rightThunderLaserDownAngleDegrees);
-            var origin = spawnPoint.position
-                         + spawnPoint.rotation * rightThunderAuraOffset
-                         + direction * Mathf.Max(0f, rightThunderLaserSpawnForwardOffset);
-
-            var hitPoint = origin + direction * rightThunderRangeMeters;
-            Collider hitCollider = null;
-            if (Physics.Raycast(origin, direction, out var hit, rightThunderRangeMeters, rightThunderHitMask, QueryTriggerInteraction.Collide))
-            {
-                hitPoint = hit.point;
-                hitCollider = hit.collider;
-            }
-
-            EnsureThunderBeam();
-            rightThunderBeamLine.SetPosition(0, origin);
-            rightThunderBeamLine.SetPosition(1, hitPoint);
-
-            if (Time.time >= rightThunderNextHitTime)
-            {
-                rightThunderNextHitTime = Time.time + Mathf.Max(0.05f, rightThunderHitTickInterval);
-                ApplyThunderHit(hitCollider);
-                RememberCast(ElementType.Thunder, SpellId.Single_Strike, 0f, "Cost: dummy");
-                lastCastStatus = "Cast: Thunder dummy";
-            }
-
-            PrototypeDebugStatus = $"CAST Thunder beam:{(hitPoint - origin).magnitude:0.0}m";
-        }
-
-        private void EnsureThunderBeam()
-        {
-            if (rightThunderBeamLine != null)
-                return;
-
-            rightThunderBeamInstance = new GameObject("ThunderLaser_Dummy");
-            ParentToSpellRoot(rightThunderBeamInstance);
-            rightThunderBeamLine = rightThunderBeamInstance.AddComponent<LineRenderer>();
-            rightThunderBeamLine.positionCount = 2;
-            rightThunderBeamLine.startWidth = rightThunderLaserWidth;
-            rightThunderBeamLine.endWidth = rightThunderLaserWidth * 0.45f;
-            rightThunderBeamLine.material = CreateUnlitMaterial(rightThunderLaserColor);
-            rightThunderBeamLine.startColor = rightThunderLaserColor;
-            rightThunderBeamLine.endColor = new Color(rightThunderLaserColor.r, rightThunderLaserColor.g, rightThunderLaserColor.b, 0.15f);
-        }
-
-        private void StopThunderBeam()
-        {
-            rightThunderBeamEndTime = -999f;
-            rightThunderNextHitTime = -999f;
-            if (rightThunderBeamInstance != null)
-                Destroy(rightThunderBeamInstance);
-            rightThunderBeamInstance = null;
-            rightThunderBeamLine = null;
-        }
-
-        private void ApplyThunderHit(Collider hitCollider)
-        {
-            if (hitCollider == null || ArcanePlayerRigResolver.IsPlayerCollider(hitCollider))
-                return;
-
-            var dbData = GetSpellData(SpellId.Single_Strike);
-            var hitData = new SpellHitData(
-                SpellId.Single_Strike,
-                ElementType.Thunder,
-                dbData?.statusEffect ?? StatusEffect.Stagger,
-                dbData?.damage ?? rightThunderDamage,
-                dbData?.statusDuration ?? rightThunderStatusDuration,
-                dbData?.statusMagnitude ?? 1f,
-                dbData?.statusTickInterval ?? 0f);
-
-            var spellTarget = hitCollider.GetComponentInParent<ISpellTarget>();
-            if (spellTarget != null)
-            {
-                spellTarget.OnHit(hitData);
-                return;
-            }
-
-            var boss = hitCollider.GetComponentInParent<BossAI>();
-            var golemTarget = boss != null
-                ? boss.GetComponent<GolemCombatTarget>() ?? boss.GetComponentInParent<GolemCombatTarget>()
-                : hitCollider.GetComponentInParent<GolemCombatTarget>();
-            golemTarget?.OnHit(hitData);
-        }
+        // ── 조합 마법 콜백 ────────────────────────────────────────────────────
 
         private void HandleCombinationSuccess(SpellId spellId)
         {
-            if (IsCombinationCastAllowed(spellId))
-                Cast(spellId);
+            if (!IsCombinationCastAllowed(spellId))
+            {
+                LogCombo($"Combination success ignored: cast not allowed for {spellId}.");
+                return;
+            }
+
+            LogCombo($"Combination success received: {spellId}.");
+            Cast(spellId);
         }
 
         private void HandleCombinationFail()
@@ -926,163 +610,210 @@ namespace ArcaneVR.Spell
 
         private void HandleComboReadyChanged(SpellId spellId, bool ready)
         {
-            if (ready && SpellHitData.IsComboSpellId(spellId))
+            LogComboSfx($"ready_changed spell={spellId} ready={ready}");
+
+            if (SpellHitData.IsComboSpellId(spellId))
                 StartCombinationAuraFeedback(spellId, false);
-            else if (!combinationAuraCompleted)
+            else if (!_combinationAuraCompleted)
                 StopCombinationAuraFeedback();
         }
 
-        public bool Cast(SpellId spellId)
+        // ── 조합 오라 피드백 ──────────────────────────────────────────────────
+
+        private void StartCombinationAuraFeedback(SpellId spellId, bool completed)
         {
-            if (!IsCombinationCastAllowed(spellId))
+            if (!SpellHitData.IsComboSpellId(spellId))
+                return;
+
+            LogComboSfx($"start_feedback spell={spellId} completed={completed} showAura={showCombinationAura}");
+            PlayCombinationFeedbackSfx(spellId, completed);
+
+            if (!showCombinationAura)
+                return;
+
+            _combinationAuraSpell     = spellId;
+            _combinationAuraCompleted = completed;
+            _combinationAuraUntilTime = completed ? Time.time + combinationCompleteAuraHoldSeconds : -999f;
+
+            EnsureCombinationAura();
+            if (_combinationAuraRoot == null) return;
+
+            _combinationAuraRoot.SetActive(true);
+            _combinationAuraRoot.transform.position   = ResolveCombinationAuraPosition();
+            _combinationAuraRoot.transform.localScale  = Vector3.one * (completed ? combinationCompleteAuraScale : combinationReadyAuraScale);
+
+            var aura = _combinationAuraRoot.GetComponent<ElementAuraDummy>();
+            if (aura != null)
+                aura.Configure(GetComboAuraColor(spellId), completed ? combinationCompleteAuraScale : combinationReadyAuraScale, auraTimeFocusExemptLayerName);
+        }
+
+        private void StopCombinationAuraFeedback()
+        {
+            _combinationAuraSpell = SpellId.None;
+            _combinationAuraCompleted = false;
+            if (_combinationAuraRoot != null) _combinationAuraRoot.SetActive(false);
+        }
+
+        private void UpdateCombinationAuraFeedback()
+        {
+            if (_combinationAuraRoot == null || _combinationAuraSpell == SpellId.None) return;
+            _combinationAuraRoot.transform.position = ResolveCombinationAuraPosition();
+            if (_combinationAuraCompleted && Time.time > _combinationAuraUntilTime)
+                StopCombinationAuraFeedback();
+        }
+
+        private void EnsureCombinationAura()
+        {
+            if (_combinationAuraRoot != null) return;
+            _combinationAuraRoot = ElementAuraDummy
+                .Create("CombinationAura_Dummy", Color.white, combinationReadyAuraScale, auraTimeFocusExemptLayerName)
+                .gameObject;
+            _combinationAuraRoot.hideFlags = HideFlags.DontSave;
+            _combinationAuraRoot.SetActive(false);
+        }
+
+        private void PlayCombinationFeedbackSfx(SpellId spellId, bool completed)
+        {
+            if (!SpellHitData.IsComboSpellId(spellId))
+                return;
+
+            if (_comboFeedbackAudio == null)
             {
-                lastCastStatus = $"Combo cast locked: {SpellHitData.GetDisplayName(spellId)}";
-                lastManaCostStatus = "Cost: combo locked";
-                return false;
+                _comboFeedbackAudio = gameObject.AddComponent<AudioSource>();
+                _comboFeedbackAudio.playOnAwake = false;
+                _comboFeedbackAudio.spatialBlend = 0f;
+                _comboFeedbackAudio.volume = Mathf.Clamp01(combinationFeedbackSfxVolume);
+                LogComboSfx("audio_source_created");
             }
 
-            if (spellDatabase == null)
-                spellDatabase = Resources.Load<SpellDatabase>("ArcaneVR/SpellDatabase");
-            var data = spellDatabase != null ? spellDatabase.Get(spellId) : null;
-            if (data == null)
-            {
-                lastCastStatus = $"Blocked: missing {spellId}";
-                lastManaCostStatus = "Cost: missing data";
-                return false;
-            }
-
-            if (combatManager == null)
-                combatManager = FindAnyObjectByType<CombatManager>();
-            if (combatManager != null && !combatManager.TryConsumeMana(data.manaCost))
-            {
-                RecordCastBlocked(spellId, data.element, data.manaCost, $"Cost: NoMana {combatManager.CurrentMana:0.#}/{data.manaCost:0.#}");
-                return false;
-            }
-
-            var spawnPoint = ResolveSpawnPoint(spellId);
-            var spawnPosition = spawnPoint != null ? spawnPoint.position : transform.position;
-            var direction = ResolveAimDirection(spawnPosition);
-            spawnPosition += direction * 0.25f;
-            var element = data.element;
-            if (combinationChecker != null && IsSingleSpell(spellId) && combinationChecker.CurrentElement != ElementType.None)
-                element = combinationChecker.CurrentElement;
-
-            var projectileObject = CreateProjectileObject(data, element, spawnPosition, Quaternion.LookRotation(direction, Vector3.up));
-            ParentToSpellRoot(projectileObject);
-            var projectile = projectileObject.GetComponent<SpellProjectile>() ?? projectileObject.AddComponent<SpellProjectile>();
-            projectile.Initialize(
+            var cue = completed ? ArcaneSpellSfxCue.ComboCast : ArcaneSpellSfxCue.ComboReady;
+            LogComboSfx($"play spell={spellId} cue={cue} volume={combinationFeedbackSfxVolume:0.00}");
+            ArcaneSpellSfx.PlayCombo(
+                _comboFeedbackAudio,
                 spellId,
-                element,
-                data.damage,
-                data.projectileSpeed,
-                data.statusEffect,
-                data.statusDuration,
-                direction,
-                combatManager,
-                data.statusMagnitude,
-                data.statusTickInterval);
-
-            RememberCast(element, spellId, data.manaCost, combatManager != null ? $"Cost: Paid {data.manaCost:0.#}" : "Cost: no CombatManager");
-            lastCastStatus = SpellHitData.IsComboSpellId(spellId)
-                ? $"Cast: {SpellHitData.GetDisplayName(spellId)}"
-                : $"Cast: {element} {spellId}";
-            Destroy(projectileObject, fallbackProjectileLifetime);
-            feedbackManager?.OnSpellCast(spellId);
-            if (SpellHitData.IsComboSpellId(spellId))
-                StartCombinationAuraFeedback(spellId, true);
-            return true;
+                cue,
+                combinationFeedbackSfxVolume);
         }
 
-        private SpellDatabase.SpellData GetSpellData(SpellId spellId)
+        private void LogComboSfx(string message)
         {
-            if (spellDatabase == null)
-                spellDatabase = Resources.Load<SpellDatabase>("ArcaneVR/SpellDatabase");
-            return spellDatabase != null ? spellDatabase.Get(spellId) : null;
+            if (enableComboDebugLogs)
+                Debug.Log($"[ComboSfxTrace] {message}", this);
         }
 
-        private void InitializePrototypeProjectile(
-            GameObject projectileObject,
-            SpellId spellId,
-            ElementType element,
-            StatusEffect statusEffect,
-            float damage,
-            float statusDuration,
-            float speed,
-            Vector3 direction)
+        // ── 음성 부스트 ───────────────────────────────────────────────────────
+
+        private void HandleVoiceCommand(ElementType element)
         {
-            var projectile = projectileObject.GetComponent<SpellProjectile>() ?? projectileObject.AddComponent<SpellProjectile>();
-            projectile.spellId = spellId;
-            projectile.InitializePrototype(
-                speed,
-                direction,
-                element,
-                statusEffect,
-                damage,
-                statusDuration);
+            if (IsVoiceInputSuppressedForCombinationFocus()) return;
+            if (PrototypeArmedElement == ElementType.None || PrototypeArmedElement != element) return;
+            ActivateVoiceBoost(element);
+        }
+
+        private void ActivateVoiceBoost(ElementType element)
+        {
+            _isVoiceBoostActive = true;
+            _voiceBoostExpiry   = Time.time + voiceBoostDuration;
+            elementAuraManager?.SetVoiceBoosted(true);
+            PlayVoiceBoostSfx();
+            _lastVoiceBoostStatus = $"음성 부스트: {element} 활성";
+            PrototypeDebugStatus  = $"음성 부스트: {element}";
+        }
+
+        private void DeactivateVoiceBoost()
+        {
+            if (!_isVoiceBoostActive) return;
+            _isVoiceBoostActive = false;
+            _voiceBoostExpiry   = -999f;
+            elementAuraManager?.SetVoiceBoosted(false);
+            _lastVoiceBoostStatus = "음성: 비활성";
+        }
+
+        private void UpdateVoiceBoost()
+        {
+            if (!_isVoiceBoostActive) return;
+            if (Time.time >= _voiceBoostExpiry || string.IsNullOrEmpty(_currentRightGesture))
+                DeactivateVoiceBoost();
+        }
+
+        private void PlayVoiceBoostSfx()
+        {
+            if (_voiceBoostAudio == null)
+            {
+                _voiceBoostAudio = gameObject.AddComponent<AudioSource>();
+                _voiceBoostAudio.playOnAwake  = false;
+                _voiceBoostAudio.spatialBlend = 0f;
+                _voiceBoostAudio.volume       = 0.8f;
+            }
+
+            if (voiceBoostClip != null)
+                _voiceBoostAudio.clip = voiceBoostClip;
+            else
+            {
+                _cachedBoostTone ??= GenerateVoiceBoostTone();
+                _voiceBoostAudio.clip = _cachedBoostTone;
+            }
+
+            _voiceBoostAudio.Stop();
+            _voiceBoostAudio.Play();
+        }
+
+        private static AudioClip GenerateVoiceBoostTone()
+        {
+            const int sampleRate = 44100;
+            const float duration = 0.35f;
+            var samples = (int)(sampleRate * duration);
+            var data    = new float[samples];
+            for (var i = 0; i < samples; i++)
+            {
+                float t        = (float)i / sampleRate;
+                float freq     = Mathf.Lerp(520f, 1040f, t / duration);
+                float envelope = Mathf.Sin(Mathf.PI * t / duration);
+                data[i] = Mathf.Sin(2f * Mathf.PI * freq * t) * envelope * 0.45f;
+            }
+            var clip = AudioClip.Create("VoiceBoostTone", samples, 1, sampleRate, false);
+            clip.SetData(data, 0);
+            return clip;
+        }
+
+        // ── 유틸리티 ─────────────────────────────────────────────────────────
+
+        private void RememberCast(ElementType element, SpellId spellId, float manaCost, string costStatus)
+        {
+            _lastCastElement    = element;
+            _lastCastSpellId    = spellId;
+            _lastManaCost       = manaCost;
+            _lastManaCostStatus = costStatus;
         }
 
         private void RecordCastBlocked(SpellId spellId, ElementType element, float manaCost, string costStatus)
         {
-            lastCastSpellId = spellId;
-            lastCastElement = element;
-            lastManaCost = manaCost;
-            lastManaCostStatus = costStatus;
-            lastCastStatus = $"Blocked: {element} {spellId}";
-        }
-
-        private void RememberCast(ElementType element, SpellId spellId, float manaCost, string costStatus)
-        {
-            lastCastElement = element;
-            lastCastSpellId = spellId;
-            lastManaCost = manaCost;
-            lastManaCostStatus = costStatus;
-            lastCastTime = Time.time;
-        }
-
-        private Transform ResolveRightSpawnPoint()
-        {
-            return rightHandSpawnPoint != null ? rightHandSpawnPoint : transform;
+            _lastCastSpellId    = spellId;
+            _lastCastElement    = element;
+            _lastManaCost       = manaCost;
+            _lastManaCostStatus = costStatus;
+            _lastCastStatus     = $"차단: {element} {spellId}";
         }
 
         private Transform ResolveSpawnPoint(SpellId spellId)
         {
-            if (spellId == SpellId.Single_Pointer || spellId == SpellId.Single_Wave || spellId == SpellId.Single_Strike)
+            if (IsSingleSpell(spellId))
                 return rightHandSpawnPoint != null ? rightHandSpawnPoint : leftHandSpawnPoint;
-
             return leftHandSpawnPoint != null ? leftHandSpawnPoint : rightHandSpawnPoint;
         }
 
-        private Vector3 ResolveAimDirection(Vector3 spawnPosition)
+        private Vector3 ResolveCastOrigin(SpellId spellId)
         {
-            var direction = headTransform != null ? headTransform.forward : transform.forward;
-            return direction.sqrMagnitude > 0.001f ? direction.normalized : Vector3.forward;
+            if (SpellHitData.IsComboSpellId(spellId) && leftHandSpawnPoint != null && rightHandSpawnPoint != null)
+                return (leftHandSpawnPoint.position + rightHandSpawnPoint.position) * 0.5f;
+
+            return ResolveSpawnPoint(spellId)?.position ?? transform.position;
         }
 
-        private static Vector3 ApplyDownAngle(Vector3 direction, float downAngleDegrees)
+        private Vector3 ResolveAimDirection(Vector3 _)
         {
-            if (direction.sqrMagnitude <= 0.001f)
-                direction = Vector3.forward;
-
-            var angle = Mathf.Max(0f, downAngleDegrees);
-            if (angle <= 0.001f)
-                return direction.normalized;
-
-            return Vector3.RotateTowards(
-                direction.normalized,
-                Vector3.down,
-                angle * Mathf.Deg2Rad,
-                0f).normalized;
-        }
-
-        private static Vector3 ApplyYawAngle(Vector3 direction, float yawAngleDegrees)
-        {
-            if (direction.sqrMagnitude <= 0.001f)
-                direction = Vector3.forward;
-
-            if (Mathf.Abs(yawAngleDegrees) <= 0.001f)
-                return direction.normalized;
-
-            return (Quaternion.AngleAxis(yawAngleDegrees, Vector3.up) * direction.normalized).normalized;
+            var dir = headTransform != null ? headTransform.forward : transform.forward;
+            return dir.sqrMagnitude > 0.001f ? dir.normalized : Vector3.forward;
         }
 
         private Vector3 ResolveTrackingPosition(Vector3 worldPosition)
@@ -1099,17 +830,13 @@ namespace ArcaneVR.Spell
 
         private Transform ResolveTrackingSpaceRoot()
         {
-            if (rightHandSpawnPoint != null)
+            var parent = rightHandSpawnPoint;
+            while (parent != null)
             {
-                var parent = rightHandSpawnPoint;
-                while (parent != null)
-                {
-                    if (parent.name == "TrackingSpace" || parent.name == "Camera Offset" || parent.name == "XR Origin")
-                        return parent;
-                    parent = parent.parent;
-                }
+                if (parent.name is "TrackingSpace" or "Camera Offset" or "XR Origin")
+                    return parent;
+                parent = parent.parent;
             }
-
             return null;
         }
 
@@ -1119,373 +846,183 @@ namespace ArcaneVR.Spell
                 obj.transform.SetParent(spellSpawnRoot, true);
         }
 
-        private GameObject CreateProjectileObject(SpellDatabase.SpellData data, ElementType element, Vector3 position, Quaternion rotation)
-        {
-            if (!useDebugPrimitiveProjectiles && data.prefab != null)
-                return Instantiate(data.prefab, position, rotation);
-
-            var projectileObject = new GameObject($"Spell_{data.spellId}");
-            projectileObject.transform.SetPositionAndRotation(position, rotation);
-            var collider = projectileObject.AddComponent<SphereCollider>();
-            collider.isTrigger = true;
-            collider.radius = GetDebugColliderRadius(data.spellId) * debugProjectileScale;
-            var rigidbody = projectileObject.AddComponent<Rigidbody>();
-            rigidbody.useGravity = false;
-            rigidbody.isKinematic = true;
-            CreateDebugProjectileVisual(data.spellId, element, projectileObject.transform);
-            return projectileObject;
-        }
-
-        private GameObject CreatePrototypeProjectileObject(ElementType element, Vector3 position, Quaternion rotation)
-        {
-            var projectileObject = new GameObject($"PrototypeSpell_{element}");
-            projectileObject.transform.SetPositionAndRotation(position, rotation);
-            var collider = projectileObject.AddComponent<SphereCollider>();
-            collider.isTrigger = true;
-            collider.radius = Mathf.Max(0.02f, debugProjectileScale * 0.08f);
-            var rigidbody = projectileObject.AddComponent<Rigidbody>();
-            rigidbody.useGravity = false;
-            rigidbody.isKinematic = true;
-            AddPrimitiveVisual($"{element}_Sphere", PrimitiveType.Sphere, projectileObject.transform, Vector3.zero, Vector3.one * 0.16f, GetElementColor(element));
-            return projectileObject;
-        }
-
-        private GameObject CreateFallbackSphere(string name, Vector3 position, float scale, Color color)
-        {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            go.name = name;
-            go.transform.position = position;
-            go.transform.localScale = Vector3.one * scale;
-            var collider = go.GetComponent<Collider>();
-            if (collider != null)
-                collider.enabled = false;
-            var renderer = go.GetComponent<Renderer>();
-            if (renderer != null)
-                renderer.material = CreateUnlitMaterial(color);
-            ApplyTimeFocusExemptLayer(go);
-            return go;
-        }
-
-        private void ApplyTimeFocusExemptLayer(GameObject root)
-        {
-            if (root == null)
-                return;
-
-            var layer = LayerMask.NameToLayer(auraTimeFocusExemptLayerName);
-            if (layer < 0)
-                return;
-
-            foreach (var child in root.GetComponentsInChildren<Transform>(true))
-                child.gameObject.layer = layer;
-        }
-
-        private void CreateDebugProjectileVisual(SpellId spellId, ElementType element, Transform parent)
-        {
-            var color = GetElementColor(element);
-            switch (spellId)
-            {
-                case SpellId.Single_Wave:
-                    AddPrimitiveVisual("Wave_Plate", PrimitiveType.Cube, parent, Vector3.zero, new Vector3(0.48f, 0.08f, 0.18f), color);
-                    break;
-                case SpellId.Single_Strike:
-                    AddPrimitiveVisual("Strike_Capsule", PrimitiveType.Capsule, parent, Vector3.zero, new Vector3(0.18f, 0.38f, 0.18f), color);
-                    parent.GetChild(parent.childCount - 1).localRotation = Quaternion.Euler(90f, 0f, 0f);
-                    break;
-                default:
-                    AddPrimitiveVisual("Pointer_Sphere", PrimitiveType.Sphere, parent, Vector3.zero, Vector3.one * GetDebugColliderRadius(spellId), color);
-                    break;
-            }
-
-            var light = parent.gameObject.AddComponent<Light>();
-            light.type = LightType.Point;
-            light.color = color;
-            light.range = IsSingleSpell(spellId) ? 1.4f : 2.2f;
-            light.intensity = IsSingleSpell(spellId) ? 1.6f : 2.6f;
-        }
-
-        private void AddPrimitiveVisual(string name, PrimitiveType primitiveType, Transform parent, Vector3 localPosition, Vector3 localScale, Color color)
-        {
-            var visual = GameObject.CreatePrimitive(primitiveType);
-            visual.name = name;
-            visual.transform.SetParent(parent, false);
-            visual.transform.localPosition = localPosition;
-            visual.transform.localScale = localScale * debugProjectileScale;
-            var collider = visual.GetComponent<Collider>();
-            if (collider != null)
-                Destroy(collider);
-            var renderer = visual.GetComponent<Renderer>();
-            if (renderer != null)
-                renderer.material = CreateUnlitMaterial(color);
-        }
-
-        private void StartCombinationAuraFeedback(SpellId spellId, bool completed)
-        {
-            if (!showCombinationAura || !SpellHitData.IsComboSpellId(spellId))
-                return;
-
-            currentCombinationAuraSpell = spellId;
-            combinationAuraCompleted = completed;
-            combinationAuraUntilTime = completed ? Time.time + combinationCompleteAuraHoldSeconds : -999f;
-            EnsureCombinationAura();
-            if (combinationAuraRoot != null)
-            {
-                combinationAuraRoot.SetActive(true);
-                combinationAuraRoot.transform.position = ResolveCombinationAuraPosition();
-                combinationAuraRoot.transform.localScale = Vector3.one * (completed ? combinationCompleteAuraScale : combinationReadyAuraScale);
-                var aura = combinationAuraRoot.GetComponent<ElementAuraDummy>();
-                if (aura != null)
-                    aura.Configure(GetComboAuraColor(spellId), completed ? combinationCompleteAuraScale : combinationReadyAuraScale, auraTimeFocusExemptLayerName);
-                else
-                {
-                    var renderer = combinationAuraRoot.GetComponentInChildren<Renderer>();
-                    if (renderer != null)
-                        renderer.material = CreateUnlitMaterial(GetComboAuraColor(spellId));
-                    ApplyTimeFocusExemptLayer(combinationAuraRoot);
-                }
-            }
-        }
-
-        private void StopCombinationAuraFeedback()
-        {
-            currentCombinationAuraSpell = SpellId.None;
-            combinationAuraCompleted = false;
-            if (combinationAuraRoot != null)
-                combinationAuraRoot.SetActive(false);
-        }
-
-        // ── Voice Boost ──────────────────────────────────────────────────────────
-
-        private void HandleVoiceCommand(ElementType element)
-        {
-            var armedElement = ResolveElement(currentRightGesture);
-            Debug.Log($"[VoiceBoost] OnVoiceCommand received: {element} | currentGesture={currentRightGesture} | armed={armedElement} | suppressed={IsVoiceInputSuppressedForCombinationFocus()}");
-
-            if (IsVoiceInputSuppressedForCombinationFocus()) return;
-
-            // Only boost if the element matches the currently armed gesture
-            if (armedElement == ElementType.None || armedElement != element)
-            {
-                Debug.Log($"[VoiceBoost] No match — gesture not active or element mismatch");
-                return;
-            }
-
-            ActivateVoiceBoost(element);
-        }
-
-        private void ActivateVoiceBoost(ElementType element)
-        {
-            isVoiceBoostActive = true;
-            voiceBoostExpiry = Time.time + voiceBoostDuration;
-            elementAuraManager?.SetVoiceBoosted(true);
-            PlayVoiceBoostSfx();
-            lastVoiceBoostStatus = $"VoiceLink: {element} BOOSTED";
-            PrototypeDebugStatus = $"CAST: VoiceBoost {element}";
-        }
-
-        private void DeactivateVoiceBoost()
-        {
-            if (!isVoiceBoostActive) return;
-            isVoiceBoostActive = false;
-            voiceBoostExpiry = -999f;
-            elementAuraManager?.SetVoiceBoosted(false);
-            lastVoiceBoostStatus = "VoiceLink: idle";
-        }
-
-        private void UpdateVoiceBoost()
-        {
-            if (!isVoiceBoostActive) return;
-
-            // Expire if duration passed or gesture was cleared
-            if (Time.time >= voiceBoostExpiry || string.IsNullOrEmpty(currentRightGesture))
-                DeactivateVoiceBoost();
-        }
-
-        private void PlayVoiceBoostSfx()
-        {
-            if (voiceBoostAudioSource == null)
-            {
-                voiceBoostAudioSource = gameObject.AddComponent<AudioSource>();
-                voiceBoostAudioSource.playOnAwake = false;
-                voiceBoostAudioSource.spatialBlend = 0f;
-                voiceBoostAudioSource.volume = 0.8f;
-            }
-
-            if (voiceBoostClip != null)
-            {
-                voiceBoostAudioSource.clip = voiceBoostClip;
-            }
-            else
-            {
-                if (_cachedBoostTone == null)
-                    _cachedBoostTone = GenerateVoiceBoostTone();
-                voiceBoostAudioSource.clip = _cachedBoostTone;
-            }
-
-            voiceBoostAudioSource.Stop();
-            voiceBoostAudioSource.Play();
-            Debug.Log($"[VoiceBoost] PlayVoiceBoostSfx — clip={voiceBoostAudioSource.clip?.name} volume={voiceBoostAudioSource.volume} audioListener={FindAnyObjectByType<AudioListener>() != null}");
-        }
-
-        private static AudioClip GenerateVoiceBoostTone()
-        {
-            const int sampleRate = 44100;
-            const float duration = 0.35f;
-            var samples = (int)(sampleRate * duration);
-            var data = new float[samples];
-            for (var i = 0; i < samples; i++)
-            {
-                float t = (float)i / sampleRate;
-                float freq = Mathf.Lerp(520f, 1040f, t / duration); // rising octave
-                float envelope = Mathf.Sin(Mathf.PI * t / duration); // smooth fade in+out
-                data[i] = Mathf.Sin(2f * Mathf.PI * freq * t) * envelope * 0.45f;
-            }
-            var generatedClip = AudioClip.Create("VoiceBoostTone", samples, 1, sampleRate, false);
-            generatedClip.SetData(data, 0);
-            return generatedClip;
-        }
-
-        // ─────────────────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Controls aura/orb visibility based on the active time-focus mode.
-        ///   Grimoire time stop  → hide element aura (suppress) + hide ice orb
-        ///   Combination focus   → keep element aura, hide ice orb (timeScale check already does this)
-        ///   Normal              → restore suppressed state
-        /// </summary>
-        private void UpdateTimeFocusVisibility()
-        {
-            var grimoireOpen = grimoireManager != null && grimoireManager.IsOpen;
-
-            // Aura: suppress only during grimoire (player is reading the book)
-            elementAuraManager?.SetSuppressed(grimoireOpen);
-
-            // Ice orb: hidden during ANY time stop (grimoire or combination)
-            // UpdateIceOrbTransform already uses Time.timeScale < 0.5f, but
-            // also handle the case where the orb exists but Update hasn't run yet
-            if (rightIceOrbInstance != null)
-            {
-                var timeStopped = grimoireOpen || (focusModeController != null && focusModeController.IsFocusActive);
-                rightIceOrbInstance.SetActive(!timeStopped);
-            }
-        }
-
-        private void UpdateCombinationAuraFeedback()
-        {
-            if (combinationAuraRoot == null || currentCombinationAuraSpell == SpellId.None)
-                return;
-
-            combinationAuraRoot.transform.position = ResolveCombinationAuraPosition();
-            if (combinationAuraCompleted && Time.time > combinationAuraUntilTime)
-                StopCombinationAuraFeedback();
-        }
-
-        private void EnsureCombinationAura()
-        {
-            if (combinationAuraRoot != null)
-                return;
-
-            combinationAuraRoot = ElementAuraDummy
-                .Create("CombinationAura_Dummy", Color.white, combinationReadyAuraScale, auraTimeFocusExemptLayerName)
-                .gameObject;
-            combinationAuraRoot.hideFlags = HideFlags.DontSave;
-            combinationAuraRoot.SetActive(false);
-        }
-
         private Vector3 ResolveCombinationAuraPosition()
         {
             if (leftHandSpawnPoint != null && rightHandSpawnPoint != null)
                 return (leftHandSpawnPoint.position + rightHandSpawnPoint.position) * 0.5f;
-            var spawn = ResolveRightSpawnPoint();
-            return spawn != null ? spawn.position : transform.position;
+            return rightHandSpawnPoint != null ? rightHandSpawnPoint.position : transform.position;
         }
 
-        private static Color GetComboAuraColor(SpellId spellId)
+        private bool IsCombinationCastAllowed(SpellId spellId) =>
+            !SpellHitData.IsComboSpellId(spellId) ||
+            allowCombinationSpellCasts ||
+            (focusModeController != null && focusModeController.IsFocusActive);
+
+        private bool IsVoiceInputSuppressedForCombinationFocus() =>
+            ignoreVoiceDuringCombinationFocus &&
+            focusModeController != null &&
+            focusModeController.IsFocusActive;
+
+        private static bool IsSingleSpell(SpellId spellId) =>
+            spellId is SpellId.Single_Pointer or SpellId.Single_Wave or SpellId.Single_Strike;
+
+        private static ElementType GestureNameToElement(string gestureName) => gestureName switch
+        {
+            "Fire" => ElementType.Fire,
+            "Ice" => ElementType.Ice,
+            "Thunder" => ElementType.Thunder,
+            "ThunderShoot" => ElementType.Thunder,
+            _ => ElementType.None
+        };
+
+        private GameObject CreateProjectileObject(SpellDatabase.SpellData data, ElementType element, Vector3 position, Quaternion rotation)
+        {
+            var comboPrefab = ResolveComboProjectilePrefab(data.spellId);
+            if (comboPrefab != null)
+                return Instantiate(comboPrefab, position, rotation);
+
+            if (!useDebugPrimitiveProjectiles && data.prefab != null)
+                return Instantiate(data.prefab, position, rotation);
+
+            if (SpellHitData.IsComboSpellId(data.spellId))
+                return CreateComboDebugProjectile(data.spellId, position, rotation);
+
+            var go  = new GameObject($"Spell_{data.spellId}");
+            go.transform.SetPositionAndRotation(position, rotation);
+            var col = go.AddComponent<SphereCollider>();
+            col.isTrigger = true;
+            col.radius    = (IsSingleSpell(data.spellId) ? 0.22f : 0.34f) * debugProjectileScale;
+            var rb  = go.AddComponent<Rigidbody>();
+            rb.useGravity  = false;
+            rb.isKinematic = true;
+            return go;
+        }
+
+        private float ResolveProjectileLifetime(SpellDatabase.SpellData data)
+        {
+            if (data != null && SpellHitData.IsComboSpellId(data.spellId))
+                return Mathf.Max(0.5f, comboProjectileLifetime);
+
+            return fallbackProjectileLifetime;
+        }
+
+        private GameObject ResolveComboProjectilePrefab(SpellId spellId)
         {
             return spellId switch
             {
-                SpellId.Combo_FireIce => new Color(0.9f, 0.55f, 1f, 1f),
-                SpellId.Combo_IceThunder => new Color(0.35f, 0.9f, 1f, 1f),
-                SpellId.Combo_ThunderFire => new Color(1f, 0.55f, 0.1f, 1f),
-                _ => Color.white
+                SpellId.Combo_FireIce => comboFireIceProjectilePrefab,
+                SpellId.Combo_IceThunder => comboIceThunderProjectilePrefab,
+                SpellId.Combo_ThunderFire => comboThunderFireProjectilePrefab,
+                _ => null
             };
         }
 
-        private bool IsVoiceInputSuppressedForCombinationFocus()
+        private GameObject CreateComboDebugProjectile(SpellId spellId, Vector3 position, Quaternion rotation)
         {
-            if (focusModeController == null)
-                focusModeController = FindAnyObjectByType<CombinationFocusModeController>();
-
-            return ignoreVoiceDuringCombinationFocus &&
-                   focusModeController != null &&
-                   focusModeController.IsFocusActive;
-        }
-
-        private bool IsCombinationCastAllowed(SpellId spellId)
-        {
-            return !SpellHitData.IsComboSpellId(spellId) ||
-                   allowCombinationSpellCasts ||
-                   (focusModeController != null && focusModeController.IsFocusActive);
-        }
-
-        private static ElementType ResolveElement(string gestureName)
-        {
-            return gestureName switch
+            var primitiveType = spellId switch
             {
-                "Fire" => ElementType.Fire,
-                "Ice" => ElementType.Ice,
-                "Thunder" => ElementType.Thunder,
-                "ThunderShoot" => ElementType.Thunder,
-                _ => ElementType.None
+                SpellId.Combo_FireIce => PrimitiveType.Sphere,
+                SpellId.Combo_IceThunder => PrimitiveType.Capsule,
+                SpellId.Combo_ThunderFire => PrimitiveType.Cube,
+                _ => PrimitiveType.Sphere
             };
+
+            var go = GameObject.CreatePrimitive(primitiveType);
+            go.name = $"Combo_{spellId}";
+            go.transform.SetPositionAndRotation(position, rotation);
+            go.transform.localScale = Vector3.one * GetComboProjectileScale(spellId);
+
+            var collider = go.GetComponent<Collider>();
+            if (collider == null)
+                collider = go.AddComponent<SphereCollider>();
+            collider.isTrigger = true;
+
+            var rb = go.GetComponent<Rigidbody>();
+            if (rb == null)
+                rb = go.AddComponent<Rigidbody>();
+            rb.useGravity = false;
+            rb.isKinematic = true;
+
+            ApplyComboProjectileVisuals(go, spellId);
+            return go;
         }
 
-        private static Color GetElementColor(ElementType element)
+        private void ApplyComboProjectileVisuals(GameObject go, SpellId spellId)
         {
-            return element switch
+            var color = GetComboAuraColor(spellId);
+            var renderer = go.GetComponent<Renderer>();
+            if (renderer != null)
             {
-                ElementType.Fire => new Color(1f, 0.22f, 0.06f, 1f),
-                ElementType.Ice => new Color(0.24f, 0.78f, 1f, 1f),
-                ElementType.Thunder => new Color(1f, 0.88f, 0.12f, 1f),
-                _ => new Color(0.75f, 0.75f, 0.85f, 1f)
-            };
-        }
+                var shader = Shader.Find("Universal Render Pipeline/Lit") ??
+                             Shader.Find("Standard") ??
+                             Shader.Find("Unlit/Color");
+                if (shader != null)
+                {
+                    var material = new Material(shader);
+                    if (material.HasProperty("_BaseColor"))
+                        material.SetColor("_BaseColor", color);
+                    if (material.HasProperty("_Color"))
+                        material.SetColor("_Color", color);
+                    if (material.HasProperty("_EmissionColor"))
+                    {
+                        material.EnableKeyword("_EMISSION");
+                        material.SetColor("_EmissionColor", color * 1.6f);
+                    }
 
-        private static float GetDebugColliderRadius(SpellId spellId)
-        {
-            return IsSingleSpell(spellId) ? 0.22f : 0.34f;
-        }
-
-        private static bool IsSingleSpell(SpellId spellId)
-        {
-            return spellId == SpellId.Single_Pointer ||
-                   spellId == SpellId.Single_Wave ||
-                   spellId == SpellId.Single_Strike;
-        }
-
-        private static Material CreateUnlitMaterial(Color color)
-        {
-            var shader = Shader.Find("Universal Render Pipeline/Unlit") ??
-                         Shader.Find("Sprites/Default") ??
-                         Shader.Find("Unlit/Color") ??
-                         Shader.Find("Standard");
-            var material = new Material(shader);
-            ApplyMaterialColor(material, color);
-            return material;
-        }
-
-        private static void ApplyMaterialColor(Material material, Color color)
-        {
-            if (material == null)
-                return;
-            if (material.HasProperty("_BaseColor"))
-                material.SetColor("_BaseColor", color);
-            if (material.HasProperty("_Color"))
-                material.SetColor("_Color", color);
-            if (material.HasProperty("_EmissionColor"))
-            {
-                material.EnableKeyword("_EMISSION");
-                material.SetColor("_EmissionColor", color);
+                    renderer.sharedMaterial = material;
+                }
             }
+
+            var light = go.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.range = 3.2f;
+            light.intensity = comboProjectileLightIntensity;
+            light.color = color;
+
+            var trail = go.AddComponent<TrailRenderer>();
+            trail.time = 0.18f;
+            trail.startWidth = 0.18f;
+            trail.endWidth = 0.02f;
+            trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            trail.receiveShadows = false;
+            var trailMaterial = new Material(Shader.Find("Sprites/Default"));
+            trailMaterial.color = color;
+            trail.sharedMaterial = trailMaterial;
+            trail.startColor = color;
+            trail.endColor = new Color(color.r, color.g, color.b, 0f);
+        }
+
+        private float GetComboProjectileScale(SpellId spellId)
+        {
+            return spellId switch
+            {
+                SpellId.Combo_FireIce => comboProjectileScale.fireIce,
+                SpellId.Combo_IceThunder => comboProjectileScale.iceThunder,
+                SpellId.Combo_ThunderFire => comboProjectileScale.thunderFire,
+                _ => 0.35f
+            };
+        }
+
+        private static Color GetComboAuraColor(SpellId spellId) => spellId switch
+        {
+            SpellId.Combo_FireIce     => new Color(0.9f, 0.55f, 1f,  1f),
+            SpellId.Combo_IceThunder  => new Color(0.35f, 0.9f, 1f,  1f),
+            SpellId.Combo_ThunderFire => new Color(1f, 0.55f, 0.1f,  1f),
+            _                         => Color.white
+        };
+
+        private static Color GetElementAuraColor(ElementType element) => element switch
+        {
+            ElementType.Fire    => new Color(1f, 0.05f, 0f, 1f),
+            ElementType.Ice     => new Color(0.45f, 0.85f, 1f, 1f),
+            ElementType.Thunder => new Color(1f, 0.95f, 0f, 1f),
+            _                   => Color.white
+        };
+
+        private void LogCombo(string message)
+        {
+            if (enableComboDebugLogs)
+                Debug.Log($"[ComboMagicTest] {message}", this);
         }
     }
 }

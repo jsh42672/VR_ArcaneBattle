@@ -7,12 +7,14 @@ public class PortalTeleporter : MonoBehaviour
 {
     public PortalData portalData;
     public bool isExitPortal = false;
-    public string worldSceneName = "OPenWorld2";
-    public float activationRadius = 2.5f;
-    public bool usePlayerDistanceFallback = true;
+    [Header("Audio")]
+    [SerializeField] private AudioClip ambientLoopClip;
+    [SerializeField] [Range(0f, 1f)] private float ambientLoopVolume = 0.55f;
+    [SerializeField] private float ambientMinDistance = 2f;
+    [SerializeField] private float ambientMaxDistance = 14f;
     
     private Light portalLight;
-    private bool teleportRequested;
+    private AudioSource ambientAudioSource;
     
     void Start()
     {
@@ -22,6 +24,8 @@ public class PortalTeleporter : MonoBehaviour
         {
             portalLight.color = portalData.glowColor;
         }
+
+        EnsureAmbientAudio();
         
         // Ensure trigger
         SphereCollider col = GetComponent<SphereCollider>();
@@ -30,25 +34,13 @@ public class PortalTeleporter : MonoBehaviour
             col = gameObject.AddComponent<SphereCollider>();
         }
         col.isTrigger = true;
-        col.radius = activationRadius;
+        col.radius = 2.5f;
     }
 
-    void Update()
+    void OnDisable()
     {
-        if (!usePlayerDistanceFallback || teleportRequested)
-            return;
-
-        Transform player = ArcanePlayerRigResolver.FindHeadTransform();
-        if (player == null)
-            player = ArcanePlayerRigResolver.FindPlayerRigTransform();
-
-        if (player == null)
-            return;
-
-        if (Vector3.Distance(player.position, transform.position) <= activationRadius)
-        {
-            Teleport();
-        }
+        if (ambientAudioSource != null)
+            ambientAudioSource.Stop();
     }
     
     void OnTriggerEnter(Collider other)
@@ -56,30 +48,20 @@ public class PortalTeleporter : MonoBehaviour
         // Detect VR player
         if (IsPlayer(other))
         {
-            Teleport();
+            if (isExitPortal)
+            {
+                ReturnToWorldMap();
+            }
+            else
+            {
+                EnterBattleArena();
+            }
         }
     }
     
     bool IsPlayer(Collider other)
     {
         return ArcanePlayerRigResolver.IsPlayerCollider(other);
-    }
-
-    void Teleport()
-    {
-        if (teleportRequested)
-            return;
-
-        teleportRequested = true;
-
-        if (isExitPortal)
-        {
-            ReturnToWorldMap();
-        }
-        else
-        {
-            EnterBattleArena();
-        }
     }
     
     void EnterBattleArena()
@@ -101,7 +83,30 @@ public class PortalTeleporter : MonoBehaviour
         // Save return spawn data
         PlayerPrefs.SetString("ReturnPortalID", returnPortalID);
         
-        // Load world map
-        SceneManager.LoadScene(worldSceneName);
+        // Load WorldMap
+        SceneManager.LoadScene("World");
+    }
+
+    void EnsureAmbientAudio()
+    {
+        if (ambientLoopClip == null)
+            return;
+
+        ambientAudioSource = GetComponent<AudioSource>();
+        if (ambientAudioSource == null)
+            ambientAudioSource = gameObject.AddComponent<AudioSource>();
+
+        ambientAudioSource.playOnAwake = false;
+        ambientAudioSource.loop = true;
+        ambientAudioSource.clip = ambientLoopClip;
+        ambientAudioSource.volume = Mathf.Clamp01(ambientLoopVolume);
+        ambientAudioSource.spatialBlend = 1f;
+        ambientAudioSource.rolloffMode = AudioRolloffMode.Linear;
+        ambientAudioSource.minDistance = Mathf.Max(0.1f, ambientMinDistance);
+        ambientAudioSource.maxDistance = Mathf.Max(ambientAudioSource.minDistance + 0.1f, ambientMaxDistance);
+        ambientAudioSource.dopplerLevel = 0f;
+
+        if (!ambientAudioSource.isPlaying)
+            ambientAudioSource.Play();
     }
 }

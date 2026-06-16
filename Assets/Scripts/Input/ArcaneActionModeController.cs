@@ -10,13 +10,13 @@ namespace ArcaneVR.Input
     [DefaultExecutionOrder(85)]
     public class ArcaneActionModeController : MonoBehaviour
     {
-        [Header("References")]
+        [Header("── 핵심 참조 ──")]
         [SerializeField] private HandPullMovementController handPullMovement;
         [SerializeField] private CombinationChecker combinationChecker;
         [SerializeField] private VoiceRecognizer voiceRecognizer;
         [SerializeField] private Transform trackingSpaceRoot;
 
-        [Header("Mode Toggle")]
+        [Header("── 모드 전환 조건 ──")]
         [SerializeField] private bool enableVoiceModeToggle = true;
         [SerializeField] private bool disableHandGestureModeToggle = true;
         [SerializeField] private bool enableTriangleGesture;
@@ -41,11 +41,11 @@ namespace ArcaneVR.Input
         [SerializeField] private bool requireTriangleFacingHead = true;
         [SerializeField] private float triangleFacingHeadDotMin = 0.2f;
 
-        [Header("Cast Mode")]
+        [Header("── 캐스트 모드 유지 ──")]
         [SerializeField] private float castModeTimeout = 10f;
         [SerializeField] private bool exitAfterComboCast = true;
 
-        [Header("Triangle Feedback")]
+        [Header("── 삼각형 피드백 ──")]
         [SerializeField] private bool showTriangleFeedback = true;
         [SerializeField] private float triangleFeedbackBaseSize = 0.055f;
         [SerializeField] private float triangleFeedbackReadySize = 0.18f;

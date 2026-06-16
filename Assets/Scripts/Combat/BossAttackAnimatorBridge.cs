@@ -15,7 +15,7 @@ namespace ArcaneVR.Combat
         [SerializeField] private string highAttackState = "AttackHigh";
         [SerializeField] private string middleAttackState = "AttackMiddle";
         [SerializeField] private string lowAttackState = "AttackLow";
-        [SerializeField] private string fallbackAttackState = "Armature|Armature|Armature|Armature|Triple_Combo_Attack|baselayer";
+        [SerializeField] private string fallbackAttackState = "OneHand_Up_Attack_B_1";
         [SerializeField] private string resourcesFallbackControllerPath = "ArcaneVR/ThunderGolemAttackController";
         [SerializeField] private float fallbackControllerRestoreDelay = 1.2f;
         [SerializeField] private float crossFadeDuration = 0.05f;
@@ -116,13 +116,15 @@ namespace ArcaneVR.Combat
 
         private void HandleBarrierStarted(float duration)
         {
-            PlayAnimation(barrierTrigger, fallbackAttackState);
+            MaybeLog($"Barrier started without boss animation | duration={duration:0.00}s");
         }
 
         private void PlayAnimation(string triggerName, string preferredState)
         {
             if (bossAnimator == null)
                 return;
+
+            bossAnimator.applyRootMotion = false;
 
             if (TrySetTrigger(triggerName))
             {

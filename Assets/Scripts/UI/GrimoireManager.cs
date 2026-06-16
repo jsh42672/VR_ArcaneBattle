@@ -1,6 +1,7 @@
 using System;
 using ArcaneVR.Input;
 using ArcaneVR.Spell;
+using ArcaneVR.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,6 +19,11 @@ namespace ArcaneVR.UI
         [SerializeField] private Transform leftHandBookAnchor;
         [SerializeField] private GestureDetector gestureDetector;
         [SerializeField] private GestureEventRouter gestureRouter;
+        [SerializeField] private OVRHand leftOvrHand;
+        [SerializeField] private OVRHand rightOvrHand;
+        [SerializeField] private SpellCaster[] spellCasters = Array.Empty<SpellCaster>();
+        [SerializeField] private Canvas[] sceneGrimoireCanvases = Array.Empty<Canvas>();
+        [SerializeField] private Transform visualParkingAnchor;
 
         [Header("Input")]
         [SerializeField] private InputActionReference toggleAction;
@@ -35,7 +41,7 @@ namespace ArcaneVR.UI
         [SerializeField] private bool requireLeftPalmFacingPlayer = true;
         [SerializeField] private float openPalmHoldDuration = 0.6f;
         [SerializeField] private float closeFistHoldDuration = 0.18f;
-        [SerializeField] private float palmFacingDotThreshold = 0.58f;
+        [SerializeField] private float palmFacingDotThreshold = 0.5f;
         [SerializeField] private float toggleCooldown = 0.65f;
 
         [Header("Page Turn")]
@@ -45,6 +51,14 @@ namespace ArcaneVR.UI
         [SerializeField] private float pageSwipeMaxDuration = 0.75f;
         [SerializeField] private float pageSwipeCooldown = 0.35f;
         [SerializeField] private float pageSwipeVerticalTolerance = 0.28f;
+
+        [Header("── 시간정지 / 이동 억제 ──")]
+        [SerializeField] private ArcaneTimeFocusController timeFocusController;
+        [SerializeField] private HandPullMovementController handPullMovement;
+
+        [Header("Book Visual Override")]
+        [Tooltip("설정 시 런타임 fallback 큐브 대신 이 오브젝트를 손 비주얼로 사용 (GrimoireBook 프리팹 인스턴스 연결)")]
+        [SerializeField] private GameObject runtimeBookOverride;
 
         [Header("Magic Lock")]
         [SerializeField] private bool suppressMagicWhileOpen = true;
@@ -56,8 +70,14 @@ namespace ArcaneVR.UI
         public bool IsExternallySuppressed { get; private set; }
         public string LastGrimoireStatus { get; private set; } = "Grimoire: idle";
 
-        private OVRHand leftOvrHand;
-        private OVRHand rightOvrHand;
+        // 페이지 드래그 중에는 닫힘 제스처를 차단
+        private bool isPageDragLocked;
+
+        public void SetPageDragLocked(bool locked)
+        {
+            isPageDragLocked = locked;
+        }
+
         private float leftOpenHoldTimer;
         private float leftFistHoldTimer;
         private float lastToggleTime = -999f;
@@ -105,12 +125,11 @@ namespace ArcaneVR.UI
                 toggleAction.action.performed -= OnTogglePressed;
 
             ApplyMagicSuppression(false);
+            ApplyGrimoireTimeFocus(false);
         }
 
         private void Update()
         {
-            ResolveReferences();
-            SubscribeGestureEvents();
             UpdateGestureControl();
 
             if (IsOpen)
@@ -123,6 +142,11 @@ namespace ArcaneVR.UI
             {
                 DisableSceneGrimoireCanvases();
             }
+        }
+
+        private void OnValidate()
+        {
+            ResolveReferences();
         }
 
         public void ToggleGrimoire()
@@ -171,12 +195,11 @@ namespace ArcaneVR.UI
         {
             if (IsOpen || IsSuppressed())
                 return;
-
-            ResolveReferences();
             IsOpen = true;
             SetVisualActive(true);
             PositionGrimoire();
             ApplyMagicSuppression(true);
+            ApplyGrimoireTimeFocus(true);
             PlayFeedback(openClip ??= CreateFeedbackClip("ArcaneGrimoireOpen", 360f, 720f, 0.28f, 0.24f), 0.65f);
 
             LastGrimoireStatus = "Grimoire: open";
@@ -211,6 +234,7 @@ namespace ArcaneVR.UI
             IsOpen = false;
             SetVisualActive(false);
             ApplyMagicSuppression(false);
+            ApplyGrimoireTimeFocus(false);
             ResetGestureTimers();
             PlayFeedback(closeClip ??= CreateFeedbackClip("ArcaneGrimoireClose", 680f, 260f, 0.22f, 0.22f), 0.55f);
 
@@ -273,46 +297,84 @@ namespace ArcaneVR.UI
 
         private void ResolveReferences()
         {
-            if (playerCamera == null && Camera.main != null)
-                playerCamera = Camera.main.transform;
+            if (playerCamera == null || !playerCamera.gameObject.activeInHierarchy)
+                playerCamera = ArcanePlayerRigResolver.FindHeadTransform(leftHandBookAnchor);
 
-            if (grimoireUI == null)
+            if (leftHandBookAnchor == null ||
+                !leftHandBookAnchor.gameObject.activeInHierarchy ||
+                (playerCamera != null && !ArcanePlayerRigResolver.ShareResolvedRig(leftHandBookAnchor, playerCamera)))
             {
-                foreach (var ui in FindObjectsByType<GrimoireUI>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                {
-                    if (ui == null)
-                        continue;
-
-                    grimoireUI = ui;
-                    if (grimoireCanvas == null)
-                        grimoireCanvas = grimoireUI.gameObject;
-                    break;
-                }
+                leftHandBookAnchor = ArcanePlayerRigResolver.FindHandTransform(true, playerCamera) ?? leftHandBookAnchor;
             }
 
-            if (grimoireCanvas == null)
-            {
-                foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                {
-                    if (canvas == null || !canvas.name.Contains("Grimoire"))
-                        continue;
+            if (grimoireUI == null && grimoireCanvas != null)
+                grimoireUI = grimoireCanvas.GetComponent<GrimoireUI>();
 
-                    grimoireCanvas = canvas.gameObject;
-                    break;
-                }
+            if (grimoireCanvas == null && grimoireUI != null)
+                grimoireCanvas = grimoireUI.gameObject;
+
+            var rigRoot = ResolveRigRoot();
+            if (gestureDetector == null || !SharesRig(gestureDetector.transform, rigRoot))
+                gestureDetector = FindRigComponent<GestureDetector>(rigRoot);
+
+            if (gestureRouter == null || !SharesRig(gestureRouter.transform, rigRoot))
+                gestureRouter = FindRigComponent<GestureEventRouter>(rigRoot);
+
+            var scopedCasters = FindRigComponents<SpellCaster>(rigRoot);
+            if (scopedCasters.Length > 0)
+                spellCasters = scopedCasters;
+
+            if (timeFocusController == null)
+                timeFocusController = FindAnyObjectByType<ArcaneTimeFocusController>();
+            if (handPullMovement == null)
+                handPullMovement = FindAnyObjectByType<HandPullMovementController>();
+        }
+
+        private Transform ResolveRigRoot()
+        {
+            if (playerCamera != null)
+                return playerCamera.root;
+
+            if (transform.root != null && transform.root.name == "ArcanePlayerRig")
+                return transform.root;
+
+            var ovrRig = GetComponentInParent<OVRCameraRig>(true);
+            if (ovrRig != null && ovrRig.transform.root != null)
+                return ovrRig.transform.root;
+
+            var head = ArcanePlayerRigResolver.FindHeadTransform(transform);
+            return head != null ? head.root : transform.root;
+        }
+
+        private static T FindRigComponent<T>(Transform rigRoot) where T : Component
+        {
+            if (rigRoot != null)
+            {
+                var scoped = rigRoot.GetComponentInChildren<T>(true);
+                if (scoped != null)
+                    return scoped;
             }
 
-            if (gestureDetector == null)
-                gestureDetector = FindAnyObjectByType<GestureDetector>();
+            return FindAnyObjectByType<T>();
+        }
 
-            if (leftHandBookAnchor == null)
-                leftHandBookAnchor = GameObject.Find("L_Wrist")?.transform;
+        private static T[] FindRigComponents<T>(Transform rigRoot) where T : Component
+        {
+            if (rigRoot != null)
+            {
+                var scoped = rigRoot.GetComponentsInChildren<T>(true);
+                if (scoped != null && scoped.Length > 0)
+                    return scoped;
+            }
 
-            if (leftOvrHand == null)
-                leftOvrHand = FindBestOvrHand(true);
+            return FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        }
 
-            if (rightOvrHand == null)
-                rightOvrHand = FindBestOvrHand(false);
+        private static bool SharesRig(Transform candidate, Transform rigRoot)
+        {
+            return candidate != null &&
+                   rigRoot != null &&
+                   candidate.root == rigRoot;
         }
 
         private void SubscribeGestureEvents()
@@ -321,8 +383,6 @@ namespace ArcaneVR.UI
             {
                 gestureDetector.OnGrimTrigger -= HandleLegacyGrimoireTrigger;
                 gestureDetector.OnGrimTrigger += HandleLegacyGrimoireTrigger;
-                gestureDetector.OnGestureCleared -= HandleGestureCleared;
-                gestureDetector.OnGestureCleared += HandleGestureCleared;
                 gestureDetector.OnLeftFistStart -= HandleLeftFistStarted;
                 gestureDetector.OnLeftFistStart += HandleLeftFistStarted;
             }
@@ -334,7 +394,6 @@ namespace ArcaneVR.UI
             if (gestureDetector != null)
             {
                 gestureDetector.OnGrimTrigger -= HandleLegacyGrimoireTrigger;
-                gestureDetector.OnGestureCleared -= HandleGestureCleared;
                 gestureDetector.OnLeftFistStart -= HandleLeftFistStarted;
             }
 
@@ -355,23 +414,15 @@ namespace ArcaneVR.UI
 
         private void HandleLeftFistStarted()
         {
-            if (!enableGestureControl || !IsOpen || Time.unscaledTime - lastToggleTime < toggleCooldown)
+            if (!enableGestureControl || !IsOpen || isPageDragLocked || Time.unscaledTime - lastToggleTime < toggleCooldown)
                 return;
 
             CloseFromGesture("left fist");
         }
 
-        private void HandleGestureCleared(bool isLeft, string gestureName)
-        {
-            if (!enableGestureControl || !IsOpen || !isLeft || gestureName != "Grimoire")
-                return;
-
-            CloseFromGesture("left grimoire released");
-        }
-
         private void UpdateGestureControl()
         {
-            if (!enableGestureControl || IsSuppressed())
+            if (!enableGestureControl || IsSuppressed() || isPageDragLocked)
                 return;
 
             if (IsOpen)
@@ -570,9 +621,6 @@ namespace ArcaneVR.UI
                 return false;
 
             var hand = leftHand ? leftOvrHand : rightOvrHand;
-            if (hand == null)
-                hand = FindBestOvrHand(leftHand);
-
             if (hand == null || !hand.IsTracked || hand.PointerPose == null)
                 return false;
 
@@ -589,6 +637,25 @@ namespace ArcaneVR.UI
                    localPosition.y <= 0.35f;
         }
 
+        private const string GrimoireTimeFocusKey = "Grimoire";
+
+        private void ApplyGrimoireTimeFocus(bool active)
+        {
+            if (timeFocusController == null)
+                timeFocusController = FindAnyObjectByType<ArcaneTimeFocusController>();
+            if (timeFocusController != null)
+            {
+                if (active)
+                    timeFocusController.RequestFocus(GrimoireTimeFocusKey);
+                else
+                    timeFocusController.ReleaseFocus(GrimoireTimeFocusKey);
+            }
+
+            if (handPullMovement == null)
+                handPullMovement = FindAnyObjectByType<HandPullMovementController>();
+            handPullMovement?.SetMovementSuppressed(active, GrimoireTimeFocusKey);
+        }
+
         private void ApplyMagicSuppression(bool suppress)
         {
             if (!suppressMagicWhileOpen)
@@ -600,8 +667,13 @@ namespace ArcaneVR.UI
             magicSuppressionApplied = suppress;
             nextMagicSuppressionRefreshTime = Time.unscaledTime + (suppress ? 1f : 0.25f);
 
-            foreach (var caster in FindObjectsByType<SpellCaster>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var caster in spellCasters)
+            {
+                if (caster == null)
+                    continue;
+
                 caster.SetCastingSuppressed(suppress, "Grimoire");
+            }
         }
 
         private void SetVisualActive(bool active)
@@ -648,9 +720,6 @@ namespace ArcaneVR.UI
                 return leftHandBookAnchor;
 
             if (leftOvrHand == null || !leftOvrHand.IsTracked)
-                leftOvrHand = FindBestOvrHand(true);
-
-            if (leftOvrHand == null || !leftOvrHand.IsTracked)
                 return null;
 
             return leftOvrHand.PointerPose != null && leftOvrHand.IsPointerPoseValid
@@ -660,9 +729,9 @@ namespace ArcaneVR.UI
 
         private void DisableSceneGrimoireCanvases()
         {
-            foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var canvas in sceneGrimoireCanvases)
             {
-                if (canvas == null || !canvas.name.Contains("Grimoire"))
+                if (canvas == null)
                     continue;
 
                 canvas.gameObject.SetActive(false);
@@ -676,6 +745,14 @@ namespace ArcaneVR.UI
         {
             if (fallbackGrimoireRoot != null)
                 return;
+
+            // 프리팹 오버라이드가 연결된 경우 fallback 큐브 생성 없이 해당 오브젝트 사용
+            if (runtimeBookOverride != null)
+            {
+                fallbackGrimoireRoot = runtimeBookOverride;
+                fallbackGrimoireRoot.SetActive(false);
+                return;
+            }
 
             fallbackGrimoireRoot = new GameObject("Runtime Hand Grimoire")
             {
@@ -738,15 +815,14 @@ namespace ArcaneVR.UI
 
         private Vector3 ResolveParkingPosition()
         {
+            if (visualParkingAnchor != null)
+                return visualParkingAnchor.position;
+
             if (playerCamera == null && Camera.main != null)
                 playerCamera = Camera.main.transform;
 
             if (playerCamera != null)
                 return playerCamera.position + playerCamera.forward * 0.6f + Vector3.down * 0.15f;
-
-            var spawnPoint = GameObject.Find("PlayerSpawnPoint");
-            if (spawnPoint != null)
-                return spawnPoint.transform.position + Vector3.up * 1.2f;
 
             return Vector3.up * 1.6f;
         }
@@ -881,18 +957,6 @@ namespace ArcaneVR.UI
             leftOpenHoldTimer = 0f;
             leftFistHoldTimer = 0f;
             pageSwipeActive = false;
-        }
-
-        private static OVRHand FindBestOvrHand(bool leftHand)
-        {
-            var expected = leftHand ? OVRPlugin.Hand.HandLeft : OVRPlugin.Hand.HandRight;
-            foreach (var hand in FindObjectsByType<OVRHand>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (hand != null && hand.GetHand() == expected && hand.enabled)
-                    return hand;
-            }
-
-            return null;
         }
 
         private static Material CreateRuntimeMaterial(Color color)

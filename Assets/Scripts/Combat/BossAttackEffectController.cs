@@ -1,4 +1,5 @@
 using System.Collections;
+using ArcaneVR.Input;
 using UnityEngine;
 
 namespace ArcaneVR.Combat
@@ -14,6 +15,23 @@ namespace ArcaneVR.Combat
         [SerializeField] private Transform bossRoot;
         [SerializeField] private Transform headTransform;
 
+        [Header("── 차지 VFX (선택) ──")]
+        [Tooltip("차지 패턴 시 보스 주변에 재생할 VFX 프리팹 (없으면 런타임 링 생성)")]
+        [SerializeField] private GameObject chargeVfxPrefab;
+        [SerializeField] private float chargeVfxDuration = 3f;
+
+        [Header("── 취약 VFX (선택) ──")]
+        [Tooltip("취약 상태 진입 시 보스 주변에 재생할 VFX 프리팹 (없으면 황금 링 생성)")]
+        [SerializeField] private GameObject weaknessVfxPrefab;
+
+        [Header("── 공격 VFX 프리팹 (선택) ──")]
+        [Tooltip("High 공격 시 재생할 VFX 프리팹 (예: Lightning_MagicCircle_Slash)")]
+        [SerializeField] private GameObject highAttackVfxPrefab;
+        [Tooltip("Middle 공격 시 재생할 VFX 프리팹 (예: Lightning_MagicCircle)")]
+        [SerializeField] private GameObject midAttackVfxPrefab;
+        [Tooltip("Low 공격 시 재생할 VFX 프리팹 (예: Lightning_Crystals_front_attack)")]
+        [SerializeField] private GameObject lowAttackVfxPrefab;
+
         [Header("Attack VFX")]
         [SerializeField] private bool enableAttackEffects = true;
         [SerializeField] private float effectDurationMultiplier = 1.05f;
@@ -26,19 +44,26 @@ namespace ArcaneVR.Combat
         [SerializeField] private Color lowAttackColor = new Color(0.16f, 0.74f, 1f, 0.88f);
         [SerializeField] private Color successColor = new Color(0.18f, 1f, 0.52f, 0.95f);
         [SerializeField] private Color failColor = new Color(1f, 0.12f, 0.06f, 0.95f);
+        [SerializeField] private AudioClip highAttackSfxClip;
+        [SerializeField] private AudioClip middleAttackSfxClip;
+        [SerializeField] private AudioClip lowAttackSfxClip;
+        [SerializeField] private float attackSfxVolume = 0.95f;
 
         private BossPatternCombatBridge subscribedPatternBridge;
         private DodgeDetector subscribedDodgeDetector;
         private BarrierController subscribedBarrierController;
         private CombatManager subscribedCombatManager;
+        private GolemCombatTarget subscribedGolemTarget;
         private Coroutine activeAttackRoutine;
         private float lastResolveEffectTime = -999f;
+        private AudioSource attackAudioSource;
 
         public string LastEffectStatus { get; private set; } = "AttackFx: idle";
 
         private void Awake()
         {
             ResolveReferences();
+            EnsureAttackAudioSource();
         }
 
         private void OnEnable()
@@ -100,11 +125,17 @@ namespace ArcaneVR.Combat
             if (subscribedPatternBridge != patternBridge)
             {
                 if (subscribedPatternBridge != null)
+                {
                     subscribedPatternBridge.OnAttackResponseWindowStarted -= HandleAttackStarted;
+                    subscribedPatternBridge.OnChargeCounterWindowStarted -= HandleChargeStarted;
+                }
 
                 subscribedPatternBridge = patternBridge;
                 if (subscribedPatternBridge != null)
+                {
                     subscribedPatternBridge.OnAttackResponseWindowStarted += HandleAttackStarted;
+                    subscribedPatternBridge.OnChargeCounterWindowStarted += HandleChargeStarted;
+                }
             }
 
             if (subscribedDodgeDetector != dodgeDetector)
@@ -142,12 +173,25 @@ namespace ArcaneVR.Combat
                 if (subscribedCombatManager != null)
                     subscribedCombatManager.OnPlayerHit += HandlePlayerHit;
             }
+
+            if (subscribedGolemTarget != golemTarget)
+            {
+                if (subscribedGolemTarget != null)
+                    subscribedGolemTarget.OnWeaknessExposed -= HandleWeaknessExposed;
+
+                subscribedGolemTarget = golemTarget;
+                if (subscribedGolemTarget != null)
+                    subscribedGolemTarget.OnWeaknessExposed += HandleWeaknessExposed;
+            }
         }
 
         private void Unsubscribe()
         {
             if (subscribedPatternBridge != null)
+            {
                 subscribedPatternBridge.OnAttackResponseWindowStarted -= HandleAttackStarted;
+                subscribedPatternBridge.OnChargeCounterWindowStarted -= HandleChargeStarted;
+            }
 
             if (subscribedDodgeDetector != null)
             {
@@ -161,14 +205,21 @@ namespace ArcaneVR.Combat
             if (subscribedCombatManager != null)
                 subscribedCombatManager.OnPlayerHit -= HandlePlayerHit;
 
+            if (subscribedGolemTarget != null)
+                subscribedGolemTarget.OnWeaknessExposed -= HandleWeaknessExposed;
+
             subscribedPatternBridge = null;
             subscribedDodgeDetector = null;
             subscribedBarrierController = null;
             subscribedCombatManager = null;
+            subscribedGolemTarget = null;
         }
 
         private void HandleAttackStarted(BossAttackType attackType, float duration)
         {
+            Debug.Log($"[CenterFixed] EffectController.HandleAttackStarted | type={attackType} | dur={duration:0.0}s | enabled={enableAttackEffects}");
+            PlayAttackSfx(attackType);
+
             if (!enableAttackEffects)
                 return;
 
@@ -176,6 +227,115 @@ namespace ArcaneVR.Combat
                 StopCoroutine(activeAttackRoutine);
 
             activeAttackRoutine = StartCoroutine(AttackEffectRoutine(attackType, Mathf.Max(0.2f, duration)));
+        }
+
+        private void HandleChargeStarted(float duration)
+        {
+            if (!enableAttackEffects)
+                return;
+
+            StartCoroutine(ChargeEffectRoutine(Mathf.Max(0.5f, duration)));
+        }
+
+        private void HandleWeaknessExposed()
+        {
+            if (!enableAttackEffects)
+                return;
+
+            var duration = golemTarget != null ? Mathf.Max(1f, golemTarget.WeakRemaining) : 4f;
+            StartCoroutine(WeaknessEffectRoutine(duration));
+        }
+
+        private IEnumerator WeaknessEffectRoutine(float duration)
+        {
+            ResolveReferences();
+
+            if (weaknessVfxPrefab != null)
+            {
+                var origin = bossRoot != null ? bossRoot.position : transform.position;
+                var vfxObj = Instantiate(weaknessVfxPrefab, origin, Quaternion.identity);
+                Destroy(vfxObj, duration);
+                LastEffectStatus = $"AttackFx: Weakness {duration:0.0}s";
+                yield return new WaitForSeconds(duration);
+            }
+            else
+            {
+                var root = new GameObject("Arcane Weakness FX") { hideFlags = HideFlags.DontSave };
+                var goldColor = new Color(1f, 0.85f, 0.2f, 0.8f);
+                var ring1 = CreateGroundRing(root.transform, "Weakness Outer Ring", goldColor, 0.75f, 48);
+                var ring2 = CreateGroundRing(root.transform, "Weakness Inner Ring", Color.Lerp(goldColor, Color.white, 0.35f), 0.55f, 32);
+                LastEffectStatus = $"AttackFx: Weakness {duration:0.0}s";
+
+                var started = Time.time;
+                while (root != null && Time.time - started < duration)
+                {
+                    var t = Mathf.Clamp01((Time.time - started) / Mathf.Max(0.01f, duration));
+                    var center = bossRoot != null ? bossRoot.position : transform.position;
+                    var pulse = 0.5f + 0.5f * Mathf.Sin(t * Mathf.PI * 5f);
+                    UpdateChargeRing(ring1, center, Mathf.Lerp(1.2f, 2.4f, pulse), 0.9f - t * 0.2f, 48);
+                    UpdateChargeRing(ring2, center, Mathf.Lerp(0.5f, 1.4f, 1f - pulse), t * 0.5f + 0.3f, 32);
+                    yield return null;
+                }
+
+                if (root != null)
+                    Destroy(root);
+            }
+
+            LastEffectStatus = "AttackFx: idle";
+        }
+
+        private IEnumerator ChargeEffectRoutine(float duration)
+        {
+            ResolveReferences();
+
+            if (chargeVfxPrefab != null)
+            {
+                var origin = bossRoot != null ? bossRoot.position : transform.position;
+                var vfxObj = Instantiate(chargeVfxPrefab, origin, Quaternion.identity);
+                Destroy(vfxObj, duration);
+                LastEffectStatus = $"AttackFx: Charge {duration:0.0}s";
+                yield return new WaitForSeconds(duration);
+            }
+            else
+            {
+                var root = new GameObject("Arcane Charge FX") { hideFlags = HideFlags.DontSave };
+                var chargeColor = new Color(0.5f, 0.2f, 1f, 0.85f);
+                var ring1 = CreateGroundRing(root.transform, "Charge Outer Ring", chargeColor, 0.7f, 48);
+                var ring2 = CreateGroundRing(root.transform, "Charge Inner Ring", Color.Lerp(chargeColor, Color.white, 0.4f), 0.5f, 32);
+                LastEffectStatus = $"AttackFx: Charge {duration:0.0}s";
+
+                var started = Time.time;
+                while (root != null && Time.time - started < duration)
+                {
+                    var t = Mathf.Clamp01((Time.time - started) / Mathf.Max(0.01f, duration));
+                    var center = bossRoot != null ? bossRoot.position : transform.position;
+                    var pulse = 0.5f + 0.5f * Mathf.Sin(t * Mathf.PI * 6f);
+                    UpdateChargeRing(ring1, center, Mathf.Lerp(0.6f, 2.0f, pulse), 1f - t * 0.3f, 48);
+                    UpdateChargeRing(ring2, center, Mathf.Lerp(0.3f, 1.2f, 1f - pulse), t * 0.6f + 0.2f, 32);
+                    yield return null;
+                }
+
+                if (root != null)
+                    Destroy(root);
+            }
+
+            LastEffectStatus = "AttackFx: idle";
+        }
+
+        private void UpdateChargeRing(LineRenderer line, Vector3 center, float radius, float alpha, int segments)
+        {
+            if (line == null)
+                return;
+
+            var count = Mathf.Max(8, segments + 1);
+            line.positionCount = count;
+            for (var i = 0; i < count; i++)
+            {
+                var angle = (float)i / (count - 1) * Mathf.PI * 2f;
+                line.SetPosition(i, center + new Vector3(Mathf.Cos(angle) * radius, 0.05f, Mathf.Sin(angle) * radius));
+            }
+
+            SetLineAlpha(line, Mathf.Clamp01(alpha));
         }
 
         private void HandleDodgeSuccess()
@@ -209,29 +369,103 @@ namespace ArcaneVR.Combat
         {
             ResolveReferences();
 
-            var root = new GameObject($"Arcane Boss {attackType} Attack FX")
-            {
-                hideFlags = HideFlags.DontSave
-            };
-
-            var color = ResolveAttackColor(attackType);
             var lifetime = duration * Mathf.Max(0.2f, effectDurationMultiplier);
-            BuildAttackVisual(root.transform, attackType, color);
             LastEffectStatus = $"AttackFx: {attackType}";
 
-            var started = Time.time;
-            while (root != null && Time.time - started < lifetime)
+            var prefab = attackType switch
             {
-                var t = Mathf.Clamp01((Time.time - started) / Mathf.Max(0.01f, lifetime));
-                UpdateAttackVisual(root.transform, attackType, color, t);
-                yield return null;
-            }
+                BossAttackType.High => highAttackVfxPrefab,
+                BossAttackType.Middle => midAttackVfxPrefab,
+                BossAttackType.Low => lowAttackVfxPrefab,
+                _ => null
+            };
 
-            if (root != null)
-                Destroy(root);
+            if (prefab != null)
+            {
+                // 실제 VFX 프리팹 사용 — 더미 LineRenderer 없음
+                SpawnVfxPrefab(attackType, lifetime);
+                yield return new WaitForSeconds(lifetime);
+            }
+            else
+            {
+                // 프리팹 없을 때만 더미 LineRenderer fallback
+                var root = new GameObject($"Arcane Boss {attackType} Attack FX")
+                {
+                    hideFlags = HideFlags.DontSave
+                };
+
+                var color = ResolveAttackColor(attackType);
+                BuildAttackVisual(root.transform, attackType, color);
+
+                var started = Time.time;
+                while (root != null && Time.time - started < lifetime)
+                {
+                    var t = Mathf.Clamp01((Time.time - started) / Mathf.Max(0.01f, lifetime));
+                    UpdateAttackVisual(root.transform, attackType, color, t);
+                    yield return null;
+                }
+
+                if (root != null)
+                    Destroy(root);
+            }
 
             activeAttackRoutine = null;
             LastEffectStatus = "AttackFx: idle";
+        }
+
+        private void SpawnVfxPrefab(BossAttackType attackType, float lifetime)
+        {
+            var prefab = attackType switch
+            {
+                BossAttackType.High => highAttackVfxPrefab,
+                BossAttackType.Middle => midAttackVfxPrefab,
+                BossAttackType.Low => lowAttackVfxPrefab,
+                _ => null
+            };
+
+            if (prefab == null)
+                return;
+
+            var origin = ResolveBossAttackOrigin(attackType);
+            var vfxObj = Instantiate(prefab, origin, Quaternion.identity);
+            Destroy(vfxObj, lifetime);
+        }
+
+        private void PlayAttackSfx(BossAttackType attackType)
+        {
+            var clip = attackType switch
+            {
+                BossAttackType.High => highAttackSfxClip,
+                BossAttackType.Middle => middleAttackSfxClip,
+                BossAttackType.Low => lowAttackSfxClip,
+                _ => null
+            };
+
+            if (clip == null)
+                return;
+
+            var audioSource = EnsureAttackAudioSource();
+            if (audioSource != null)
+                audioSource.PlayOneShot(clip, Mathf.Clamp01(attackSfxVolume));
+        }
+
+        private AudioSource EnsureAttackAudioSource()
+        {
+            if (attackAudioSource != null)
+                return attackAudioSource;
+
+            attackAudioSource = GetComponent<AudioSource>();
+            if (attackAudioSource == null)
+                attackAudioSource = gameObject.AddComponent<AudioSource>();
+
+            attackAudioSource.playOnAwake = false;
+            attackAudioSource.loop = false;
+            attackAudioSource.spatialBlend = 1f;
+            attackAudioSource.rolloffMode = AudioRolloffMode.Linear;
+            attackAudioSource.minDistance = 2f;
+            attackAudioSource.maxDistance = 18f;
+            attackAudioSource.dopplerLevel = 0f;
+            return attackAudioSource;
         }
 
         private void BuildAttackVisual(Transform root, BossAttackType attackType, Color color)

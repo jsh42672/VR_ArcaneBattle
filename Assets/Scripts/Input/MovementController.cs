@@ -36,7 +36,7 @@ namespace ArcaneVR.Input
 
         public void ConfigureLeftFistPrototype(GestureDetector detector, Transform rigRoot, Transform leftHand)
         {
-            ConfigureLeftFistPrototype(detector, FindAnyObjectByType<GestureEventRouter>(), rigRoot, leftHand);
+            ConfigureLeftFistPrototype(detector, gestureRouter, rigRoot, leftHand);
         }
 
         public void ConfigureLeftFistPrototype(
@@ -62,15 +62,6 @@ namespace ArcaneVR.Input
 
         private void Awake()
         {
-            if (gestureDetector == null)
-                gestureDetector = FindAnyObjectByType<GestureDetector>();
-
-            if (gestureRouter == null)
-                gestureRouter = FindAnyObjectByType<GestureEventRouter>();
-
-            if (constraintController == null)
-                constraintController = FindAnyObjectByType<ConstraintController>();
-
             if (headTransform == null && Camera.main != null)
                 headTransform = Camera.main.transform;
 
@@ -79,9 +70,15 @@ namespace ArcaneVR.Input
 
             if (characterController == null && playerRoot != null)
                 characterController = playerRoot.GetComponent<CharacterController>();
+        }
 
-            if (leftHandAnchor == null)
-                leftHandAnchor = ResolveLeftHandTransform();
+        private void OnValidate()
+        {
+            if (playerRoot == null)
+                playerRoot = transform;
+
+            if (characterController == null && playerRoot != null)
+                characterController = playerRoot.GetComponent<CharacterController>();
         }
 
         private void OnEnable()
@@ -110,9 +107,6 @@ namespace ArcaneVR.Input
         {
             if (!detectorEventsSubscribed)
             {
-                if (gestureDetector == null)
-                    gestureDetector = FindAnyObjectByType<GestureDetector>();
-
                 if (gestureDetector != null)
                 {
                     gestureDetector.OnPoseDetected += HandlePoseDetected;
@@ -124,9 +118,6 @@ namespace ArcaneVR.Input
 
             if (!routerEventsSubscribed)
             {
-                if (gestureRouter == null)
-                    gestureRouter = FindAnyObjectByType<GestureEventRouter>();
-
                 if (gestureRouter != null)
                 {
                     gestureRouter.OnLeftFistStart += StartGrab;
@@ -223,9 +214,6 @@ namespace ArcaneVR.Input
         private void StartGrab()
         {
             if (leftHandAnchor == null)
-                leftHandAnchor = ResolveLeftHandTransform();
-
-            if (leftHandAnchor == null)
                 return;
 
             isGrabbing = true;
@@ -244,9 +232,6 @@ namespace ArcaneVR.Input
 
             if (playerRoot == null)
                 playerRoot = transform;
-
-            if (leftHandAnchor == null)
-                leftHandAnchor = ResolveLeftHandTransform();
 
             if (leftHandAnchor == null || Time.deltaTime <= 0f)
                 return;
@@ -267,16 +252,5 @@ namespace ArcaneVR.Input
                 playerRoot.position += move;
         }
 
-        private static Transform ResolveLeftHandTransform()
-        {
-            foreach (var hand in FindObjectsByType<OVRHand>(FindObjectsInactive.Include))
-            {
-                if (hand.GetHand() == OVRPlugin.Hand.HandLeft)
-                    return hand.transform;
-            }
-
-            var leftAnchor = GameObject.Find("LeftHandAnchor") ?? GameObject.Find("LeftHand Controller");
-            return leftAnchor != null ? leftAnchor.transform : null;
-        }
     }
 }

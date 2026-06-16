@@ -12,7 +12,7 @@ namespace ArcaneVR.Input
     /// </summary>
     public class CombinationFocusModeController : MonoBehaviour
     {
-        [Header("References")]
+        [Header("── 핵심 참조 ──")]
         [SerializeField] private CombinationChecker combinationChecker;
         [SerializeField] private CombineGestureDetector combineGestureDetector;
         [SerializeField] private ArcaneTimeFocusController timeFocusController;
@@ -21,28 +21,28 @@ namespace ArcaneVR.Input
         [SerializeField] private LeftGrimoireGesture leftGrimoireGesture;
         [SerializeField] private Transform headTransform;
 
-        [Header("Focus Timing")]
+        [Header("── 포커스 유지 시간 ──")]
         [SerializeField, Range(0.05f, 1f)] private float slowTimeScale = 0.2f;
         [SerializeField] private float maxDuration = 10f;
         [SerializeField] private bool autoExitAfterDuration = true;
 
-        [Header("Hands Together Entry")]
+        [Header("── 양손 맞닿음 진입 조건 ──")]
         [SerializeField] private bool enableHandsTogetherEntry = true;
         [SerializeField] private bool requireCombineGestureForFocus = true;
         [SerializeField] private float handsTogetherDistance = 0.12f;
         [SerializeField] private float handsReleaseDistance = 0.22f;
         [SerializeField] private float handsTogetherHoldTime = 0.35f;
 
-        [Header("Combination Push")]
+        [Header("── 조합 발사 밀기 판정 ──")]
         [SerializeField] private float combinePushDistance = 0.18f;
         [SerializeField] private float combinePushVelocity = 0.45f;
         [SerializeField] private float combinePushCooldown = 0.7f;
 
-        [Header("Focus Suppression")]
+        [Header("── 포커스 중 억제 대상 ──")]
         [SerializeField] private bool suppressLegacyGesturesDuringFocus = true;
         [SerializeField] private MonoBehaviour[] legacyGesturesToSuppress;
 
-        [Header("Debug")]
+        [Header("── 디버그 ──")]
         [SerializeField] private bool allowKeyboardToggleInEditor = true;
         [SerializeField] private KeyCode keyboardToggleKey = KeyCode.F8;
 

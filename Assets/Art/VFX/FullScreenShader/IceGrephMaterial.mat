@@ -44,7 +44,7 @@ Material:
     - _VignettePower: 5
     - _Vignettetensity: 1
     m_Colors:
-    - _Color: {r: 21.904778, g: 41.749096, b: 49.93347, a: 0.3921569}
+    - _Color: {r: 0.32857937, g: 0.6262511, b: 0.7490196, a: 0.3921569}
     - _NoiceSpeed: {r: 0, g: 0, b: 0, a: 0}
     - _Noice_Tiling: {r: 1, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []

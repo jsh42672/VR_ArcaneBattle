@@ -32,7 +32,7 @@ public class ArcaneTestHub : MonoBehaviour
     bool m_RightPrimaryWasPressed;
     bool m_RightPinchWasPressed;
 
-    [Header("Legacy Test Hub")]
+    [Header("── 레거시 테스트 허브 ──")]
     [SerializeField] bool m_AllowLegacyRuntimeObjects;
     [SerializeField] bool m_EnableLegacyHud;
     [SerializeField] bool m_EnableLegacyProjectileFire;
