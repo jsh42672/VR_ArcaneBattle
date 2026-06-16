@@ -1,3 +1,4 @@
+using ArcaneVR.Boss;
 using UnityEngine;
 
 namespace ArcaneVR.Combat
@@ -7,14 +8,15 @@ namespace ArcaneVR.Combat
     {
         [SerializeField] private BossPatternCombatBridge patternBridge;
         [SerializeField] private Animator bossAnimator;
+        [SerializeField] private BossChaseController chaseController;
         [SerializeField] private string highAttackTrigger = "AttackHigh";
         [SerializeField] private string middleAttackTrigger = "AttackMiddle";
         [SerializeField] private string lowAttackTrigger = "AttackLow";
         [SerializeField] private string chargeTrigger = "Charge";
         [SerializeField] private string barrierTrigger = "Barrier";
-        [SerializeField] private string highAttackState = "AttackHigh";
-        [SerializeField] private string middleAttackState = "AttackMiddle";
-        [SerializeField] private string lowAttackState = "AttackLow";
+        [SerializeField] private string highAttackState = "Slah_Cast";
+        [SerializeField] private string middleAttackState = "Spell Cast";
+        [SerializeField] private string lowAttackState = "Golemn_attack";
         [SerializeField] private string fallbackAttackState = "OneHand_Up_Attack_B_1";
         [SerializeField] private string resourcesFallbackControllerPath = "ArcaneVR/ThunderGolemAttackController";
         [SerializeField] private float fallbackControllerRestoreDelay = 1.2f;
@@ -29,6 +31,7 @@ namespace ArcaneVR.Combat
 
         private void OnEnable()
         {
+            MigrateLegacyStateNames();
             ResolveReferences();
             Subscribe();
         }
@@ -51,10 +54,18 @@ namespace ArcaneVR.Combat
             if (patternBridge == null)
                 patternBridge = FindAnyObjectByType<BossPatternCombatBridge>();
 
+            if (chaseController == null)
+                chaseController = FindAnyObjectByType<BossChaseController>();
+
             if (bossAnimator == null)
             {
-                var target = FindAnyObjectByType<GolemCombatTarget>();
-                bossAnimator = target != null ? target.GetComponentInChildren<Animator>(true) : GetComponentInChildren<Animator>(true);
+                if (chaseController != null && chaseController.BossAnimator != null)
+                    bossAnimator = chaseController.BossAnimator;
+                else
+                {
+                    var target = FindAnyObjectByType<GolemCombatTarget>();
+                    bossAnimator = target != null ? target.GetComponentInChildren<Animator>(true) : GetComponentInChildren<Animator>(true);
+                }
             }
 
             if (fallbackController == null && !string.IsNullOrEmpty(resourcesFallbackControllerPath))
@@ -126,6 +137,13 @@ namespace ArcaneVR.Combat
 
             bossAnimator.applyRootMotion = false;
 
+            EnsurePatternAttackController();
+            if (TryCrossFade(preferredState))
+            {
+                MaybeLog($"Animator state: {preferredState}");
+                return;
+            }
+
             if (TrySetTrigger(triggerName))
             {
                 MaybeLog($"Animator trigger: {triggerName}");
@@ -133,14 +151,27 @@ namespace ArcaneVR.Combat
             }
 
             EnsureFallbackController();
-            if (TryCrossFade(preferredState) || TryCrossFade(fallbackAttackState))
+            if (TryCrossFade(fallbackAttackState))
             {
-                MaybeLog($"Animator state: {preferredState}");
+                MaybeLog($"Animator fallback state: {fallbackAttackState}");
                 return;
             }
 
             if (!string.IsNullOrEmpty(fallbackAttackState) && bossAnimator.runtimeAnimatorController != null)
                 bossAnimator.Play(fallbackAttackState, 0, 0f);
+        }
+
+        private void EnsurePatternAttackController()
+        {
+            if (bossAnimator == null ||
+                chaseController == null ||
+                chaseController.PatternAttackController == null ||
+                bossAnimator.runtimeAnimatorController == chaseController.PatternAttackController)
+            {
+                return;
+            }
+
+            bossAnimator.runtimeAnimatorController = chaseController.PatternAttackController;
         }
 
         private void EnsureFallbackController()
@@ -210,6 +241,18 @@ namespace ArcaneVR.Combat
             }
 
             return false;
+        }
+
+        private void MigrateLegacyStateNames()
+        {
+            if (string.IsNullOrEmpty(highAttackState) || highAttackState == "AttackHigh")
+                highAttackState = "Slah_Cast";
+
+            if (string.IsNullOrEmpty(middleAttackState) || middleAttackState == "AttackMiddle")
+                middleAttackState = "Spell Cast";
+
+            if (string.IsNullOrEmpty(lowAttackState) || lowAttackState == "AttackLow")
+                lowAttackState = "Golemn_attack";
         }
 
         private void MaybeLog(string message)
