@@ -44,7 +44,7 @@ namespace ArcaneVR.Combat
                 return;
             }
 
-            dodgeDetector?.BeginDodgeWindow(attackType);
+            dodgeDetector?.BeginDodgeWindow(attackType, duration);
             LastBridgeStatus = $"Dodge window: {attackType}";
             OnAttackResponseWindowStarted?.Invoke(attackType, duration);
         }

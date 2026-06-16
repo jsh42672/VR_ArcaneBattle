@@ -8,6 +8,7 @@
 /[Oo]bj/
 /[Bb]uild/
 /[Bb]uilds/
+/[Bb]uild2/
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 *.log
@@ -135,6 +136,9 @@ local.properties
 
 # Unity auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Local preview captures
+/[Aa]ssets/[Ss]creenshots/ThunderGolem_AnimationClipPreview*
 
 # Visual Studio newer solution format
 *.slnx

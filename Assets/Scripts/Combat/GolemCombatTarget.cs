@@ -312,6 +312,9 @@ namespace ArcaneVR.Combat
             if (staggerRoutine != null)
                 StopCoroutine(staggerRoutine);
 
+            if (enableDebugLogs)
+                Debug.Log($"[{nameof(GolemCombatTarget)}] Stagger start duration:{duration:0.00}s", this);
+
             staggerRoutine = StartCoroutine(TimedStagger(Mathf.Max(0.1f, duration)));
         }
 
@@ -331,6 +334,9 @@ namespace ArcaneVR.Combat
             if (slowRoutine != null)
                 StopCoroutine(slowRoutine);
 
+            if (enableDebugLogs)
+                Debug.Log($"[{nameof(GolemCombatTarget)}] Slow start duration:{duration:0.00}s", this);
+
             slowRoutine = StartCoroutine(TimedSlow(Mathf.Max(0.1f, duration)));
         }
 
@@ -338,6 +344,14 @@ namespace ArcaneVR.Combat
         {
             if (burnRoutine != null)
                 StopCoroutine(burnRoutine);
+
+            if (enableDebugLogs)
+            {
+                Debug.Log(
+                    $"[{nameof(GolemCombatTarget)}] Burn start duration:{Mathf.Max(burnDuration, hitData.statusDuration):0.00}s " +
+                    $"tick:{Mathf.Max(0.2f, hitData.statusTickInterval):0.00}s damage:{Mathf.Max(0f, hitData.statusMagnitude):0.00}",
+                    this);
+            }
 
             burnRoutine = StartCoroutine(TimedBurn(hitData.Clone()));
         }
@@ -392,6 +406,8 @@ namespace ArcaneVR.Combat
             yield return new WaitForSeconds(duration);
             IsStaggered = false;
             staggerRoutine = null;
+            if (enableDebugLogs)
+                Debug.Log($"[{nameof(GolemCombatTarget)}] Stagger end", this);
             if (!IsWeakExposed && !IsBarrierActive && !IsChargeCounterWindowOpen)
                 SetCue("IDLE");
             NotifyStatusChanged();
@@ -428,6 +444,8 @@ namespace ArcaneVR.Combat
             yield return new WaitForSeconds(duration);
             IsSlowed = false;
             slowRoutine = null;
+            if (enableDebugLogs)
+                Debug.Log($"[{nameof(GolemCombatTarget)}] Slow end", this);
             NotifyStatusChanged();
         }
 
@@ -445,10 +463,14 @@ namespace ArcaneVR.Combat
             {
                 yield return new WaitForSeconds(interval);
                 ApplyDamage(tickDamage, ElementType.Fire);
+                if (enableDebugLogs && tickDamage > 0f)
+                    Debug.Log($"[{nameof(GolemCombatTarget)}] Burn tick damage:{tickDamage:0.00} hp:{currentHealth:0.0}/{maxHealth:0.0}", this);
             }
 
             IsBurning = false;
             burnRoutine = null;
+            if (enableDebugLogs)
+                Debug.Log($"[{nameof(GolemCombatTarget)}] Burn end", this);
             NotifyStatusChanged();
         }
 
