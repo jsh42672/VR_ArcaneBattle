@@ -153,6 +153,8 @@ namespace ArcaneVR.Spell
                 data?.damage         ?? 10f,
                 data?.statusDuration ?? 3f);
             sp.ConfigureImpactAudio(impactSfxClip, impactSfxVolume);
+            if (!projectile.TryGetComponent<FireballProjectile>(out _))
+                sp.ConfigureImpactVfx(explosionPrefab, explosionScale, explosionLifetime);
 
             PlayElementSfx(castSfxClip, ArcaneSpellSfxCue.SpellCast, castSfxVolume);
             Destroy(projectile, projectileLifetime);
@@ -162,7 +164,7 @@ namespace ArcaneVR.Spell
         {
             if (_auraManager != null)
             {
-                _auraManager.Show(ElementType.Fire, _rightSpawn);
+                _auraManager.Show(ElementType.Fire, _rightSpawn, auraScale);
                 return;
             }
 

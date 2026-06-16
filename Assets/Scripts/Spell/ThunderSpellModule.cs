@@ -1,6 +1,7 @@
 using ArcaneVR.Boss;
 using ArcaneVR.Combat;
 using ArcaneVR.Core;
+using DigitalRuby.LightningBolt;
 using UnityEngine;
 
 namespace ArcaneVR.Spell
@@ -16,6 +17,11 @@ namespace ArcaneVR.Spell
         [SerializeField] private AudioClip beamLoopAudioClip;
         [SerializeField] private float auraLoopVolume = 0.55f;
         [SerializeField] private float beamLoopVolume = 0.8f;
+        [SerializeField] private GameObject beamPrefab;
+        [SerializeField] private GameObject impactVfxPrefab;
+        [SerializeField] private float impactVfxScale = 1f;
+        [SerializeField] private float impactVfxLifetime = 1.25f;
+        [SerializeField] private float impactVfxInterval = 0.12f;
 
         [Header("── 빔 설정 ──")]
         [SerializeField] private float rangeMeters = 20f;
@@ -57,12 +63,15 @@ namespace ArcaneVR.Spell
         private Renderer _auraRenderer;
         private GameObject _beamInstance;
         private LineRenderer _beamLine;
+        private LightningBoltScript _lightningBolt;
+        private int _beamCreatedFrame = -1;
 
         private bool _charged;
         private float _lastChargeTime = -999f;
         private float _lastShootTime = -999f;
         private float _beamEndTime = -999f;
         private float _nextHitTime = -999f;
+        private float _lastImpactVfxTime = -999f;
 
         private bool _armed;
         private bool _isShootMode;
@@ -221,17 +230,29 @@ namespace ArcaneVR.Spell
             }
 
             EnsureBeam();
-            _beamLine.SetPosition(0, origin);
-            _beamLine.SetPosition(1, hitPoint);
+            if (_lightningBolt != null)
+            {
+                _lightningBolt.StartObject = null;
+                _lightningBolt.EndObject = null;
+                _lightningBolt.StartPosition = origin;
+                _lightningBolt.EndPosition = hitPoint;
+                if (Time.frameCount > _beamCreatedFrame)
+                    _lightningBolt.Trigger();
+            }
+            else if (_beamLine != null)
+            {
+                _beamLine.SetPosition(0, origin);
+                _beamLine.SetPosition(1, hitPoint);
+            }
 
             if (Time.time >= _nextHitTime)
             {
                 _nextHitTime = Time.time + Mathf.Max(0.05f, hitTickInterval);
-                ApplyHit(hitCol);
+                ApplyHit(hitCol, hitPoint);
             }
         }
 
-        private void ApplyHit(Collider hitCollider)
+        private void ApplyHit(Collider hitCollider, Vector3 hitPoint)
         {
             if (hitCollider == null || ArcanePlayerRigResolver.IsPlayerCollider(hitCollider))
                 return;
@@ -250,6 +271,7 @@ namespace ArcaneVR.Spell
             if (spellTarget != null)
             {
                 spellTarget.OnHit(hitData);
+                SpawnImpactVfx(hitPoint);
                 return;
             }
 
@@ -258,11 +280,35 @@ namespace ArcaneVR.Spell
                 ? boss.GetComponent<GolemCombatTarget>() ?? boss.GetComponentInParent<GolemCombatTarget>()
                 : hitCollider.GetComponentInParent<GolemCombatTarget>();
             golemTarget?.OnHit(hitData);
+            SpawnImpactVfx(hitPoint);
         }
 
         private void EnsureBeam()
         {
-            if (_beamLine != null) return;
+            if (_beamLine != null || _lightningBolt != null) return;
+
+            if (beamPrefab != null)
+            {
+                _beamInstance = Instantiate(beamPrefab);
+                if (_spawnRoot != null)
+                    _beamInstance.transform.SetParent(_spawnRoot, true);
+
+                _lightningBolt = _beamInstance.GetComponent<LightningBoltScript>();
+                if (_lightningBolt != null)
+                {
+                    _lightningBolt.ManualMode = true;
+                    _lightningBolt.Duration = Mathf.Max(0.02f, hitTickInterval);
+                    _beamCreatedFrame = Time.frameCount;
+                    return;
+                }
+
+                _beamLine = _beamInstance.GetComponent<LineRenderer>();
+                if (_beamLine != null)
+                {
+                    _beamCreatedFrame = Time.frameCount;
+                    return;
+                }
+            }
 
             _beamInstance = new GameObject("ThunderLaser_Dummy");
             if (_spawnRoot != null)
@@ -275,6 +321,7 @@ namespace ArcaneVR.Spell
             _beamLine.material      = CreateUnlitMaterial(laserColor);
             _beamLine.startColor    = laserColor;
             _beamLine.endColor      = new Color(laserColor.r, laserColor.g, laserColor.b, 0.15f);
+            _beamCreatedFrame = Time.frameCount;
         }
 
         private void StopBeam()
@@ -286,13 +333,15 @@ namespace ArcaneVR.Spell
             if (_beamInstance != null) Destroy(_beamInstance);
             _beamInstance = null;
             _beamLine     = null;
+            _lightningBolt = null;
+            _beamCreatedFrame = -1;
         }
 
         private void ShowAura()
         {
             if (_auraManager != null)
             {
-                _auraManager.Show(ElementType.Thunder, _rightSpawn);
+                _auraManager.Show(ElementType.Thunder, _rightSpawn, auraScale);
                 return;
             }
 
@@ -327,6 +376,24 @@ namespace ArcaneVR.Spell
 
             if (_auraRenderer != null)
                 ApplyMaterialColor(_auraRenderer.material, laserColor);
+        }
+
+        private void SpawnImpactVfx(Vector3 hitPoint)
+        {
+            if (impactVfxPrefab == null || Time.time - _lastImpactVfxTime < Mathf.Max(0.01f, impactVfxInterval))
+                return;
+
+            _lastImpactVfxTime = Time.time;
+            var impact = Instantiate(impactVfxPrefab, hitPoint, Quaternion.identity);
+            impact.transform.localScale = Vector3.one * Mathf.Max(0.01f, impactVfxScale);
+
+            foreach (var particle in impact.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = particle.main;
+                main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            }
+
+            Destroy(impact, Mathf.Max(0.05f, impactVfxLifetime));
         }
 
         private bool IsChargeAvailable() =>

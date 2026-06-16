@@ -6,6 +6,8 @@ namespace ArcaneVR.UI
     [DefaultExecutionOrder(145)]
     public class BossHealthBarUI : MonoBehaviour
     {
+        private const string RuntimeRootName = "Arcane Boss Health Bar";
+
         [SerializeField] private GolemCombatTarget golemTarget;
 
         [Header("Layout")]
@@ -45,6 +47,12 @@ namespace ArcaneVR.UI
         private void OnDisable()
         {
             Unsubscribe();
+            DestroyVisuals();
+        }
+
+        private void OnDestroy()
+        {
+            DestroyVisuals();
         }
 
         private void Update()
@@ -99,7 +107,9 @@ namespace ArcaneVR.UI
             if (uiRoot != null || golemTarget == null)
                 return;
 
-            var root = new GameObject("Arcane Boss Health Bar");
+            CleanupExistingRuntimeRoots();
+
+            var root = new GameObject(RuntimeRootName);
             uiRoot = root.transform;
             uiRoot.gameObject.hideFlags = HideFlags.DontSave;
             uiRoot.position = ResolveBossBarPosition();
@@ -124,6 +134,33 @@ namespace ArcaneVR.UI
             labelText.color = textColor;
 
             RefreshBar();
+        }
+
+        private void DestroyVisuals()
+        {
+            if (uiRoot != null)
+            {
+                Destroy(uiRoot.gameObject);
+                uiRoot = null;
+            }
+        }
+
+        private void CleanupExistingRuntimeRoots()
+        {
+            foreach (var transform in Resources.FindObjectsOfTypeAll<Transform>())
+            {
+                if (transform == null ||
+                    transform == uiRoot ||
+                    transform.name != RuntimeRootName)
+                {
+                    continue;
+                }
+
+                if (transform.gameObject.scene.IsValid())
+                    continue;
+
+                Destroy(transform.gameObject);
+            }
         }
 
         private Transform CreateBarPart(string objectName, Transform parent, Vector3 localPositionValue, Vector3 localScaleValue, Color color)

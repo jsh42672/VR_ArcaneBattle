@@ -1174,7 +1174,7 @@ MonoBehaviour:
   pageSwipeVerticalTolerance: 0.28
   timeFocusController: {fileID: 0}
   handPullMovement: {fileID: 0}
-  runtimeBookOverride: {fileID: 0}
+  runtimeBookOverride: {fileID: 3525381110756386426, guid: 303ff02cc82d59644aa9d5fd1ab194ae, type: 3}
   suppressMagicWhileOpen: 1
 --- !u!1 &3536803320364830460
 GameObject:

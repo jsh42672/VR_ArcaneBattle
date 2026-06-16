@@ -2,6 +2,7 @@ using System;
 using ArcaneVR.Input;
 using ArcaneVR.Spell;
 using ArcaneVR.Core;
+using CodexGenerated.GrimoirePages;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -86,6 +87,9 @@ namespace ArcaneVR.UI
         private Vector3 pageSwipeStartLocal;
         private float pageSwipeStartTime;
         private GameObject fallbackGrimoireRoot;
+        private GameObject runtimeBookInstance;
+        private GrimoirePageTurner runtimePageTurner;
+        private bool ownsRuntimeBookInstance;
         private TextMesh fallbackPageText;
         private TextMesh fallbackLeftPageText;
         private TextMesh fallbackRightPageText;
@@ -126,6 +130,7 @@ namespace ArcaneVR.UI
 
             ApplyMagicSuppression(false);
             ApplyGrimoireTimeFocus(false);
+            CleanupRuntimeBookInstance();
         }
 
         private void Update()
@@ -168,6 +173,14 @@ namespace ArcaneVR.UI
             if (!IsOpen)
                 return;
 
+            if (runtimePageTurner != null)
+            {
+                runtimePageTurner.NextPage();
+                PlayFeedback(pageClip ??= CreateFeedbackClip("ArcaneGrimoirePage", 520f, 660f, 0.16f, 0.22f), 0.55f);
+                LastGrimoireStatus = "Grimoire: next page";
+                return;
+            }
+
             if (grimoireUI != null)
                 grimoireUI.NextPage();
 
@@ -181,6 +194,14 @@ namespace ArcaneVR.UI
         {
             if (!IsOpen)
                 return;
+
+            if (runtimePageTurner != null)
+            {
+                runtimePageTurner.PreviousPage();
+                PlayFeedback(pageClip ??= CreateFeedbackClip("ArcaneGrimoirePage", 520f, 660f, 0.16f, 0.22f), 0.55f);
+                LastGrimoireStatus = "Grimoire: previous page";
+                return;
+            }
 
             if (grimoireUI != null)
                 grimoireUI.PreviousPage();
@@ -746,14 +767,31 @@ namespace ArcaneVR.UI
             if (fallbackGrimoireRoot != null)
                 return;
 
-            // 프리팹 오버라이드가 연결된 경우 fallback 큐브 생성 없이 해당 오브젝트 사용
+            // When a prefab asset is wired, instantiate it so the current scene keeps the latest grimoire implementation.
             if (runtimeBookOverride != null)
             {
-                fallbackGrimoireRoot = runtimeBookOverride;
+                if (runtimeBookOverride.scene.IsValid())
+                {
+                    ownsRuntimeBookInstance = false;
+                    runtimeBookInstance = null;
+                    fallbackGrimoireRoot = runtimeBookOverride;
+                }
+                else
+                {
+                    ownsRuntimeBookInstance = true;
+                    runtimeBookInstance = Instantiate(runtimeBookOverride);
+                    runtimeBookInstance.name = runtimeBookOverride.name;
+                    runtimeBookInstance.hideFlags = HideFlags.DontSave;
+                    fallbackGrimoireRoot = runtimeBookInstance;
+                    ParkVisualRoot(fallbackGrimoireRoot.transform);
+                }
+
+                runtimePageTurner = fallbackGrimoireRoot.GetComponent<GrimoirePageTurner>();
                 fallbackGrimoireRoot.SetActive(false);
                 return;
             }
 
+            runtimePageTurner = null;
             fallbackGrimoireRoot = new GameObject("Runtime Hand Grimoire")
             {
                 hideFlags = HideFlags.DontSave
@@ -801,6 +839,22 @@ namespace ArcaneVR.UI
 
             RefreshFallbackPage();
             fallbackGrimoireRoot.SetActive(false);
+        }
+
+        private void CleanupRuntimeBookInstance()
+        {
+            if (!ownsRuntimeBookInstance || runtimeBookInstance == null)
+                return;
+
+            if (Application.isPlaying)
+                Destroy(runtimeBookInstance);
+            else
+                DestroyImmediate(runtimeBookInstance);
+
+            runtimeBookInstance = null;
+            runtimePageTurner = null;
+            fallbackGrimoireRoot = null;
+            ownsRuntimeBookInstance = false;
         }
 
         private void ParkVisualRoot(Transform visualRoot)

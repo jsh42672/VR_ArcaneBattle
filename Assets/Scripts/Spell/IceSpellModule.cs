@@ -12,6 +12,7 @@ namespace ArcaneVR.Spell
         [Header("── 발사체 프리팹 ──")]
         [SerializeField] private GameObject iceOrbPrefab;
         [SerializeField] private GameObject iceProjectilePrefab;
+        [SerializeField] private GameObject impactVfxPrefab;
 
         [Header("── 발사 설정 ──")]
         [SerializeField] private Vector3 palmOffset = new Vector3(0f, 0f, 0.08f);
@@ -173,6 +174,7 @@ namespace ArcaneVR.Spell
                 data?.damage         ?? 8f,
                 data?.statusDuration ?? 3f);
             sp.ConfigureImpactAudio(impactSfxClip, impactSfxVolume);
+            sp.ConfigureImpactVfx(impactVfxPrefab);
 
             var rb = projectile.GetComponent<Rigidbody>();
             if (rb == null)
@@ -238,7 +240,7 @@ namespace ArcaneVR.Spell
         {
             if (_auraManager != null)
             {
-                _auraManager.Show(ElementType.Ice, _rightSpawn);
+                _auraManager.Show(ElementType.Ice, _rightSpawn, auraScale);
                 return;
             }
 

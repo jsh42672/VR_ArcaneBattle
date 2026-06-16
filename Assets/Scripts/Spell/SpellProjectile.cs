@@ -24,6 +24,9 @@ namespace ArcaneVR.Spell
         private float destroyAfterSeconds = 3f;
         private AudioClip impactAudioClip;
         private float impactAudioVolume = 1f;
+        private GameObject impactVfxPrefab;
+        private float impactVfxScale = 1f;
+        private float impactVfxLifetime = 2f;
 
         public void SetLifetime(float seconds)
         {
@@ -34,6 +37,13 @@ namespace ArcaneVR.Spell
         {
             impactAudioClip = clip;
             impactAudioVolume = Mathf.Clamp01(volume);
+        }
+
+        public void ConfigureImpactVfx(GameObject prefab, float scale = 1f, float lifetime = 2f)
+        {
+            impactVfxPrefab = prefab;
+            impactVfxScale = Mathf.Max(0.01f, scale);
+            impactVfxLifetime = Mathf.Max(0.05f, lifetime);
         }
 
         public void Initialize(
@@ -124,7 +134,8 @@ namespace ArcaneVR.Spell
             {
                 hasHit = true;
                 spellTarget.OnHit(GetHitData());
-                PlayImpactAudio(other.ClosestPoint(transform.position));
+                var hitPoint = other.ClosestPoint(transform.position);
+                PlayImpactFeedback(hitPoint);
                 Destroy(gameObject);
                 return;
             }
@@ -135,7 +146,7 @@ namespace ArcaneVR.Spell
             {
                 hasHit = true;
                 Debug.Log($"[HIT TestTarget] {element} | {statusEffect} | DMG:{damage}");
-                PlayImpactAudio(other.ClosestPoint(transform.position));
+                PlayImpactFeedback(other.ClosestPoint(transform.position));
                 Destroy(gameObject);
                 return;
             }
@@ -153,8 +164,31 @@ namespace ArcaneVR.Spell
             else if (combatManager != null)
                 combatManager.ApplyBossHit(this);
 
-            PlayImpactAudio(other.ClosestPoint(transform.position));
+            PlayImpactFeedback(other.ClosestPoint(transform.position));
             Destroy(gameObject);
+        }
+
+        private void PlayImpactFeedback(Vector3 position)
+        {
+            SpawnImpactVfx(position);
+            PlayImpactAudio(position);
+        }
+
+        private void SpawnImpactVfx(Vector3 position)
+        {
+            if (impactVfxPrefab == null)
+                return;
+
+            var impact = Instantiate(impactVfxPrefab, position, Quaternion.identity);
+            impact.transform.localScale = Vector3.one * impactVfxScale;
+
+            foreach (var particle in impact.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = particle.main;
+                main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            }
+
+            Destroy(impact, impactVfxLifetime);
         }
 
         private void PlayImpactAudio(Vector3 position)

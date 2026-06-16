@@ -1,4 +1,5 @@
 using UnityEngine;
+using ArcaneVR.Core;
 
 namespace ArcaneVR.Combat
 {
@@ -9,10 +10,15 @@ namespace ArcaneVR.Combat
         [SerializeField] private Renderer[] targetRenderers;
         [SerializeField] private Color activeColor = new Color(0.25f, 0.65f, 1f, 1f);
         [SerializeField] private Color guardColor = new Color(0.2f, 1f, 0.7f, 1f);
+        [SerializeField] private GameObject barrierShieldPrefab;
+        [SerializeField] private Transform barrierShieldAnchor;
+        [SerializeField] private Vector3 barrierShieldOffset;
+        [SerializeField] private float barrierShieldScale = 1f;
 
         private BarrierController subscribedBarrierController;
         private bool barrierActive;
         private bool guardActive;
+        private GameObject activeShieldInstance;
 
         public string LastBarrierVisualStatus { get; private set; } = "BarrierFx: idle";
 
@@ -25,6 +31,7 @@ namespace ArcaneVR.Combat
         private void OnDisable()
         {
             Unsubscribe();
+            DestroyShield();
         }
 
         private void Update()
@@ -32,6 +39,7 @@ namespace ArcaneVR.Combat
             ResolveReferences();
             Subscribe();
             ApplyTint();
+            UpdateShieldTransform();
         }
 
         private void ResolveReferences()
@@ -41,6 +49,9 @@ namespace ArcaneVR.Combat
 
             if (targetRenderers == null || targetRenderers.Length == 0)
                 targetRenderers = FindObjectsByType<Renderer>(FindObjectsInactive.Exclude);
+
+            if (barrierShieldAnchor == null)
+                barrierShieldAnchor = ArcanePlayerRigResolver.FindPlayerRigTransform();
         }
 
         private void Subscribe()
@@ -72,6 +83,10 @@ namespace ArcaneVR.Combat
         {
             barrierActive = active;
             LastBarrierVisualStatus = active ? "BarrierFx: active" : "BarrierFx: idle";
+            if (active)
+                EnsureShield();
+            else
+                DestroyShield();
         }
 
         private void HandleGuardPoseChanged(bool active)
@@ -93,6 +108,47 @@ namespace ArcaneVR.Combat
                     continue;
 
                 targetRenderer.material.color = Color.Lerp(targetRenderer.material.color, color, Time.deltaTime * 8f);
+            }
+        }
+
+        private void EnsureShield()
+        {
+            if (barrierShieldPrefab == null || activeShieldInstance != null)
+                return;
+
+            activeShieldInstance = Instantiate(barrierShieldPrefab);
+            activeShieldInstance.transform.localScale = Vector3.one * Mathf.Max(0.01f, barrierShieldScale);
+            ApplyHierarchyParticleScaling(activeShieldInstance);
+            UpdateShieldTransform();
+        }
+
+        private void UpdateShieldTransform()
+        {
+            if (activeShieldInstance == null || barrierShieldAnchor == null)
+                return;
+
+            activeShieldInstance.transform.SetPositionAndRotation(
+                barrierShieldAnchor.position + barrierShieldAnchor.rotation * barrierShieldOffset,
+                barrierShieldAnchor.rotation);
+        }
+
+        private void DestroyShield()
+        {
+            if (activeShieldInstance != null)
+                Destroy(activeShieldInstance);
+
+            activeShieldInstance = null;
+        }
+
+        private static void ApplyHierarchyParticleScaling(GameObject root)
+        {
+            if (root == null)
+                return;
+
+            foreach (var particle in root.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = particle.main;
+                main.scalingMode = ParticleSystemScalingMode.Hierarchy;
             }
         }
     }

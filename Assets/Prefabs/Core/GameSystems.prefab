@@ -283,7 +283,7 @@ MonoBehaviour:
   highAttackState: AttackHigh
   middleAttackState: AttackMiddle
   lowAttackState: AttackLow
-  fallbackAttackState: Armature|Armature|Armature|Armature|Triple_Combo_Attack|baselayer
+  fallbackAttackState: OneHand_Up_Attack_B_1
   resourcesFallbackControllerPath: ArcaneVR/ThunderGolemAttackController
   fallbackControllerRestoreDelay: 1.2
   crossFadeDuration: 0.05
@@ -1119,6 +1119,10 @@ MonoBehaviour:
   targetRenderers: []
   activeColor: {r: 0.25, g: 0.65, b: 1, a: 1}
   guardColor: {r: 0.2, g: 1, b: 0.7, a: 1}
+  barrierShieldPrefab: {fileID: 1289543790355709915, guid: b99922c2f59b1a542bdd06ae8bee47ae, type: 3}
+  barrierShieldAnchor: {fileID: 0}
+  barrierShieldOffset: {x: 0, y: 0, z: 0}
+  barrierShieldScale: 1.35
 --- !u!1 &7548787392481696740
 GameObject:
   m_ObjectHideFlags: 0
