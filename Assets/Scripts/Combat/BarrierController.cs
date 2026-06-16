@@ -25,6 +25,8 @@ namespace ArcaneVR.Combat
         private bool isResponseWindowOpen;
         private bool isGuardPoseActive;
         private bool isBarrierActive;
+        private bool isConstraintBarrierActive;
+        private bool subscribedToBarrierGesture;
 
         public bool IsResponseWindowOpen => isResponseWindowOpen;
         public bool IsGuardPoseActive => isGuardPoseActive;
@@ -40,9 +42,16 @@ namespace ArcaneVR.Combat
             ResolveReferences();
         }
 
+        private void OnDestroy()
+        {
+            if (gestureDetector != null && subscribedToBarrierGesture)
+                gestureDetector.OnBothHandsBarrierChanged -= OnBothHandsBarrierGestureChanged;
+        }
+
         private void Update()
         {
             ResolveReferences();
+            TrySubscribeBarrierGesture();
             UpdateGuardPoseState();
             UpdateResponseWindow();
             UpdateActiveBarrier();
@@ -71,6 +80,15 @@ namespace ArcaneVR.Combat
             ResolveWindow(false, "Barrier Cancelled");
         }
 
+        // 투사체 도달 시점에 외부에서 호출 — 막지 못 했으면 실패 처리
+        public void ForceResolve()
+        {
+            if (!isResponseWindowOpen)
+                return;
+
+            ResolveWindow(false, "Barrier Fail: hit");
+        }
+
         private void ResolveReferences()
         {
             if (gestureDetector == null)
@@ -78,6 +96,23 @@ namespace ArcaneVR.Combat
 
             if (combatManager == null)
                 combatManager = FindAnyObjectByType<CombatManager>();
+        }
+
+        private void TrySubscribeBarrierGesture()
+        {
+            if (subscribedToBarrierGesture || gestureDetector == null)
+                return;
+            gestureDetector.OnBothHandsBarrierChanged += OnBothHandsBarrierGestureChanged;
+            subscribedToBarrierGesture = true;
+        }
+
+        private void OnBothHandsBarrierGestureChanged(bool active)
+        {
+            isConstraintBarrierActive = active;
+            if (isBarrierActive == active)
+                return;
+            isBarrierActive = active;
+            OnBarrierActiveChanged?.Invoke(isBarrierActive);
         }
 
         private void UpdateGuardPoseState()
@@ -139,7 +174,8 @@ namespace ArcaneVR.Combat
 
         private void UpdateActiveBarrier()
         {
-            if (!isBarrierActive || Time.time <= activeEndTime)
+            // 속박 배리어가 활성 중이면 타이머로 끄지 않음 (제스처 해제 시 OnBothHandsBarrierGestureChanged가 처리)
+            if (!isBarrierActive || isConstraintBarrierActive || Time.time <= activeEndTime)
                 return;
 
             SetBarrierActive(false);
@@ -150,6 +186,10 @@ namespace ArcaneVR.Combat
             isResponseWindowOpen = false;
             guardHoldTimer = 0f;
             LastResultText = result;
+            if (success)
+                Debug.Log($"[Barrier] ✅ 베리어 성공 | 공격={currentAttackType} | {result}");
+            else
+                Debug.LogWarning($"[Barrier] ❌ 베리어 실패 | 공격={currentAttackType} | {result}");
             OnResponseWindowResolved?.Invoke(success, result);
         }
 

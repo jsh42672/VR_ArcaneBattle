@@ -177,12 +177,28 @@ namespace ArcaneVR.Input
             LastDebugMessage = "Dodge Window";
         }
 
+        public void BeginDodgeWindow(BossAttackType attackType, float duration)
+        {
+            BeginDodgeWindow();
+        }
+
         public void CancelDodgeWindow()
         {
             if (isWindowOpen)
                 OnDodgeFail?.Invoke();
             isWindowOpen = false;
             LastDebugMessage = "Dodge Cancelled";
+        }
+
+        // 투사체 도달 시점에 외부에서 호출 — 회피 못 했으면 OnDodgeFail 발동
+        public void ForceResolve()
+        {
+            if (!isWindowOpen)
+                return;
+
+            isWindowOpen = false;
+            LastDebugMessage = "Dodge Fail: hit";
+            OnDodgeFail?.Invoke();
         }
     }
 }

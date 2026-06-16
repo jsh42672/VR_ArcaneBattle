@@ -2049,97 +2049,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2321527512367231968, guid: 3f7511fbc40ae7a4b89c3298a3de199d, type: 3}
   m_PrefabInstance: {fileID: 1380208514}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1397668523
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1397668525}
-  - component: {fileID: 1397668524}
-  m_Layer: 0
-  m_Name: Circle2
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!212 &1397668524
-SpriteRenderer:
-  serializedVersion: 2
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1397668523}
-  m_Enabled: 1
-  m_CastShadows: 0
-  m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 0
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 0
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
-  m_FlipX: 0
-  m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
-  m_AdaptiveModeThreshold: 0.5
-  m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
-  m_SpriteSortPoint: 0
---- !u!4 &1397668525
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1397668523}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -6.67, y: 14, z: -42}
-  m_LocalScale: {x: 3, y: 3, z: 3}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!1 &1399118273
 GameObject:
   m_ObjectHideFlags: 0
@@ -7095,6 +7004,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e9f1ad0b9d946348b4deef69c6658e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Boss.BossBattleRuntimeBinder
+  desiredHeadHeightAboveGround: 6
+  useManualSpawnPositions: 0
+  playerSpawnPosition: {x: 0, y: 0, z: 0}
+  golemSpawnPosition: {x: 0, y: 0, z: 0}
+  overrideGolemPosition: 0
   "\uACE8\uB818_\uC774\uB3D9_\uACF5\uACA9_\uC815\uC9C0": 0
 --- !u!4 &1483082568 stripped
 Transform:
@@ -7531,7 +7445,7 @@ Transform:
   m_GameObject: {fileID: 1545296680}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.9990258, z: -0, w: -0.044129364}
-  m_LocalPosition: {x: -15.49, y: 17.02, z: 64.62}
+  m_LocalPosition: {x: -15.49, y: 18.824, z: 64.62}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8059,97 +7973,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1647871694}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &1706532436
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1706532438}
-  - component: {fileID: 1706532437}
-  m_Layer: 0
-  m_Name: Circle
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!212 &1706532437
-SpriteRenderer:
-  serializedVersion: 2
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1706532436}
-  m_Enabled: 1
-  m_CastShadows: 0
-  m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 0
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 0
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
-  m_FlipX: 0
-  m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
-  m_AdaptiveModeThreshold: 0.5
-  m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
-  m_SpriteSortPoint: 0
---- !u!4 &1706532438
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1706532436}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -6.67, y: 14.04, z: 28.85}
-  m_LocalScale: {x: 3, y: 3, z: 3}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!1001 &1707517237
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8692,17 +8515,20 @@ MonoBehaviour:
   auraLoopVolume: 0.55
   beamLoopVolume: 0.8
   beamPrefab: {fileID: 106988, guid: a9892f6a83fd8d4468ce0c8a3d09d3cd, type: 3}
+  beamPrefabScale: 0.1
+  beamChaosFactor: 0.05
   impactVfxPrefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
   impactVfxScale: 1
   impactVfxLifetime: 1.25
   impactVfxInterval: 0.12
-  rangeMeters: 20
+  rangeMeters: 40
   damage: 16
   statusDuration: 2.5
   continuousFireSeconds: 1.5
   hitTickInterval: 0.25
   laserWidth: 0.08
   laserDownAngleDegrees: 8
+  sphereCastRadius: 2
   laserColor: {r: 1, g: 0.88, b: 0.15, a: 1}
   hitMask:
     serializedVersion: 2
@@ -8847,119 +8673,6 @@ MonoBehaviour:
   enableComboDebugLogs: 1
   handPullMovement: {fileID: 0}
   spellCaster: {fileID: 0}
---- !u!1 &2066838521
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2066838525}
-  - component: {fileID: 2066838524}
-  - component: {fileID: 2066838523}
-  - component: {fileID: 2066838522}
-  m_Layer: 0
-  m_Name: ArenaFloor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!23 &2066838522
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2066838521}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: deca893c445714e4e838d6ef1b1a2883, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 1
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &2066838523
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2066838521}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!33 &2066838524
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2066838521}
-  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &2066838525
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2066838521}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 13.9, z: 0}
-  m_LocalScale: {x: 18, y: 1, z: 18}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2068695376
 GameObject:
   m_ObjectHideFlags: 0
@@ -9056,8 +8769,11 @@ MonoBehaviour:
   handPullMovement: {fileID: 823537291837661784}
   spellCaster: {fileID: 3805601016832951519}
   combinationFocus: {fileID: 0}
+  gestureDetector: {fileID: 0}
   playerRigRoot: {fileID: 3502794437237460367}
-  playerCenterAnchor: {fileID: 1706532438}
+  useCenterPosition: 1
+  centerPosition: {x: -5.8, y: 14, z: 12.7}
+  playerCenterAnchor: {fileID: 0}
   pullDuration: 3
   arrivalThreshold: 0.3
 --- !u!114 &346613465383826127
@@ -9171,13 +8887,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BarrierVisualController
   barrierController: {fileID: 0}
+  barrierShieldPrefab: {fileID: 1289543790355709915, guid: b99922c2f59b1a542bdd06ae8bee47ae, type: 3}
+  barrierShieldAnchor: {fileID: 0}
+  barrierShieldOffset: {x: 0, y: -1.1, z: 1}
+  barrierShieldScale: 1.35
+  enableRendererTint: 0
   targetRenderers: []
   activeColor: {r: 0.25, g: 0.65, b: 1, a: 1}
   guardColor: {r: 0.2, g: 1, b: 0.7, a: 1}
-  barrierShieldPrefab: {fileID: 1289543790355709915, guid: b99922c2f59b1a542bdd06ae8bee47ae, type: 3}
-  barrierShieldAnchor: {fileID: 0}
-  barrierShieldOffset: {x: 0, y: 0, z: 0}
-  barrierShieldScale: 1.35
 --- !u!4 &537460495723009128
 Transform:
   m_ObjectHideFlags: 0
@@ -9187,7 +8904,7 @@ Transform:
   m_GameObject: {fileID: 204079995968697152}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 6.3, y: -16.6, z: 7.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9252,6 +8969,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d5c07e0825445a5960457c26e66b0da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.ArenaBoundaryRuntimeWall
+  useManualShape: 1
+  manualCenter: {x: -5.8, y: 15, z: 12}
+  manualRadius: 70
   fallbackRadius: 18
   radiusScaleFromArenaFloor: 0.94
   playerClampMargin: 0.65
@@ -9456,7 +9176,7 @@ MonoBehaviour:
   golemTarget: {fileID: 0}
   bossAI: {fileID: 0}
   playerCamera: {fileID: 5674676024207069886}
-  createWorldStatusText: 1
+  createWorldStatusText: 0
   statusLocalPosition: {x: 0.38, y: -0.28, z: 1.9}
   statusCharacterSize: 0.011
   normalTextColor: {r: 0.82, g: 0.94, b: 1, a: 1}
@@ -9533,12 +9253,28 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 823537291837661784}
     - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: leftHandBookScale
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
       propertyPath: leftHandBookAnchor
       value: 
       objectReference: {fileID: 1483082568}
     - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: runtimeBookOverride
+      value: 
+      objectReference: {fileID: 2489410535015397801, guid: d7618032f8941dc4e9845888fd8b1474, type: 3}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: timeFocusController
+      value: 
+      objectReference: {fileID: 1745364755}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
       propertyPath: leftHandBookLocalEuler.x
-      value: -70
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: leftHandBookLocalEuler.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
       propertyPath: leftHandBookLocalEuler.z
@@ -9550,7 +9286,51 @@ PrefabInstance:
       objectReference: {fileID: 3805601016832951519}
     - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
       propertyPath: leftHandBookLocalPosition.y
-      value: -0.15
+      value: -0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: pageImageOverrides.Array.size
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: 'pageImageOverrides.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2800000, guid: 5faa53372032cf949a7f21046c38eea3, type: 3}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: 'pageImageOverrides.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2800000, guid: 1be634cf62ef2c1418e1d202d02cfd32, type: 3}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: 'pageImageOverrides.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2800000, guid: 46f5167603d27c54e8484e5fd2e37e62, type: 3}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: 'pageImageOverrides.Array.data[3]'
+      value: 
+      objectReference: {fileID: 2800000, guid: 63aa5e6f3ade54e468a497a036f77051, type: 3}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: 'pageImageOverrides.Array.data[4]'
+      value: 
+      objectReference: {fileID: 2800000, guid: 66dd005c49fd84042913d498d4650e59, type: 3}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: 'pageImageOverrides.Array.data[5]'
+      value: 
+      objectReference: {fileID: 2800000, guid: 3448ee6eaac38804eba9d957b2908871, type: 3}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: 'pageImageOverrides.Array.data[6]'
+      value: 
+      objectReference: {fileID: 2800000, guid: e484410f9a1bec44f93cc789d8ec3865, type: 3}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: 'pageImageOverrides.Array.data[7]'
+      value: 
+      objectReference: {fileID: 2800000, guid: fea069a009990b243889e27bbb2cebfe, type: 3}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: 'pageImageOverrides.Array.data[8]'
+      value: 
+      objectReference: {fileID: 2800000, guid: 4d7d17ec480f3f6498dbb90713bc6519, type: 3}
+    - target: {fileID: 1224551976333266465, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
+      propertyPath: requireRightOpenPalmForPageSwipe
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4940015732472068080, guid: 6a3d04af48883a340b7e55ab04a07543, type: 3}
       propertyPath: m_LocalPosition.x
@@ -9616,6 +9396,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3250019585889705083}
   - component: {fileID: 4897361035468356170}
+  - component: {fileID: 4897361035468356171}
   m_Layer: 0
   m_Name: BossPatternBridge
   m_TagString: Untagged
@@ -10130,7 +9911,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Boss.BossChaseController
   debugFreeze: 0
-  enableChaseDebugLogs: 1
+  enableChaseDebugLogs: 0
   golemTarget: {fileID: 3483821603137979072}
   bossAI: {fileID: 3483821603137979083}
   stateMachine: {fileID: 3483821603137979082}
@@ -10151,6 +9932,7 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  groundHeightOffset: 3.5
   attackWhenInRange: 1
   attackRange: 20
   meleeStartDistance: 20
@@ -10203,7 +9985,7 @@ MonoBehaviour:
   patternBridge: {fileID: 4897361035468356170}
   constraintController: {fileID: 233042928076059649}
   debugFreeze: 0
-  debugAutoTriggerCenterFixed: 0
+  debugAutoTriggerCenterFixed: 1
   runPatternsAutomatically: 1
   createResponsePatternHelpers: 0
   firstPatternDelay: 3
@@ -10213,7 +9995,9 @@ MonoBehaviour:
   defenseDuration: 8
   chargeCounterDuration: 3
   responseWindowDuration: 1.25
-  bossPerimeterAnchor: {fileID: 1397668525}
+  usePerimeterPosition: 1
+  perimeterPosition: {x: -5, y: 15, z: -32}
+  bossPerimeterAnchor: {fileID: 0}
   bossArrivalDuration: 3
   centerFixedDuration: 12
   centerFixedStateLockDuration: 1.5
@@ -10388,6 +10172,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.BossAttackAnimatorBridge
   patternBridge: {fileID: 4897361035468356170}
   bossAnimator: {fileID: 3483821603137979074}
+  chaseController: {fileID: 0}
   highAttackTrigger: AttackHigh
   middleAttackTrigger: AttackMiddle
   lowAttackTrigger: AttackLow
@@ -10514,14 +10299,16 @@ MonoBehaviour:
   rightPageTurnGesture: {fileID: 11400000, guid: 29801e08c3939ec408ba61b76553ee29, type: 2}
   rightCombine: {fileID: 11400000, guid: 74f763f5d9a4dad47850581a1e03543a, type: 2}
   rightCombineShoot: {fileID: 11400000, guid: df632af86a1aeba408d4242706f6ad1e, type: 2}
-  rightBarrier: {fileID: 11400000, guid: 29801e08c3939ec408ba61b76553ee29, type: 2}
+  rightBarrier: {fileID: 11400000, guid: d7eee17c4b496774d9c14fd427de460b, type: 2}
   leftGrimoireGesture: {fileID: 11400000, guid: 6c4acf4e830f130418267b136dfb3d47, type: 2}
   leftFire: {fileID: 11400000, guid: 2964163fa2815c54db8d0606a2e510cc, type: 2}
   leftIce: {fileID: 11400000, guid: 17551065c8457334590e46e64a60a468, type: 2}
   leftThunder: {fileID: 11400000, guid: 5c9e50234a8d9474183c66e65bf9d69c, type: 2}
   leftCombine: {fileID: 11400000, guid: d1e6e41e39b30e3448269b1c1bfe862c, type: 2}
   leftCombineShoot: {fileID: 11400000, guid: 51932134eea09454c881e47a07b42847, type: 2}
-  leftBarrier: {fileID: 11400000, guid: 38a71a19ff6f8964293aa3aba4f0eca1, type: 2}
+  leftBarrier: {fileID: 11400000, guid: 97109207ab2388b4c83ccb932ade1df0, type: 2}
+  barrierCompletenessThreshold: 0.7
+  grimoireCloseFistCurlThreshold: 0.6
   poseHoldDuration: 0.1
   poseLostGracePeriod: 0.2
   rightThunderShootArmWindowSeconds: 2
@@ -10542,6 +10329,8 @@ MonoBehaviour:
   leftGestureCandidateLogInterval: 0.35
   showLeftThunderDebugLogs: 1
   leftThunderDebugScoreThreshold: 0.55
+  showGrimoireDebugLogs: 1
+  showBarrierDebugLogs: 1
 --- !u!114 &4539651382722870640
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10655,6 +10444,23 @@ MonoBehaviour:
   defaultResponseWindowDuration: 1.2
   defaultChargeCounterDuration: 3
   defaultGolemBarrierDuration: 8
+--- !u!114 &4897361035468356171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1619528255529186938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12743225c773f374da697238b3dfe479, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArcaneVR.Combat.DodgeDetector
+  headTransform: {fileID: 1483082569}
+  dodgeWindowDuration: 1
+  duckThreshold: 0.15
+  bodySideThreshold: 0.25
+  maxVerticalMovementForBodyDodge: 0.2
 --- !u!1 &4898993419108100071
 GameObject:
   m_ObjectHideFlags: 0
@@ -10792,6 +10598,24 @@ MonoBehaviour:
   highAttackVfxPrefab: {fileID: 3247836155836256208, guid: 1630d7d3bc7956648958558ce204d886, type: 3}
   midAttackVfxPrefab: {fileID: 7788902450298142146, guid: cf08c4742023be0498936c8df84b507d, type: 3}
   lowAttackVfxPrefab: {fileID: 6813702408129134282, guid: efc527f8c4d3b2f40bb08fd2d503f893, type: 3}
+  highVfxPositionOffset: {x: 0, y: 5, z: 8}
+  highVfxRotationOffset: {x: 3, y: 0, z: 0}
+  highVfxScale: {x: 1, y: 1, z: 1}
+  highAutoZByDistance: 0
+  highParticleSpeedMultiplier: 0.85
+  highSfxDelay: 0
+  midVfxPositionOffset: {x: 0, y: 5, z: 8}
+  midVfxRotationOffset: {x: 0, y: 0, z: 0}
+  midVfxScale: {x: 1, y: 1, z: 1}
+  midAutoZByDistance: 0
+  midParticleSpeedMultiplier: 1
+  midSfxDelay: 0
+  lowVfxPositionOffset: {x: 0, y: 0, z: 18}
+  lowVfxRotationOffset: {x: 0, y: -90, z: 0}
+  lowVfxScale: {x: 3, y: 3, z: 3}
+  lowAutoZByDistance: 0
+  lowParticleSpeedMultiplier: 1
+  lowSfxDelay: 0
   enableAttackEffects: 1
   effectDurationMultiplier: 1.05
   bossForwardOffset: 0.35
@@ -11157,7 +10981,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7268302930968622411
 Transform:
   m_ObjectHideFlags: 0
@@ -11485,12 +11309,9 @@ SceneRoots:
   - {fileID: 5001}
   - {fileID: 270710309}
   - {fileID: 1827789354}
-  - {fileID: 2066838525}
   - {fileID: 8036273}
   - {fileID: 3483821603137979069}
   - {fileID: 1610837396}
   - {fileID: 3502794437237460367}
   - {fileID: 1545296681}
-  - {fileID: 1706532438}
-  - {fileID: 1397668525}
   - {fileID: 4017715134997623712}

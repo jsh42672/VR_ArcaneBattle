@@ -22,9 +22,6 @@ namespace ArcaneVR.Combat
         [SerializeField] private float bodySideThreshold = 0.25f;
         [SerializeField] private float maxVerticalMovementForBodyDodge = 0.20f;
 
-        [Header("Debug")]
-        [SerializeField] private bool showDebugLog = true;
-
         private BossAttackType currentAttackType;
 
         private Vector3 baselineHeadWorldPosition;
@@ -92,22 +89,22 @@ namespace ArcaneVR.Combat
             windowEndTime = Time.time + Mathf.Max(0.1f, duration);
             isWindowOpen = true;
             hasResolved = false;
-
-            if (showDebugLog)
-            {
-                Debug.Log($"[DodgeDetector] Dodge window opened. Attack={attackType}, Baseline={baselineHeadWorldPosition}");
-            }
+            Debug.Log($"[Dodge] 회피 창 열림 | 공격={attackType} | 시간={duration:0.0}s | High: 고개 숙이기 / Mid: 좌우 이동");
         }
 
         public void CancelDodgeWindow()
         {
             isWindowOpen = false;
             hasResolved = true;
+        }
 
-            if (showDebugLog)
-            {
-                Debug.Log("[DodgeDetector] Dodge window cancelled.");
-            }
+        // 투사체 도달 시점에 외부에서 호출 — 회피 못 했으면 실패 처리
+        public void ForceResolve()
+        {
+            if (!isWindowOpen)
+                return;
+
+            ResolveFail();
         }
 
         private bool CheckDodgeSuccess()
@@ -131,40 +128,16 @@ namespace ArcaneVR.Combat
         private bool CheckHighAttackDodge()
         {
             Vector3 delta = headTransform.position - baselineHeadWorldPosition;
-
-            // 상단 공격: 고개를 아래로 숙이면 성공
-            bool duckedEnough = delta.y <= -duckThreshold;
-
-            if (showDebugLog)
-            {
-                Debug.Log($"[DodgeDetector] High Check | DeltaY={delta.y:F3}, Need=-{duckThreshold:F3}");
-            }
-
-            return duckedEnough;
+            return delta.y <= -duckThreshold;
         }
 
         private bool CheckMiddleAttackDodge()
         {
             Vector3 delta = headTransform.position - baselineHeadWorldPosition;
-
-            // 공격 시작 순간의 오른쪽 방향 기준으로 좌우 이동량 계산
             float sideMove = Vector3.Dot(delta, baselineRightDirection);
-
-            // 숙여서 피하는 것을 중단 회피로 오인하지 않기 위한 필터
             float verticalMove = Mathf.Abs(delta.y);
-
             bool movedSideEnough = Mathf.Abs(sideMove) >= bodySideThreshold;
             bool notJustDucking = verticalMove <= maxVerticalMovementForBodyDodge;
-
-            if (showDebugLog)
-            {
-                string direction = sideMove >= 0f ? "Right" : "Left";
-                Debug.Log(
-                    $"[DodgeDetector] Middle Check | Side={sideMove:F3}({direction}), " +
-                    $"Vertical={verticalMove:F3}, NeedSide={bodySideThreshold:F3}"
-                );
-            }
-
             return movedSideEnough && notJustDucking;
         }
 
@@ -172,14 +145,8 @@ namespace ArcaneVR.Combat
         {
             hasResolved = true;
             isWindowOpen = false;
-
             LastDebugMessage = $"Dodge Success: {currentAttackType}";
-            if (showDebugLog)
-            {
-                
-                Debug.Log($"[DodgeDetector] Dodge Success. Attack={currentAttackType}");
-            }
-
+            Debug.Log($"[Dodge] ✅ 회피 성공 | 공격={currentAttackType}");
             OnDodgeSuccess?.Invoke();
         }
 
@@ -187,15 +154,8 @@ namespace ArcaneVR.Combat
         {
             hasResolved = true;
             isWindowOpen = false;
-
             LastDebugMessage = $"Dodge Fail: {currentAttackType}";
-
-            if (showDebugLog)
-            {
-                
-                Debug.Log($"[DodgeDetector] Dodge Fail. Attack={currentAttackType}");
-            }
-
+            Debug.LogWarning($"[Dodge] ❌ 회피 실패 | 공격={currentAttackType}");
             OnDodgeFail?.Invoke();
         }
     }

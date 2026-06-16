@@ -18,6 +18,9 @@ namespace ArcaneVR.Spell
         [SerializeField] private float auraLoopVolume = 0.55f;
         [SerializeField] private float beamLoopVolume = 0.8f;
         [SerializeField] private GameObject beamPrefab;
+        [SerializeField] private float beamPrefabScale = 1f;
+        [Tooltip("번개 움직임 폭 (ChaosFactor). 낮을수록 직선에 가깝고 좁게 움직임. 기본값 0.15")]
+        [SerializeField] private float beamChaosFactor = 0.15f;
         [SerializeField] private GameObject impactVfxPrefab;
         [SerializeField] private float impactVfxScale = 1f;
         [SerializeField] private float impactVfxLifetime = 1.25f;
@@ -31,6 +34,8 @@ namespace ArcaneVR.Spell
         [SerializeField] private float hitTickInterval = 0.25f;
         [SerializeField] private float laserWidth = 0.08f;
         [SerializeField] private float laserDownAngleDegrees = 8f;
+        [Tooltip("히트 판정 구체 반경 (m). 클수록 번개 시각 오차를 흡수. 기본값 0.15")]
+        [SerializeField] private float sphereCastRadius = 0.15f;
         [SerializeField] private Color laserColor = new Color(1f, 0.88f, 0.15f, 1f);
         [SerializeField] private LayerMask hitMask = ~0;
 
@@ -77,7 +82,7 @@ namespace ArcaneVR.Spell
         private bool _isShootMode;
 
         public bool IsArmed => _armed;
-        public bool IsBeamActive => _beamLine != null && Time.time <= _beamEndTime;
+        public bool IsBeamActive => (_beamLine != null || _lightningBolt != null) && Time.time <= _beamEndTime;
 
         // ── 초기화 ────────────────────────────────────────────────────────────
 
@@ -161,7 +166,7 @@ namespace ArcaneVR.Spell
             UpdateAuraTransform();
 
             // 빔이 아직 활성 중이면 유지
-            if (_beamLine != null && Time.time < _beamEndTime)
+            if ((_beamLine != null || _lightningBolt != null) && Time.time < _beamEndTime)
             {
                 _lastShootTime = Time.time;
                 UpdateBeam();
@@ -182,7 +187,7 @@ namespace ArcaneVR.Spell
 
             _lastShootTime = Time.time;
             UpdateBeam();
-            return _beamLine != null;
+            return _beamLine != null || _lightningBolt != null;
         }
 
         private void StartBeam()
@@ -223,7 +228,8 @@ namespace ArcaneVR.Spell
             var hitPoint  = origin + direction * rangeMeters;
             Collider hitCol = null;
 
-            if (Physics.Raycast(origin, direction, out var hit, rangeMeters, hitMask, QueryTriggerInteraction.Collide))
+            var radius = Mathf.Max(0.01f, sphereCastRadius);
+            if (Physics.SphereCast(origin, radius, direction, out var hit, rangeMeters - radius, hitMask, QueryTriggerInteraction.Collide))
             {
                 hitPoint = hit.point;
                 hitCol   = hit.collider;
@@ -290,6 +296,7 @@ namespace ArcaneVR.Spell
             if (beamPrefab != null)
             {
                 _beamInstance = Instantiate(beamPrefab);
+                _beamInstance.transform.localScale = Vector3.one * Mathf.Max(0.001f, beamPrefabScale);
                 if (_spawnRoot != null)
                     _beamInstance.transform.SetParent(_spawnRoot, true);
 
@@ -298,6 +305,10 @@ namespace ArcaneVR.Spell
                 {
                     _lightningBolt.ManualMode = true;
                     _lightningBolt.Duration = Mathf.Max(0.02f, hitTickInterval);
+                    _lightningBolt.ChaosFactor = Mathf.Max(0f, beamChaosFactor);
+                    var lr = _beamInstance.GetComponent<LineRenderer>();
+                    if (lr != null)
+                        lr.widthMultiplier = Mathf.Max(0.001f, beamPrefabScale);
                     _beamCreatedFrame = Time.frameCount;
                     return;
                 }
@@ -398,6 +409,29 @@ namespace ArcaneVR.Spell
 
         private bool IsChargeAvailable() =>
             _charged || Time.time - _lastChargeTime <= Mathf.Max(0f, chargeGraceSeconds);
+
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            var spawnRef = _rightSpawn != null ? _rightSpawn : transform;
+            var origin   = spawnRef.position + spawnRef.rotation * auraOffset;
+            var dir      = spawnRef.forward.sqrMagnitude > 0.001f ? spawnRef.forward.normalized : transform.forward;
+            dir = Vector3.RotateTowards(dir, Vector3.down, Mathf.Max(0f, laserDownAngleDegrees) * Mathf.Deg2Rad, 0f).normalized;
+            var radius   = Mathf.Max(0.01f, sphereCastRadius);
+            var length   = Mathf.Max(0f, rangeMeters - radius);
+
+            // 판정 볼륨 전체를 구체 배열로 시각화
+            UnityEngine.Gizmos.color = new Color(1f, 0.9f, 0.1f, 0.15f);
+            int steps = Mathf.Max(2, Mathf.RoundToInt(length / radius));
+            for (int i = 0; i <= steps; i++)
+                UnityEngine.Gizmos.DrawSphere(origin + dir * (length * i / steps), radius);
+
+            // 외곽선
+            UnityEngine.Gizmos.color = new Color(1f, 0.9f, 0.1f, 0.7f);
+            UnityEngine.Gizmos.DrawWireSphere(origin, radius);
+            UnityEngine.Gizmos.DrawWireSphere(origin + dir * length, radius);
+        }
+#endif
 
         private void ApplyTimeFocusLayer(GameObject root)
         {

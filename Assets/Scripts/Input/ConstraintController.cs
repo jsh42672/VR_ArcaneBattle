@@ -16,11 +16,16 @@ namespace ArcaneVR.Input
         [SerializeField] private HandPullMovementController handPullMovement;
         [SerializeField] private SpellCaster spellCaster;
         [SerializeField] private CombinationFocusModeController combinationFocus;
+        [SerializeField] private GestureDetector gestureDetector;
 
         [Header("── 경기장 중앙 고정 ──")]
         [Tooltip("플레이어 리그 루트 (ArcanePlayerRig).")]
         [SerializeField] private Transform playerRigRoot;
-        [Tooltip("플레이어를 끌어당길 경기장 중앙 마커 (Circle).")]
+        [Tooltip("씬 오브젝트 대신 좌표를 직접 지정할 경우 체크.")]
+        [SerializeField] private bool useCenterPosition = false;
+        [Tooltip("useCenterPosition ON 시 사용할 경기장 중앙 좌표.")]
+        [SerializeField] private Vector3 centerPosition = Vector3.zero;
+        [Tooltip("플레이어를 끌어당길 경기장 중앙 마커 (씬 오브젝트, useCenterPosition OFF 시 사용).")]
         [SerializeField] private Transform playerCenterAnchor;
         [Tooltip("플레이어를 중앙으로 이동시키는 데 걸리는 시간 (초).")]
         [SerializeField] private float pullDuration = 3f;
@@ -53,18 +58,28 @@ namespace ArcaneVR.Input
             IsConstrained = true;
             HasArrived = false;
 
+            Debug.Log($"[Constraint] BeginConstraint | " +
+                      $"handPull={(handPullMovement == null ? "NULL" : handPullMovement.name)} " +
+                      $"spell={(spellCaster == null ? "NULL" : spellCaster.name)} " +
+                      $"gesture={(gestureDetector == null ? "NULL" : gestureDetector.name)} " +
+                      $"combineFocus={(combinationFocus == null ? "NULL" : combinationFocus.name)}");
+
             // 이동 억제
             handPullMovement?.SetMovementSuppressed(true, ConstraintReason);
 
             // 마법 시전 차단
             spellCaster?.SetCastingSuppressed(true, ConstraintReason);
 
+            // 제스처 속박 잠금 (Combine 계열·마도서 열기 차단)
+            gestureDetector?.SetConstraintLocked(true);
+            Debug.Log($"[Constraint] SetConstraintLocked(true) 호출 → gestureDetector={(gestureDetector == null ? "NULL → 호출 안 됨" : "OK")}");
+
             // 조합 마법 차단 (컴포넌트 비활성화)
             if (combinationFocus != null)
                 combinationFocus.enabled = false;
 
             // 경기장 중앙으로 끌어당김
-            if (playerRigRoot != null && playerCenterAnchor != null)
+            if (playerRigRoot != null && (useCenterPosition || playerCenterAnchor != null))
             {
                 if (pullRoutine != null)
                     StopCoroutine(pullRoutine);
@@ -90,8 +105,14 @@ namespace ArcaneVR.Input
             IsConstrained = false;
             HasArrived = false;
 
+            Debug.Log($"[Constraint] EndConstraint | " +
+                      $"handPull={(handPullMovement == null ? "NULL" : handPullMovement.name)} " +
+                      $"gesture={(gestureDetector == null ? "NULL" : gestureDetector.name)}");
+
             handPullMovement?.SetMovementSuppressed(false, ConstraintReason);
             spellCaster?.SetCastingSuppressed(false, ConstraintReason);
+            gestureDetector?.SetConstraintLocked(false);
+            Debug.Log($"[Constraint] SetConstraintLocked(false) 호출 → gestureDetector={(gestureDetector == null ? "NULL → 호출 안 됨" : "OK")}");
 
             if (combinationFocus != null)
                 combinationFocus.enabled = true;
@@ -113,12 +134,27 @@ namespace ArcaneVR.Input
                 EndConstraint();
         }
 
+        private Vector3 GetCenterXZ()
+        {
+            if (useCenterPosition)
+                return new Vector3(centerPosition.x, 0f, centerPosition.z);
+
+            if (playerCenterAnchor != null)
+                return new Vector3(playerCenterAnchor.position.x, 0f, playerCenterAnchor.position.z);
+
+            return Vector3.zero;
+        }
+
         private IEnumerator PullToCenter()
         {
-            var anchor = playerCenterAnchor;
             var head = ArcanePlayerRigResolver.FindHeadTransform();
-            if (playerRigRoot == null || anchor == null || head == null)
+            if (playerRigRoot == null || head == null)
                 yield break;
+
+            if (!useCenterPosition && playerCenterAnchor == null)
+                yield break;
+
+            var targetXZ = GetCenterXZ();
 
             // 시작 시점의 head-rig 오프셋 기준으로 목표 rig 위치 계산
             var headOffsetAtStart = new Vector3(
@@ -127,20 +163,19 @@ namespace ArcaneVR.Input
                 head.position.z - playerRigRoot.position.z);
             var startRigPos = playerRigRoot.position;
             var targetRigPos = new Vector3(
-                anchor.position.x - headOffsetAtStart.x,
+                targetXZ.x - headOffsetAtStart.x,
                 playerRigRoot.position.y,
-                anchor.position.z - headOffsetAtStart.z);
+                targetXZ.z - headOffsetAtStart.z);
 
             var elapsed = 0f;
-            while (elapsed < pullDuration && playerRigRoot != null && anchor != null)
+            while (elapsed < pullDuration && playerRigRoot != null)
             {
                 elapsed += Time.deltaTime;
                 var t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / pullDuration));
                 playerRigRoot.position = Vector3.Lerp(startRigPos, targetRigPos, t);
 
                 var headXZ = new Vector3(head.position.x, 0f, head.position.z);
-                var anchorXZ = new Vector3(anchor.position.x, 0f, anchor.position.z);
-                var dist = Vector3.Distance(headXZ, anchorXZ);
+                var dist = Vector3.Distance(headXZ, targetXZ);
                 LastDebugMessage = $"Constraint: pulling {dist:0.1f}m";
 
                 if (dist <= arrivalThreshold)
@@ -153,17 +188,17 @@ namespace ArcaneVR.Input
                 yield return null;
             }
 
-            // 3초 종료 후 정확한 위치로 스냅
-            if (playerRigRoot != null && head != null && anchor != null)
+            // pullDuration 종료 후 정확한 위치로 스냅
+            if (playerRigRoot != null && head != null)
             {
                 var finalOffset = new Vector3(
                     head.position.x - playerRigRoot.position.x,
                     0f,
                     head.position.z - playerRigRoot.position.z);
                 playerRigRoot.position = new Vector3(
-                    anchor.position.x - finalOffset.x,
+                    targetXZ.x - finalOffset.x,
                     playerRigRoot.position.y,
-                    anchor.position.z - finalOffset.z);
+                    targetXZ.z - finalOffset.z);
             }
             HasArrived = true;
             LastDebugMessage = "Constraint: arrived";
@@ -180,6 +215,9 @@ namespace ArcaneVR.Input
 
             if (combinationFocus == null)
                 combinationFocus = FindAnyObjectByType<CombinationFocusModeController>();
+
+            if (gestureDetector == null)
+                gestureDetector = FindAnyObjectByType<GestureDetector>(FindObjectsInactive.Include);
 
             if (playerRigRoot == null)
             {

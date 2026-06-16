@@ -7,13 +7,21 @@ namespace ArcaneVR.Combat
     public class BarrierVisualController : MonoBehaviour
     {
         [SerializeField] private BarrierController barrierController;
+
+        [Header("── 쉴드 프리팹 ──")]
+        [SerializeField] private GameObject barrierShieldPrefab;
+        [Tooltip("비워두면 HMD 헤드 트랜스폼으로 자동 설정됨.")]
+        [SerializeField] private Transform barrierShieldAnchor;
+        [Tooltip("앵커(헤드) 로컬 좌표계 기준 위치 오프셋. Y 음수로 가슴 높이 조정.")]
+        [SerializeField] private Vector3 barrierShieldOffset = new Vector3(0f, -0.5f, 0f);
+        [SerializeField] private float barrierShieldScale = 1f;
+
+        [Header("── 렌더러 틴트 효과 ──")]
+        [Tooltip("활성화 시 씬의 렌더러들에 색상을 입힘. 화면이 밝아지는 효과를 끄려면 체크 해제.")]
+        [SerializeField] private bool enableRendererTint = false;
         [SerializeField] private Renderer[] targetRenderers;
         [SerializeField] private Color activeColor = new Color(0.25f, 0.65f, 1f, 1f);
         [SerializeField] private Color guardColor = new Color(0.2f, 1f, 0.7f, 1f);
-        [SerializeField] private GameObject barrierShieldPrefab;
-        [SerializeField] private Transform barrierShieldAnchor;
-        [SerializeField] private Vector3 barrierShieldOffset;
-        [SerializeField] private float barrierShieldScale = 1f;
 
         private BarrierController subscribedBarrierController;
         private bool barrierActive;
@@ -51,7 +59,7 @@ namespace ArcaneVR.Combat
                 targetRenderers = FindObjectsByType<Renderer>(FindObjectsInactive.Exclude);
 
             if (barrierShieldAnchor == null)
-                barrierShieldAnchor = ArcanePlayerRigResolver.FindPlayerRigTransform();
+                barrierShieldAnchor = ArcanePlayerRigResolver.FindHeadTransform();
         }
 
         private void Subscribe()
@@ -98,7 +106,7 @@ namespace ArcaneVR.Combat
 
         private void ApplyTint()
         {
-            if ((!barrierActive && !guardActive) || targetRenderers == null)
+            if (!enableRendererTint || (!barrierActive && !guardActive) || targetRenderers == null)
                 return;
 
             var color = barrierActive ? activeColor : guardColor;

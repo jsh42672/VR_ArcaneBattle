@@ -1,5 +1,4 @@
 using System.Collections;
-using ArcaneVR.Input;
 using UnityEngine;
 
 namespace ArcaneVR.Combat
@@ -31,6 +30,48 @@ namespace ArcaneVR.Combat
         [SerializeField] private GameObject midAttackVfxPrefab;
         [Tooltip("Low 공격 시 재생할 VFX 프리팹 (예: Lightning_Crystals_front_attack)")]
         [SerializeField] private GameObject lowAttackVfxPrefab;
+
+        [Header("── High 공격 VFX 튜닝 ──")]
+        [SerializeField] private Vector3 highVfxPositionOffset = new Vector3(0f, 3f, 0f);
+        [SerializeField] private Vector3 highVfxRotationOffset = new Vector3(0f, 0f, 0f);
+        [Tooltip("X·Y=두께, Z=플레이어 방향 길이")]
+        [SerializeField] private Vector3 highVfxScale = new Vector3(100f, 100f, 100f);
+        [Tooltip("ON: Z를 보스-플레이어 거리에 비례해 자동 계산 (Z 값은 거리당 배율)")]
+        [SerializeField] private bool highAutoZByDistance = false;
+        [Tooltip("파티클 startSpeed 배율 (1=원본, 낮출수록 느려짐)")]
+        [SerializeField] private float highParticleSpeedMultiplier = 1f;
+        [Tooltip("VFX 발동 후 효과음 재생까지 딜레이 (초)")]
+        [SerializeField] private float highSfxDelay = 0f;
+
+        [Header("── Middle 공격 VFX 튜닝 ──")]
+        [SerializeField] private Vector3 midVfxPositionOffset = new Vector3(0f, 3f, 0f);
+        [SerializeField] private Vector3 midVfxRotationOffset = new Vector3(0f, 0f, 0f);
+        [Tooltip("X·Y=두께, Z=플레이어 방향 길이")]
+        [SerializeField] private Vector3 midVfxScale = new Vector3(100f, 100f, 100f);
+        [Tooltip("ON: Z를 보스-플레이어 거리에 비례해 자동 계산 (Z 값은 거리당 배율)")]
+        [SerializeField] private bool midAutoZByDistance = false;
+        [Tooltip("파티클 startSpeed 배율 (1=원본, 낮출수록 느려짐)")]
+        [SerializeField] private float midParticleSpeedMultiplier = 1f;
+        [Tooltip("VFX 발동 후 효과음 재생까지 딜레이 (초)")]
+        [SerializeField] private float midSfxDelay = 0f;
+
+        [Header("── Low 공격 VFX 튜닝 ──")]
+        [SerializeField] private Vector3 lowVfxPositionOffset = new Vector3(0f, 0f, 0f);
+        [SerializeField] private Vector3 lowVfxRotationOffset = new Vector3(0f, -90f, 0f);
+        [Tooltip("X·Y=두께, Z=플레이어 방향 길이")]
+        [SerializeField] private Vector3 lowVfxScale = new Vector3(5f, 5f, 5f);
+        [Tooltip("ON: Z를 보스-플레이어 거리에 비례해 자동 계산 (Z 값은 거리당 배율)")]
+        [SerializeField] private bool lowAutoZByDistance = false;
+        [Tooltip("파티클 startSpeed 배율 (1=원본, 낮출수록 느려짐)")]
+        [SerializeField] private float lowParticleSpeedMultiplier = 1f;
+        [Tooltip("VFX 발동 후 효과음 재생까지 딜레이 (초)")]
+        [SerializeField] private float lowSfxDelay = 0f;
+
+        [Header("── 히트 타이밍 (투사체 도달 시간) ──")]
+        [Tooltip("VFX 생성 후 실제 히트 판정·사운드까지 대기 시간 (초). VFX 도달 시간에 맞게 조정.")]
+        [SerializeField] private float highHitDelay = 2f;
+        [SerializeField] private float midHitDelay = 2f;
+        [SerializeField] private float lowHitDelay = 1.5f;
 
         [Header("Attack VFX")]
         [SerializeField] private bool enableAttackEffects = true;
@@ -218,7 +259,30 @@ namespace ArcaneVR.Combat
         private void HandleAttackStarted(BossAttackType attackType, float duration)
         {
             Debug.Log($"[CenterFixed] EffectController.HandleAttackStarted | type={attackType} | dur={duration:0.0}s | enabled={enableAttackEffects}");
-            PlayAttackSfx(attackType);
+
+            var sfxDelay = attackType switch
+            {
+                BossAttackType.High   => highSfxDelay,
+                BossAttackType.Middle => midSfxDelay,
+                BossAttackType.Low    => lowSfxDelay,
+                _                    => 0f
+            };
+
+            if (sfxDelay <= 0f)
+                PlayAttackSfx(attackType);
+            else
+                StartCoroutine(PlayAttackSfxDelayed(attackType, sfxDelay));
+
+            var hitDelay = attackType switch
+            {
+                BossAttackType.High   => highHitDelay,
+                BossAttackType.Middle => midHitDelay,
+                BossAttackType.Low    => lowHitDelay,
+                _                    => 0f
+            };
+
+            if (hitDelay > 0f)
+                StartCoroutine(HitDelayRoutine(attackType, hitDelay));
 
             if (!enableAttackEffects)
                 return;
@@ -227,6 +291,23 @@ namespace ArcaneVR.Combat
                 StopCoroutine(activeAttackRoutine);
 
             activeAttackRoutine = StartCoroutine(AttackEffectRoutine(attackType, Mathf.Max(0.2f, duration)));
+        }
+
+        private IEnumerator PlayAttackSfxDelayed(BossAttackType attackType, float delay)
+        {
+            yield return new WaitForSeconds(Mathf.Max(0f, delay));
+            PlayAttackSfx(attackType);
+        }
+
+        private IEnumerator HitDelayRoutine(BossAttackType attackType, float delay)
+        {
+            yield return new WaitForSeconds(Mathf.Max(0f, delay));
+
+            // 투사체 도달 — 회피·방어 창을 강제 종료해 히트 판정 즉시 발생
+            if (attackType == BossAttackType.Low)
+                barrierController?.ForceResolve();
+            else
+                dodgeDetector?.ForceResolve();
         }
 
         private void HandleChargeStarted(float duration)
@@ -413,6 +494,15 @@ namespace ArcaneVR.Combat
             LastEffectStatus = "AttackFx: idle";
         }
 
+        [ContextMenu("▶ Test High Attack VFX")]
+        private void TestHighVfx() => SpawnVfxPrefab(BossAttackType.High, 5f);
+
+        [ContextMenu("▶ Test Middle Attack VFX")]
+        private void TestMidVfx() => SpawnVfxPrefab(BossAttackType.Middle, 5f);
+
+        [ContextMenu("▶ Test Low Attack VFX")]
+        private void TestLowVfx() => SpawnVfxPrefab(BossAttackType.Low, 5f);
+
         private void SpawnVfxPrefab(BossAttackType attackType, float lifetime)
         {
             var prefab = attackType switch
@@ -426,9 +516,89 @@ namespace ArcaneVR.Combat
             if (prefab == null)
                 return;
 
+            ResolveReferences();
+
             var origin = ResolveBossAttackOrigin(attackType);
-            var vfxObj = Instantiate(prefab, origin, Quaternion.identity);
+            var playerPoint = ResolvePlayerAttackPoint(attackType);
+            var direction = (playerPoint - origin);
+            if (direction.sqrMagnitude < 0.001f)
+                direction = (headTransform != null ? headTransform.position : Vector3.forward) - origin;
+
+            var baseRotation = Quaternion.LookRotation(direction.normalized);
+
+            var (posOffset, rotOffset, scale, autoZ, speedMult) = attackType switch
+            {
+                BossAttackType.High   => (highVfxPositionOffset, highVfxRotationOffset, highVfxScale, highAutoZByDistance, highParticleSpeedMultiplier),
+                BossAttackType.Middle => (midVfxPositionOffset,  midVfxRotationOffset,  midVfxScale,  midAutoZByDistance,  midParticleSpeedMultiplier),
+                BossAttackType.Low    => (lowVfxPositionOffset,  lowVfxRotationOffset,  lowVfxScale,  lowAutoZByDistance,  lowParticleSpeedMultiplier),
+                _                    => (Vector3.zero,           Vector3.zero,          Vector3.one,  false,               1f)
+            };
+
+            var finalRotation = baseRotation * Quaternion.Euler(rotOffset);
+            var finalPosition = origin + baseRotation * posOffset;
+
+            // autoZ: 보스-플레이어 거리에 비례해 Z 스케일 자동 설정 (Z 필드값 = 거리당 배율)
+            var finalScale = scale;
+            if (autoZ)
+            {
+                var dist = direction.magnitude;
+                finalScale.z = dist * Mathf.Max(0.01f, scale.z);
+            }
+
+            var vfxObj = Instantiate(prefab, finalPosition, finalRotation);
+            vfxObj.transform.localScale = new Vector3(
+                Mathf.Max(0.01f, finalScale.x),
+                Mathf.Max(0.01f, finalScale.y),
+                Mathf.Max(0.01f, finalScale.z));
+            ApplyHierarchyParticleScaling(vfxObj);
+            if (!Mathf.Approximately(speedMult, 1f))
+                ApplyParticleSpeedMultiplier(vfxObj, speedMult);
+            ApplyEnergyCoreFlightSpeed(vfxObj, direction.magnitude, lifetime);
             Destroy(vfxObj, lifetime);
+        }
+
+        private static void ApplyEnergyCoreFlightSpeed(GameObject root, float distanceToPlayer, float vfxLifetime)
+        {
+            if (root == null)
+                return;
+
+            foreach (var core in root.GetComponentsInChildren<EnergyCore>(true))
+            {
+                // 발사 가능한 시간 = 전체 lifetime - autoLaunchDelay
+                var availableFlightTime = vfxLifetime - core.autoLaunchDelay;
+                if (availableFlightTime <= 0.1f)
+                {
+                    // 비행 시간이 너무 짧으면 lifetime을 늘려서라도 도달하게 함
+                    availableFlightTime = Mathf.Max(0.5f, distanceToPlayer / Mathf.Max(1f, core.flightSpeed));
+                    // vfxObj는 여기서 Destroy 타이밍 조정 불가이므로 속도만 맞춤
+                }
+
+                core.flightSpeed = distanceToPlayer / availableFlightTime;
+            }
+        }
+
+        private static void ApplyParticleSpeedMultiplier(GameObject root, float multiplier)
+        {
+            if (root == null)
+                return;
+            foreach (var ps in root.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = ps.main;
+                main.startSpeed = new ParticleSystem.MinMaxCurve(
+                    main.startSpeed.constantMin * multiplier,
+                    main.startSpeed.constantMax * multiplier);
+            }
+        }
+
+        private static void ApplyHierarchyParticleScaling(GameObject root)
+        {
+            if (root == null)
+                return;
+            foreach (var ps in root.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                var main = ps.main;
+                main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            }
         }
 
         private void PlayAttackSfx(BossAttackType attackType)
