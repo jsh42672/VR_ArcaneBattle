@@ -11,6 +11,10 @@ public class FireballProjectile : MonoBehaviour
     [SerializeField] private float lifetime = 5f;
     [SerializeField] private float damage = 20f;
     [SerializeField] private float burnDuration = 3f;
+    [SerializeField] private SpellId spellId = SpellId.Single_Pointer;
+    [SerializeField] private StatusEffect statusEffect = StatusEffect.Burn;
+    [SerializeField] private float statusMagnitude = 1f;
+    [SerializeField] private float statusTickInterval = 0.5f;
 
     private Rigidbody rb;
     private bool hasHit;
@@ -38,6 +42,22 @@ public class FireballProjectile : MonoBehaviour
         explosionScale = Mathf.Max(0.01f, scale);
         explosionLifetime = Mathf.Max(0.05f, lifetimeSeconds);
         explosionMaterialOverride = materialOverride;
+    }
+
+    public void ConfigureHitData(
+        SpellId newSpellId,
+        float newDamage,
+        StatusEffect newStatusEffect,
+        float newStatusDuration,
+        float newStatusMagnitude,
+        float newStatusTickInterval)
+    {
+        spellId = newSpellId;
+        damage = Mathf.Max(0f, newDamage);
+        statusEffect = newStatusEffect;
+        burnDuration = Mathf.Max(0f, newStatusDuration);
+        statusMagnitude = Mathf.Max(0f, newStatusMagnitude);
+        statusTickInterval = Mathf.Max(0f, newStatusTickInterval);
     }
 
     void Start()
@@ -80,13 +100,13 @@ public class FireballProjectile : MonoBehaviour
     private void ApplyHit(Collider other)
     {
         var hitData = new SpellHitData(
-            SpellId.Single_Strike,
+            spellId,
             ElementType.Fire,
-            StatusEffect.Burn,
+            statusEffect,
             damage,
             burnDuration,
-            1f,
-            0f);
+            statusMagnitude,
+            statusTickInterval);
 
         var spellTarget = other.GetComponentInParent<ISpellTarget>();
         if (spellTarget != null)

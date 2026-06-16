@@ -98,11 +98,14 @@ namespace ArcaneVR.Boss
         private Vector3 prevDebugPosition;
         private AudioSource movementLoopAudioSource;
         private string lastDetailedChaseReason;
+        private RuntimeAnimatorController patternAttackController;
 
         public string LastChaseStatus { get; private set; } = "Chase: idle";
         public bool IsChasing { get; private set; }
         public float DistanceToTarget { get; private set; } = -1f;
         public bool IsInAttackRange => DistanceToTarget >= 0f && DistanceToTarget <= attackRange;
+        public RuntimeAnimatorController PatternAttackController => patternAttackController;
+        public Animator BossAnimator => bossAnimator;
         private bool ShouldUsePatternAttackResponses => enableAttackResponsePatterns &&
                                                         stateMachine != null &&
                                                         stateMachine.IsPatternAttackPhaseActive;
@@ -216,6 +219,8 @@ namespace ArcaneVR.Boss
             if (bossAnimator == null)
                 bossAnimator = ResolveAnimator();
 
+            CachePatternAttackController();
+
             if (idleController == null && !string.IsNullOrEmpty(idleControllerResourcePath))
                 idleController = Resources.Load<RuntimeAnimatorController>(idleControllerResourcePath);
 
@@ -306,7 +311,9 @@ namespace ArcaneVR.Boss
                 prevDebugPosition = debugRoot.position;
 
                 LastChaseStatus = "Chase: 디버그 정지";
-                UpdateAnimator(false, 0f);
+                StopMovementLoopAudio();
+                if (bossAI == null || bossAI.CurrentState != BossState.CenterFixed)
+                    UpdateAnimator(false, 0f);
                 return;
             }
             prevDebugPosition = Vector3.zero;
@@ -819,6 +826,28 @@ namespace ArcaneVR.Boss
             {
                 bossAnimator.runtimeAnimatorController = controllerBeforeRun;
             }
+        }
+
+        private void CachePatternAttackController()
+        {
+            if (patternAttackController != null ||
+                bossAnimator == null ||
+                bossAnimator.runtimeAnimatorController == null)
+            {
+                return;
+            }
+
+            var controller = bossAnimator.runtimeAnimatorController;
+            if (controller == idleController ||
+                controller == walkController ||
+                controller == runController ||
+                controller == attackController)
+            {
+                return;
+            }
+
+            if (controller.name == "BossAttack" || controller.name.Contains("BossAttack"))
+                patternAttackController = controller;
         }
 
         private bool ShouldUseRunAnimation(float normalizedSpeed)

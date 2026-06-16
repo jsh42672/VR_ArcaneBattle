@@ -133,6 +133,7 @@ Material:
     - _Wiggle_Offset: 0.426
     - _Wind_Speed: 1.6
     - _Wind_Strength: 0.2
+    - _XRMotionVectorsPass: 1
     - _ZTestDepthEqualForOpaque: 3
     - _ZTestGBuffer: 4
     - _ZTestTransparent: 4
@@ -142,7 +143,7 @@ Material:
     - _DiffusionProfileAsset: {r: -3.698545e+22, g: 20.616848, b: -5.291675e-28, a: -1.3520143e+18}
     - _DoubleSidedConstants: {r: 1, g: 1, b: 1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-    - _InteractorPosition: {r: 4.18, g: 0, b: 7.8, a: 0}
+    - _InteractorPosition: {r: 56.07027, g: 24.68286, b: -14.34454, a: 0}
     - _Interactor_Position: {r: 1.71, g: 1.45, b: 2.73, a: 0}
     - _Top_Color: {r: 0, g: 0.69, b: 0.36, a: 1}
     - _Wind_Direction: {r: 2.7, g: 0.5, b: 4.6, a: 0}

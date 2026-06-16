@@ -71,6 +71,11 @@ namespace ArcaneVR.Combat
 
         public void BeginDodgeWindow(BossAttackType attackType)
         {
+            BeginDodgeWindow(attackType, dodgeWindowDuration);
+        }
+
+        public void BeginDodgeWindow(BossAttackType attackType, float duration)
+        {
             if (headTransform == null)
             {
                 Debug.LogWarning("[DodgeDetector] Cannot begin dodge window. Head Transform is missing.");
@@ -84,7 +89,7 @@ namespace ArcaneVR.Combat
             baselineHeadWorldPosition = headTransform.position;
             baselineRightDirection = Vector3.ProjectOnPlane(headTransform.right, Vector3.up).normalized;
 
-            windowEndTime = Time.time + dodgeWindowDuration;
+            windowEndTime = Time.time + Mathf.Max(0.1f, duration);
             isWindowOpen = true;
             hasResolved = false;
 
